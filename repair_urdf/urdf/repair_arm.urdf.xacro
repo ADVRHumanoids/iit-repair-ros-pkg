@@ -1,0 +1,218 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+<xacro:include filename="$(find repair_urdf)/urdf/utils.urdf.xacro" />
+<xacro:property name="big_tau_max" value="200.0" />
+<xacro:property name="mid_tau_max" value="200.0" />
+<xacro:property name="sm_tau_max" value="200.0" />
+
+
+<xacro:macro name="repair_arm" params="id base_link" >
+
+<joint name="arm_${id}_joint_1" type="revolute">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="${base_link}"/>
+    <child link="arm_${id}_link_1"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-150.0 * DEG2RAD}" upper="${150.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
+</joint>
+
+<joint name="arm_${id}_joint_2" type="revolute">
+    <origin xyz="${7.0 * mmTom} 0 0" rpy="0 ${-PI_2} ${PI}"/>
+    <parent link="arm_${id}_link_1"/>
+    <child link="arm_${id}_link_2"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-90.0 * DEG2RAD}" upper="${90.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
+</joint>
+
+<joint name="arm_${id}_joint_3" type="revolute">
+    <origin xyz="0 0 0" rpy="0 ${-PI_2} ${PI}"/>
+    <parent link="arm_${id}_link_2"/>
+    <child link="arm_${id}_link_3"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-150.0 * DEG2RAD}" upper="${150.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
+</joint>
+
+<joint name="arm_${id}_joint_4" type="revolute">
+    <origin xyz="0 ${22.5000 * mmTom} ${360.150 * mmTom}" rpy="0 ${-PI_2} ${PI}"/>
+    <parent link="arm_${id}_link_3"/>
+    <child link="arm_${id}_link_4"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-150.0 * DEG2RAD}" upper="${50.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
+</joint>
+
+<joint name="arm_${id}_joint_5" type="revolute">
+    <origin xyz="0 0 0" rpy="0 ${-PI_2} ${PI}"/>
+    <parent link="arm_${id}_link_4"/>
+    <child link="arm_${id}_link_5"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-150.0 * DEG2RAD}" upper="${150.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
+</joint>
+
+<joint name="arm_${id}_joint_6" type="revolute">
+    <origin xyz="0 0 ${321.000 * mmTom}" rpy="0 ${-PI_2} ${PI}"/>
+    <parent link="arm_${id}_link_5"/>
+    <child link="arm_${id}_link_6"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-150.0 * DEG2RAD}" upper="${150.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
+</joint>
+
+<joint name="arm_${id}_joint_7" type="revolute">
+    <origin xyz="${180.000 * mmTom} 0 0" rpy="0 ${-PI_2} ${PI}"/>
+    <parent link="arm_${id}_link_6"/>
+    <child link="arm_${id}_link_7"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-150.0 * DEG2RAD}" upper="${150.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
+</joint>
+
+<joint name="arm_${id}_tcp_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="arm_${id}_link_7"/>
+    <child link="arm_${id}_tcp"/>
+</joint>
+
+<link name="arm_${id}_link_1">
+    <inertial>
+        <mass value="0.1"/>
+        <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+        <origin xyz="0 0 0"/>
+    </inertial>
+    <collision name="arm_${id}_link_1_collision">
+        <geometry>
+            <mesh filename="package://repair_urdf/meshes/link_1.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+        </geometry>
+        <material name="dark"/>
+    </collision>
+    <visual name="arm_${id}_link_1_visual">
+        <geometry>
+            <mesh filename="package://repair_urdf/meshes/link_1.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+        </geometry>
+        <material name="dark"/>
+    </visual>
+</link>
+
+<link name="arm_${id}_link_2">
+    <inertial>
+        <mass value="0.1"/>
+        <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+        <origin xyz="0 0 0"/>
+    </inertial>
+    <collision name="arm_${id}_link_2_collision">
+        <geometry>
+            <mesh filename="package://repair_urdf/meshes/link_2.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+        </geometry>
+        <material name="dark"/>
+    </collision>
+    <visual name="arm_${id}_link_2_visual">
+        <geometry>
+            <mesh filename="package://repair_urdf/meshes/link_2.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+        </geometry>
+        <material name="dark"/>
+    </visual>
+</link>
+
+<link name="arm_${id}_link_3">
+    <inertial>
+        <mass value="0.1"/>
+        <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+        <origin xyz="0 0 0"/>
+    </inertial>
+    <collision name="arm_${id}_link_3_collision">
+        <geometry>
+            <mesh filename="package://repair_urdf/meshes/link_3.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+        </geometry>
+        <material name="dark"/>
+    </collision>
+    <visual name="arm_${id}_link_3_visual">
+        <geometry>
+            <mesh filename="package://repair_urdf/meshes/link_3.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+        </geometry>
+        <material name="dark"/>
+    </visual>
+</link>
+
+<link name="arm_${id}_link_4">
+    <inertial>
+        <mass value="0.1"/>
+        <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+        <origin xyz="0 0 0"/>
+    </inertial>
+    <collision name="arm_${id}_link_4_collision">
+        <geometry>
+            <mesh filename="package://repair_urdf/meshes/link_4.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+        </geometry>
+        <material name="dark"/>
+    </collision>
+    <visual name="arm_${id}_link_4_visual">
+        <geometry>
+            <mesh filename="package://repair_urdf/meshes/link_4.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+        </geometry>
+        <material name="dark"/>
+    </visual>
+</link>
+
+<link name="arm_${id}_link_5">
+    <inertial>
+        <mass value="0.1"/>
+        <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+        <origin xyz="0 0 0"/>
+    </inertial>
+    <collision name="arm_${id}_link_5_collision">
+        <geometry>
+            <mesh filename="package://repair_urdf/meshes/link_5.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+        </geometry>
+        <material name="dark"/>
+    </collision>
+    <visual name="arm_${id}_link_5_visual">
+        <geometry>
+            <mesh filename="package://repair_urdf/meshes/link_5.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+        </geometry>
+        <material name="dark"/>
+    </visual>
+</link>
+
+<link name="arm_${id}_link_6">
+    <inertial>
+        <mass value="0.1"/>
+        <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+        <origin xyz="0 0 0"/>
+    </inertial>
+    <collision name="arm_${id}_link_6_collision">
+        <geometry>
+            <mesh filename="package://repair_urdf/meshes/link_6.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+        </geometry>
+        <material name="dark"/>
+    </collision>
+    <visual name="arm_${id}_link_6_visual">
+        <geometry>
+            <mesh filename="package://repair_urdf/meshes/link_6.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+        </geometry>
+        <material name="dark"/>
+    </visual>
+</link>
+
+<link name="arm_${id}_link_7">
+    <inertial>
+        <mass value="0.1"/>
+        <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+        <origin xyz="0 0 0"/>
+    </inertial>
+    <collision name="arm_${id}_link_7_collision">
+        <geometry>
+            <mesh filename="package://repair_urdf/meshes/link_7.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+        </geometry>
+        <material name="dark"/>
+    </collision>
+    <visual name="arm_${id}_link_7_visual">
+        <geometry>
+            <mesh filename="package://repair_urdf/meshes/link_7.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+        </geometry>
+        <material name="dark"/>
+    </visual>
+</link>
+
+<link name="arm_${id}_tcp"/>
+
+</xacro:macro>
+
+</robot>
