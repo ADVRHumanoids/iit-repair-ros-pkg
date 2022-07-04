@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<robot name = "table" xmlns:xacro="http://ros.org/wiki/xacro">
+
+<xacro:include filename="$(find repair_urdf)/urdf/repair_arm.urdf.xacro"/>
+
+<xacro:include filename="$(find repair_urdf)/urdf/repair_cage.urdf.xacro"/>
+
+<joint name="x_joint" type="prismatic">
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <parent link="working_surface_link"/>
+    <child link="dummy_link"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="${- cage_depth/2 + x_joint_limit_margin}" upper= "${cage_depth/2 - x_joint_limit_margin}" effort="1000.0" velocity="20.0"/>
+</joint>
+
+<link name="dummy_link">
+</link>
+
+<joint name="z_joint" type="prismatic">
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <parent link="dummy_link"/>
+    <child link="base_link"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${z_joint_limit_margin}" upper= "${cage_height - z_joint_limit_margin}" effort="1000.0" velocity="20.0"/>
+</joint>
+
+<!-- RePAIR assembly (two arms) -->
+
+<link name="base_link">
+</link>
+
+<joint name="r_arm_mount_joint" type="prismatic">
+    <origin xyz="0.0 0.0 0.0" rpy="${-PI_2} 0 ${PI}"/>
+    <parent link="base_link"/>
+    <child link="dummy_r"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${shoulder_width_lb}" upper= "${shoulder_width_ub}" effort="1000.0" velocity="20.0"/>
+</joint>
+
+<link name="dummy_r">
+</link>
+
+<joint name="roll_r" type="revolute">
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <parent link="dummy_r"/>
+    <child link="r_arm_mount_frame"/>
+    <axis xyz="-1 0 0"/>
+    <limit lower="${shoulder_roll_lb}" upper="${shoulder_roll_ub}" effort="0.0" velocity="0.0"/>
+</joint>
+
+<link name="r_arm_mount_frame">
+</link>
+<xacro:repair_arm base_link="r_arm_mount_frame" id="1"/>
+
+<joint name="l_arm_mount_joint" type="prismatic">
+    <origin xyz="0.0 0.0 0.0" rpy="${-PI_2} 0 0"/>
+    <parent link="base_link"/>
+    <child link="dummy_l"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${shoulder_width_lb}" upper= "${shoulder_width_ub}" effort="1000.0" velocity="20.0"/>
+</joint>
+<link name="dummy_l">
+</link>
+<joint name="roll_l" type="revolute">
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <parent link="dummy_l"/>
+    <child link="l_arm_mount_frame"/>
+    <axis xyz="-1 0 0"/>
+    <limit lower="${shoulder_roll_lb}" upper="${shoulder_roll_ub}" effort="0.0" velocity="0.0"/>
+</joint>
+<link name="l_arm_mount_frame">
+</link>
+<xacro:repair_arm base_link="l_arm_mount_frame" id="2"/>
+
+</robot>
