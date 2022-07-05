@@ -50,6 +50,20 @@ def str2bool(v):
   #susendberg's function
   return v.lower() in ("yes", "true", "t", "1")
 
+def rot2quat(R):
+    # convert matrix to quaternion
+
+    
+    return True
+def rot_error(R_trgt, R_actual):
+
+    # R_trgt * R_actual^T should be the identity matrix
+    # I - R_trgt * R_actual^T can be a measure of the orientation error
+    # convert R_trgt * R_actual^T to quaternion
+    # compute norm of quaternion 
+    # compute difference w.r.t. [1, 0, 0, 0], which is the unit quat. corresponding to I
+    return True
+
 def main(args):
 
     # preliminary ops
@@ -92,8 +106,8 @@ def main(args):
     # parameters
     n_q = kindyn.nq()
     n_v = kindyn.nv()
-    tf = 3
-    n_nodes = 1000
+    tf = 5
+    n_nodes = 200
     dt = tf / n_nodes
     lbs = kindyn.q_min() 
     ubs = kindyn.q_max()
@@ -101,10 +115,11 @@ def main(args):
     prb = problem.Problem(n_nodes)
     q = prb.createStateVariable('q', n_q)
     q_dot = prb.createInputVariable('q_dot', n_v)
-    q_design = q[1, 2, 3, 2 + arm_dofs, 3 + arm_dofs] # design vector
+    q_design = q[1, 2, 3, 2 + (arm_dofs + 2), 3 + (arm_dofs + 2)] # design vector
     
     q_init = np.zeros((n_q, 1)).flatten()
-    q_aux = np.array([0, 0.5, 0.3, -0.2, -0.4, -1, 0.8, -2, -0.4, 0.4, 1.4, 0.3, -0.2, 0.25, -1.2, -1.45, -1.3, 0.5, -0.72, 0.3])
+    q_init[1] = 0.6
+    q_aux = np.array([0, 0.6, 0.3, 0, 1, -1, -0.7, -0.2, -1.5, 0.6, 0.4, 0.3, 0, -0.9, -0.8, 0, -1, 1, -0.8, -2])
     
     prb.setDynamics(q_dot)
     prb.setDt(dt)  
@@ -138,20 +153,25 @@ def main(args):
     prb.createConstraint("fixed_x", q[0])
 
     # roll and shouldeer vars equal
-    prb.createConstraint("same_roll", q[3] - q[3 + arm_dofs])
-    prb.createConstraint("same_shoulder_w", q[2] - q[2 + arm_dofs])
+    prb.createConstraint("same_roll", q[3] - q[3 + (arm_dofs + 2)])
+    prb.createConstraint("same_shoulder_w", q[2] - q[2 + (arm_dofs + 2)])
     # design vars equal on all nodes 
-    prb.createConstraint("single_var_cnstrnt", q_design - q_design.getVarOffset(-1), nodes = range(1, n_nodes))
+    prb.createConstraint("single_var_cnstrnt", q_design - q_design.getVarOffset(-1), nodes = range(1, n_nodes + 1))
 
     # lower and upper bounds for design variables and joint variables
     q.setBounds(lbs, ubs) 
-
+    print(lbs)
+    print(ubs)
     # TCPs above working surface
 
-    # keep_tcp1_above_ground = prb.createConstraint("keep_tcp1_above_ground", rarm_tcp_pos_wrt_ws[2], nodes = range(1, n_nodes - 1))
-    # keep_tcp1_above_ground.setLowerBounds(0)
-    # keep_tcp2_above_ground = prb.createConstraint("keep_tcp2_above_ground", larm_tcp_pos_wrt_ws[2], nodes = range(1, n_nodes - 1))
-    # keep_tcp2_above_ground.setLowerBounds(0)
+    keep_tcp1_above_ground = prb.createConstraint("keep_tcp1_above_ground", rarm_tcp_pos_wrt_ws[2])
+    keep_tcp1_above_ground.setBounds(0, cs.inf)
+    keep_tcp2_above_ground = prb.createConstraint("keep_tcp2_above_ground", larm_tcp_pos_wrt_ws[2])
+    keep_tcp2_above_ground.setBounds(0, cs.inf)
+
+    # prb.createFinalConstraint("final_left_tcp_pos_error", larm_tcp_pos - fk_arm_l(q = q_aux)["ee_pos"])
+    # prb.createFinalConstraint("final_right_tcp_pos_error", rarm_tcp_pos - fk_arm_r(q = q_aux)["ee_pos"])
+
     # COSTS
 
     # min inputs 
@@ -159,12 +179,14 @@ def main(args):
     prb.createIntermediateCost("min_q_dot", 0.01 * cs.sumsqr(q_dot))  # minimizing the joint accelerations ("responsiveness" of the trajectory)
     
     # left arm pose error
-    prb.createIntermediateCost("init_left_tcp_pos_error", 100000000 * cs.sumsqr(larm_tcp_pos - fk_arm_l(q = q_init)["ee_pos"]), nodes = 0)
-    prb.createFinalCost("final_left_tcp_pos_error", 100000000 * cs.sumsqr(larm_tcp_pos - fk_arm_l(q = q_aux)["ee_pos"]))
+    prb.createIntermediateCost("init_left_tcp_pos_error", 10 * cs.sumsqr(larm_tcp_pos - fk_arm_l(q = q_init)["ee_pos"]), nodes = 0)
+    prb.createFinalCost("final_left_tcp_pos_error", 100 * cs.sumsqr(larm_tcp_pos - fk_arm_l(q = q_aux)["ee_pos"]))
+    prb.createFinalCost("final_left_tcp_rot_error", 100 * cs.sumsqr(larm_tcp_pos - fk_arm_l(q = q_aux)["ee_pos"]))
 
     # right arm pose error
-    prb.createIntermediateCost("init_right_tcp_pos_error", 100000000 * cs.sumsqr(rarm_tcp_pos - fk_arm_r(q = q_init)["ee_pos"]), nodes = 0)
-    prb.createFinalCost("final_right_tcp_pos_error", 100000000 * cs.sumsqr(rarm_tcp_pos - fk_arm_r(q = q_aux)["ee_pos"]))
+    prb.createIntermediateCost("init_right_tcp_pos_error", 10 * cs.sumsqr(rarm_tcp_pos - fk_arm_r(q = q_init)["ee_pos"]), nodes = 0)
+    prb.createFinalCost("final_right_tcp_pos_error",  100 * cs.sumsqr(rarm_tcp_pos - fk_arm_r(q = q_aux)["ee_pos"]))
+    prb.createFinalCost("final_right_tcp_rot_error", 100 * cs.sumsqr(rarm_tcp_pos - fk_arm_l(q = q_aux)["ee_pos"]))
 
     ## Creating the solver and solving the problem
     slvr = solver.Solver.make_solver(solver_type, prb, slvr_opt) 
@@ -176,7 +198,13 @@ def main(args):
     cnstr_opt = slvr.getConstraintSolutionDict()
 
     q_sol = solution["q"]
-    ms.store({**solution, **cnstr_opt})
+    
+    tcp_pos = {"rTCP_pos": fk_arm_r(q = q_sol)["ee_pos"].toarray() , "lTCP_pos": fk_arm_l(q = q_sol)["ee_pos"].toarray() }
+    tcp_rot = {"rTCP_rot": fk_arm_r(q = q_sol)["ee_rot"].toarray() , "lTCP_rot": fk_arm_l(q = q_sol)["ee_rot"].toarray() }
+    tcp_pos_trgt = {"rTCP_trgt_pos": fk_arm_r(q = q_aux)["ee_pos"].toarray() , "lTCP_trgt_pos": fk_arm_l(q = q_aux)["ee_pos"].toarray() }
+    tcp_rot_trgt = {"rTCP_trgt_rot": fk_arm_r(q = q_aux)["ee_rot"].toarray() , "lTCP_trgt_rot": fk_arm_l(q = q_aux)["ee_pos"].toarray() }
+
+    ms.store({**solution, **cnstr_opt, **tcp_pos, **tcp_rot, **tcp_pos_trgt, **tcp_rot_trgt})
 
     if args.rviz_replay and args.launch_rviz:
         rpl_traj = replay_trajectory(dt = dt, joint_list = joint_names, q_replay = q_sol)  
