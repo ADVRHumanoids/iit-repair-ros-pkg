@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-from curses import KEY_B2
-from sympy import Q
 from horizon import problem
 from horizon.utils import utils, kin_dyn, plotter, mat_storer
 from horizon.ros.replay_trajectory import *
@@ -91,8 +89,8 @@ def main(args):
     # parameters
     n_q = kindyn.nq()
     n_v = kindyn.nv()
-    tf = 5
-    n_nodes = 100
+    tf = 1
+    n_nodes = 1
     dt = tf / n_nodes
     lbs = kindyn.q_min() 
     ubs = kindyn.q_max()
