@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from curses import KEY_B2
+import multiprocessing
 from sympy import Q
 from horizon import problem
 from horizon.utils import utils, kin_dyn, plotter, mat_storer
@@ -25,6 +26,9 @@ import rospy
 
 import subprocess
 
+from geometry_msgs.msg import PoseStamped
+
+import multiprocessing.process as Process
 ## Getting/setting some useful variables
 today = date.today()
 today_is = today.strftime("%d-%m-%Y")
@@ -51,18 +55,92 @@ def str2bool(v):
   return v.lower() in ("yes", "true", "t", "1")
 
 def rot2quat(R):
-    # convert matrix to quaternion
 
+    # convert matrix to quaternion representation
+
+    # quaternion Q ={eta, Epsi}
+    # where eta = cos(theta/2), with theta belogs [- PI, PI] 
+    # Epsi = sin(theta/2) * r, where r is the axis of rotation
+
+    eta = 1/2 * cs.sqrt(R[0, 0] + R[1, 1] + R[2, 2] + 1)
+    epsi_1 = 1/2 * cs.sign(R[2, 1] - R[1, 2]) * cs.sqrt(R[0, 0] - R[1, 1] - R[2, 2] + 1) 
+    epsi_2 = 1/2 * cs.sign(R[0, 2] - R[2, 0]) * cs.sqrt(R[1, 1] - R[2, 2] - R[0, 0] + 1) 
+    epsi_3 = 1/2 * cs.sign(R[1, 0] - R[0, 1]) * cs.sqrt(R[2, 2] - R[0, 0] - R[1, 1] + 1)
     
-    return True
+    Q = cs.vertcat(eta, epsi_1, epsi_2, epsi_3)
+    return Q
+
 def rot_error(R_trgt, R_actual):
 
-    # R_trgt * R_actual^T should be the identity matrix
-    # I - R_trgt * R_actual^T can be a measure of the orientation error
-    # convert R_trgt * R_actual^T to quaternion
-    # compute norm of quaternion 
-    # compute difference w.r.t. [1, 0, 0, 0], which is the unit quat. corresponding to I
+    Q_trgt = rot2quat(R_trgt)
+    Q_actual = rot2quat(R_actual)
+
+    rot_err1 = Q_trgt[0] * Q_actual[1] - Q_actual[0] * Q_trgt[1] + Q_actual[3] * Q_trgt[2] - Q_actual[2] * Q_trgt[3]
+    rot_err2 = Q_trgt[0] * Q_actual[2] - Q_actual[0] * Q_trgt[2] - Q_actual[3] * Q_trgt[1] + Q_actual[1] * Q_trgt[3]
+    rot_err3 = Q_trgt[0] * Q_actual[3] - Q_actual[0] * Q_trgt[3] + Q_actual[2] * Q_trgt[1] - Q_actual[1] * Q_trgt[2]
+
+    return (rot_err1 * rot_err1 + rot_err2 * rot_err2 + rot_err3 * rot_err3)
+
+def rot_error2(R_trgt, R_actual):
+
+    R_err = R_trgt * cs.transpose(R_actual) # R_trgt * R_actual^T should be the identity matrix if error = 0
+
+    I = np.zeros((3, 3))
+    I[0, 0] = 1
+    I[1, 1] = 1
+    I[2, 2] = 1
+
+    Err = R_err - I
+
+    err = Err[0, 0] * Err[0, 0] + Err[1, 0] * Err[1, 0] + Err[2, 0] * Err[2, 0] + \
+          Err[0, 1] * Err[0, 1] + Err[1, 1] * Err[1, 1] + Err[2, 1] * Err[2, 1] + \
+          Err[0, 2] * Err[0, 2] + Err[1, 2] * Err[1, 2] + Err[2, 2] * Err[2, 2] 
+
+    return err
+
+def trgt_pose_publisher(pos_left, pos_rght, rot_lft, rot_rght):
+
+    Q_lft = rot2quat(rot_lft)
+    Q_rght = rot2quat(rot_rght)
+    
+    rospy.init_node('trgt_pose_pub', anonymous = False)
+
+    publisher_lft = rospy.Publisher("/repair/trgt_pose_lft", PoseStamped, queue_size = 10)
+    publisher_rght = rospy.Publisher("/repair/trgt_pose_rght", PoseStamped, queue_size = 10)
+
+    pose_lft = PoseStamped()
+    pose_rght = PoseStamped()
+
+    pose_lft.header.stamp = rospy.Time.now()
+    pose_lft.header.frame_id = "world"
+    pose_lft.pose.position.x = pos_left[0]
+    pose_lft.pose.position.y = pos_left[1]
+    pose_lft.pose.position.z = pos_left[2]
+    pose_lft.pose.orientation.x = Q_lft[1]
+    pose_lft.pose.orientation.y = Q_lft[2]
+    pose_lft.pose.orientation.z = Q_lft[3]
+    pose_lft.pose.orientation.w = Q_lft[0]
+
+    pose_rght.header.stamp = rospy.Time.now()
+    pose_rght.header.frame_id = "world"
+    pose_rght.pose.position.x = pos_rght[0]
+    pose_rght.pose.position.y = pos_rght[1]
+    pose_rght.pose.position.z = pos_rght[2]
+    pose_rght.pose.orientation.x = Q_rght[1]
+    pose_rght.pose.orientation.y = Q_rght[2]
+    pose_rght.pose.orientation.z = Q_rght[3]
+    pose_rght.pose.orientation.w = Q_rght[0]
+    
+    rate = rospy.Rate(10) # 10hz
+    while not rospy.is_shutdown():
+
+        publisher_lft.publish(pose_lft)
+        publisher_rght.publish(pose_rght)
+        rate.sleep()
+
+
     return True
+
 
 def main(args):
 
@@ -79,7 +157,7 @@ def main(args):
     if args.launch_rviz:
         try:
 
-            rviz_window = subprocess.Popen(["roslaunch", "repair_urdf", "repair_full.launch"])
+            rviz_window = subprocess.Popen(["roslaunch", "repair_urdf", "repair_full_trgt_poses.launch"])
 
         except:
             print('Failed to launch RViz.')
@@ -119,7 +197,7 @@ def main(args):
     
     q_init = np.zeros((n_q, 1)).flatten()
     q_init[1] = 0.6
-    q_aux = np.array([0, 0.6, 0.3, 0, 1, -1, -0.7, -0.2, -1.5, 0.6, 0.4, 0.3, 0, -0.9, -0.8, 0, -1, 1, -0.8, -2])
+    q_aux = np.array([0, 0.6, 0.3, 0, -1, -1, -0.7, -0.2, -1.5, 0.6, 0.4, 0.3, 0, -0.9, -0.8, 0, -1, 1, -0.8, -2])
     
     prb.setDynamics(q_dot)
     prb.setDt(dt)  
@@ -150,7 +228,7 @@ def main(args):
     larm_tcp_rot_wrt_ws = cs.inv(ws_tcp_rot) * larm_tcp_rot # orient w.r.t. working surface
 
     # fixed x constraint
-    prb.createConstraint("fixed_x", q[0])
+    # prb.createConstraint("fixed_x", q[0])
 
     # roll and shouldeer vars equal
     prb.createConstraint("same_roll", q[3] - q[3 + (arm_dofs + 2)])
@@ -160,8 +238,7 @@ def main(args):
 
     # lower and upper bounds for design variables and joint variables
     q.setBounds(lbs, ubs) 
-    print(lbs)
-    print(ubs)
+
     # TCPs above working surface
 
     keep_tcp1_above_ground = prb.createConstraint("keep_tcp1_above_ground", rarm_tcp_pos_wrt_ws[2])
@@ -180,13 +257,13 @@ def main(args):
     
     # left arm pose error
     prb.createIntermediateCost("init_left_tcp_pos_error", 10 * cs.sumsqr(larm_tcp_pos - fk_arm_l(q = q_init)["ee_pos"]), nodes = 0)
-    prb.createFinalCost("final_left_tcp_pos_error", 100 * cs.sumsqr(larm_tcp_pos - fk_arm_l(q = q_aux)["ee_pos"]))
-    prb.createFinalCost("final_left_tcp_rot_error", 100 * cs.sumsqr(larm_tcp_pos - fk_arm_l(q = q_aux)["ee_pos"]))
+    prb.createFinalCost("final_left_tcp_pos_error", 1000 * cs.sumsqr(larm_tcp_pos - fk_arm_l(q = q_aux)["ee_pos"]))
+    prb.createFinalCost("final_left_tcp_rot_error", 1 * rot_error(fk_arm_l(q = q_aux)["ee_rot"], larm_tcp_rot))
 
     # right arm pose error
     prb.createIntermediateCost("init_right_tcp_pos_error", 10 * cs.sumsqr(rarm_tcp_pos - fk_arm_r(q = q_init)["ee_pos"]), nodes = 0)
-    prb.createFinalCost("final_right_tcp_pos_error",  100 * cs.sumsqr(rarm_tcp_pos - fk_arm_r(q = q_aux)["ee_pos"]))
-    prb.createFinalCost("final_right_tcp_rot_error", 100 * cs.sumsqr(rarm_tcp_pos - fk_arm_l(q = q_aux)["ee_pos"]))
+    prb.createFinalCost("final_right_tcp_pos_error",  1000 * cs.sumsqr(rarm_tcp_pos - fk_arm_r(q = q_aux)["ee_pos"]))
+    prb.createFinalCost("final_right_tcp_rot_error", 1 * rot_error(fk_arm_r(q = q_aux)["ee_rot"], rarm_tcp_rot))
 
     ## Creating the solver and solving the problem
     slvr = solver.Solver.make_solver(solver_type, prb, slvr_opt) 
@@ -207,6 +284,10 @@ def main(args):
     ms.store({**solution, **cnstr_opt, **tcp_pos, **tcp_rot, **tcp_pos_trgt, **tcp_rot_trgt})
 
     if args.rviz_replay and args.launch_rviz:
+
+        process = multiprocessing.Process(target = trgt_pose_publisher, args=(fk_arm_l(q = q_aux)["ee_pos"], fk_arm_r(q = q_aux)["ee_pos"], fk_arm_l(q = q_aux)["ee_rot"], fk_arm_r(q = q_aux)["ee_rot"]))
+        process.start()
+
         rpl_traj = replay_trajectory(dt = dt, joint_list = joint_names, q_replay = q_sol)  
         rpl_traj.sleep(1.)
         rpl_traj.replay(is_floating_base = False)

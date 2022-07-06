@@ -19,6 +19,7 @@ Panels:
         - /InteractiveMarkers1
         - /left_trgt_pose1
         - /right_trgt_pose1
+        - /right_trgt_pose1/Status1
       Splitter Ratio: 0.5
     Tree Height: 674
   - Class: rviz/Selection
@@ -271,24 +272,24 @@ Visualization Manager:
       Update Topic: ""
       Value: true
     - Alpha: 1
-      Axes Length: 1
-      Axes Radius: 0.10000000149011612
+      Axes Length: 0.10000000149011612
+      Axes Radius: 0.019999999552965164
       Class: rviz/Pose
       Color: 255; 25; 0
       Enabled: true
-      Head Length: 0.30000001192092896
+      Head Length: 0.05000000074505806
       Head Radius: 0.10000000149011612
       Name: left_trgt_pose
       Queue Size: 10
-      Shaft Length: 1
+      Shaft Length: 0.10000000149011612
       Shaft Radius: 0.05000000074505806
-      Shape: Arrow
-      Topic: repair/trgt_pose_lft
+      Shape: Axes
+      Topic: /repair/trgt_pose_lft
       Unreliable: false
       Value: true
     - Alpha: 1
-      Axes Length: 1
-      Axes Radius: 0.10000000149011612
+      Axes Length: 0.10000000149011612
+      Axes Radius: 0.019999999552965164
       Class: rviz/Pose
       Color: 255; 25; 0
       Enabled: true
@@ -298,8 +299,8 @@ Visualization Manager:
       Queue Size: 10
       Shaft Length: 1
       Shaft Radius: 0.05000000074505806
-      Shape: Arrow
-      Topic: ""
+      Shape: Axes
+      Topic: repair/trgt_pose_rght
       Unreliable: false
       Value: true
   Enabled: true
@@ -330,7 +331,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.050046443939209
+      Distance: 2.6957640647888184
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -338,17 +339,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.8679162859916687
-        Y: -0.07932703197002411
-        Z: 0.6170613765716553
+        X: 0.6764481663703918
+        Y: 0.039691630750894547
+        Z: 0.23464643955230713
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.20520280301570892
+      Pitch: 0.11520259082317352
       Target Frame: <Fixed Frame>
-      Yaw: 0.7271993160247803
+      Yaw: 1.2122039794921875
     Saved: ~
 Window Geometry:
   Displays:
@@ -366,5 +367,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1920
-  X: 0
+  X: 1919
   Y: 0
