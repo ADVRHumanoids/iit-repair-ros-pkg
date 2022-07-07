@@ -23,7 +23,7 @@ import subprocess
 import rospkg
 
 from codesign_pyutils.ros_utils import PoseStampedPub
-from codesign_pyutils.math_utils import rot_error
+from codesign_pyutils.math_utils import rot_error, Skew
 from codesign_pyutils.miscell_utils import str2bool
 
 ## Getting/setting some useful variables
@@ -46,6 +46,7 @@ arm_dofs = 7
 
 solver_type = 'ipopt'
 slvr_opt = {"ipopt.tol": 0.0001, "ipopt.max_iter": 1000} 
+
 
 def main(args):
 
@@ -151,8 +152,16 @@ def main(args):
     keep_tcp2_above_ground = prb.createConstraint("keep_tcp2_above_ground", larm_tcp_pos_wrt_ws[2])
     keep_tcp2_above_ground.setBounds(0, cs.inf)
 
-    # prb.createFinalConstraint("final_left_tcp_pos_error", larm_tcp_pos - fk_arm_l(q = q_aux)["ee_pos"])
-    # prb.createFinalConstraint("final_right_tcp_pos_error", rarm_tcp_pos - fk_arm_r(q = q_aux)["ee_pos"])
+    # Pose tracking 
+    # left arm
+    prb.createConstraint("init_left_tcp_pos", larm_tcp_pos - fk_arm_l(q = q_init)["ee_pos"], nodes = 0)
+    prb.createFinalConstraint("final_left_tcp_pos", larm_tcp_pos - fk_arm_l(q = q_aux)["ee_pos"])
+    prb.createFinalConstraint("final_left_tcp_rot", rot_error(fk_arm_l(q = q_aux)["ee_rot"], larm_tcp_rot))
+
+    #right arm
+    prb.createConstraint("init_right_tcp_pos", rarm_tcp_pos - fk_arm_r(q = q_init)["ee_pos"], nodes = 0)
+    prb.createFinalConstraint("final_right_tcp_pos", rarm_tcp_pos - fk_arm_r(q = q_aux)["ee_pos"])
+    prb.createFinalConstraint("final_right_tcp_rot", rot_error(fk_arm_r(q = q_aux)["ee_rot"], rarm_tcp_rot))
 
     # COSTS
 
@@ -160,15 +169,15 @@ def main(args):
 
     prb.createIntermediateCost("min_q_dot", 0.01 * cs.sumsqr(q_dot))  # minimizing the joint accelerations ("responsiveness" of the trajectory)
     
-    # left arm pose error
-    prb.createIntermediateCost("init_left_tcp_pos_error", 1000 * cs.sumsqr(larm_tcp_pos - fk_arm_l(q = q_init)["ee_pos"]), nodes = 0)
-    prb.createFinalCost("final_left_tcp_pos_error", 1000 * cs.sumsqr(larm_tcp_pos - fk_arm_l(q = q_aux)["ee_pos"]))
-    prb.createFinalCost("final_left_tcp_rot_error", 100 * rot_error(fk_arm_l(q = q_aux)["ee_rot"], larm_tcp_rot))
+    # # left arm pose error
+    # prb.createIntermediateCost("init_left_tcp_pos_error", 1000 * cs.sumsqr(larm_tcp_pos - fk_arm_l(q = q_init)["ee_pos"]), nodes = 0)
+    # prb.createFinalCost("final_left_tcp_pos_error", 1000 * cs.sumsqr(larm_tcp_pos - fk_arm_l(q = q_aux)["ee_pos"]))
+    # prb.createFinalCost("final_left_tcp_rot_error", 100 * cs.sumsqr(rot_error(fk_arm_l(q = q_aux)["ee_rot"], larm_tcp_rot)))
 
-    # right arm pose error
-    prb.createIntermediateCost("init_right_tcp_pos_error", 1000 * cs.sumsqr(rarm_tcp_pos - fk_arm_r(q = q_init)["ee_pos"]), nodes = 0)
-    prb.createFinalCost("final_right_tcp_pos_error",  1000 * cs.sumsqr(rarm_tcp_pos - fk_arm_r(q = q_aux)["ee_pos"]))
-    prb.createFinalCost("final_right_tcp_rot_error", 100 * rot_error(fk_arm_r(q = q_aux)["ee_rot"], rarm_tcp_rot))
+    # # right arm pose error
+    # prb.createIntermediateCost("init_right_tcp_pos_error", 1000 * cs.sumsqr(rarm_tcp_pos - fk_arm_r(q = q_init)["ee_pos"]), nodes = 0)
+    # prb.createFinalCost("final_right_tcp_pos_error",  1000 * cs.sumsqr(rarm_tcp_pos - fk_arm_r(q = q_aux)["ee_pos"]))
+    # prb.createFinalCost("final_right_tcp_rot_error", 100 * cs.sumsqr(rot_error(fk_arm_r(q = q_aux)["ee_rot"], rarm_tcp_rot)))
 
     ## Creating the solver and solving the problem
     slvr = solver.Solver.make_solver(solver_type, prb, slvr_opt) 
@@ -188,25 +197,20 @@ def main(args):
 
     ms.store({**solution, **cnstr_opt, **tcp_pos, **tcp_rot, **tcp_pos_trgt, **tcp_rot_trgt})
 
-    if args.rviz_replay and args.launch_rviz:
+    if exists(urdf_full_path): # clear generated urdf file
 
-        # process = multiprocessing.Process(target = trgt_pose_publisher, args=(fk_arm_l(q = q_aux)["ee_pos"], fk_arm_r(q = q_aux)["ee_pos"], fk_arm_l(q = q_aux)["ee_rot"], fk_arm_r(q = q_aux)["ee_rot"]))
-        # process.start()
+        os.remove(urdf_full_path)
+
+    if args.rviz_replay and args.launch_rviz:
 
         pose_pub = PoseStampedPub("repair_frame_pub")
         pose_pub.add_pose(fk_arm_l(q = q_aux)["ee_pos"], fk_arm_l(q = q_aux)["ee_rot"], "/repair/trgt_pose_lft", "world")
         pose_pub.add_pose(fk_arm_r(q = q_aux)["ee_pos"], fk_arm_r(q = q_aux)["ee_rot"], "/repair/trgt_pose_rght", "world")
         pose_pub.pub_frames()
-
+        
         rpl_traj = replay_trajectory(dt = dt, joint_list = joint_names, q_replay = q_sol)  
         rpl_traj.sleep(1.)
         rpl_traj.replay(is_floating_base = False)
-
-    if exists(urdf_full_path): # clear generated urdf file
-
-        os.remove(urdf_full_path)
-
-    # rviz_window.kill()
 
 
 if __name__ == '__main__':

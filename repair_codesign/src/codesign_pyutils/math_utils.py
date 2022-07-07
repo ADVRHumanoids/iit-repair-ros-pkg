@@ -20,9 +20,10 @@ def rot2quat(R):
 
 def Skew(vector):
 
-    S = cs.horzcat( cs.vertcat(          0, - vector[1],   vector[2]), \
-                    cs.vertcat(  vector[1],           0, - vector[0]), \
-                    cs.vertcat(- vector[2] , vector[0] ,          0 ))
+    S = cs.vertcat( cs.horzcat(          0, - vector[2],   vector[1]), \
+                    cs.horzcat(  vector[2],           0, - vector[0]), \
+                    cs.horzcat(- vector[1] , vector[0] ,          0 ))
+
     
     return S
 
@@ -31,9 +32,18 @@ def rot_error(R_trgt, R_actual):
     Q_trgt = rot2quat(R_trgt)
     Q_actual = rot2quat(R_actual)
     
-    rot_err = Q_trgt[0] * Q_actual[1:4] - Q_actual[0] * Q_trgt[1:4] - Skew(Q_actual[1:4]) * Q_trgt[1:4]
+    # rot_err = Q_trgt[0] * Q_actual[1:4] - Q_actual[0] * Q_trgt[1:4] - Skew(Q_actual[1:4]) * Q_trgt[1:4]
 
-    return (rot_err[0] * rot_err[0] + rot_err[1] * rot_err[1] + rot_err[2] * rot_err[2])
+    rot_err1 = Q_trgt[0] * Q_actual[1] - Q_actual[0] * Q_trgt[1] + Q_actual[3] * Q_trgt[2] - Q_actual[2] * Q_trgt[3]
+    rot_err2 = Q_trgt[0] * Q_actual[2] - Q_actual[0] * Q_trgt[2] - Q_actual[3] * Q_trgt[1] + Q_actual[1] * Q_trgt[3]
+    rot_err3 = Q_trgt[0] * Q_actual[3] - Q_actual[0] * Q_trgt[3] + Q_actual[2] * Q_trgt[1] - Q_actual[1] * Q_trgt[2]
+
+    # return (rot_err[0] * rot_err[0] + rot_err[1] * rot_err[1] + rot_err[2] * rot_err[2])
+    # return (rot_err1 * rot_err1 + rot_err2 * rot_err2 + rot_err3 * rot_err3)
+
+    return cs.vertcat(rot_err1, rot_err2, rot_err3)
+
+
 
 def rot_error2(R_trgt, R_actual):
 
