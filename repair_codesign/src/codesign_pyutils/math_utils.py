@@ -2,8 +2,11 @@ import casadi as cs
 import numpy as np
 
 def quat2rot(Q):
+    
     # first element = real component 
 
+    Q = Q / cs.sqrt(Q[0]* Q[0] + Q[1]* Q[1] + Q[2]* Q[2] + Q[3]* Q[3]) # normalize input quat
+    
     R = cs.vertcat(cs.horzcat(2 * (Q[0] * Q[0] + Q[1] * Q[1]) - 1, 2 * (Q[1] * Q[2] - Q[0] * Q[3]), 2 * (Q[1] * Q[3] + Q[0] * Q[2])),\
                    cs.horzcat(2 * (Q[1] * Q[2] + Q[0] * Q[3]), 2 * (Q[0] * Q[0] + Q[2] * Q[2]) - 1, 2 * (Q[2] * Q[3] - Q[0] * Q[1])),\
                    cs.horzcat(2 * (Q[1] * Q[3] - Q[0] * Q[2]), 2 * (Q[2] * Q[3] + Q[0] * Q[1]), 2 * (Q[0] * Q[0] + Q[3] * Q[3]) - 1))
@@ -60,8 +63,6 @@ def rot_error2(R_trgt, R_actual, epsi = 0.0):
     r = cs.vertcat(S[2, 1], S[0, 2], S[1, 0])
 
     return r / cs.sqrt(epsi + 1 + cs.trace(R_err))
-
-rot_error = rot_error2
 
 def get_cocktail_aux_rot(R):
 

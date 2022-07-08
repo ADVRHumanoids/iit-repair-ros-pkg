@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from markupsafe import soft_str
 from horizon import problem
 from horizon.utils import utils, kin_dyn, plotter, mat_storer
 from horizon.ros.replay_trajectory import *
@@ -51,10 +52,13 @@ cocktail_size = 0.1
 
 n_inital_guesses = 1
 
+soft_tracking = False
+
 def main(args):
 
     # preliminary ops
     if args.gen_urdf:
+
         try:
             xacro_gen = subprocess.check_call(["xacro", "-o", urdf_full_path, xacro_full_path])
         except:
@@ -80,21 +84,20 @@ def main(args):
     if 'universe' in joint_names: joint_names.remove('universe')
     if 'floating_base_joint' in joint_names: joint_names.remove('floating_base_joint')
 
-    # 
-    design_var_names = [joint_names[0], joint_names[1], joint_names[2], joint_names[11], joint_names[3], joint_names[12]]
-    arm1_jnt_names = joint_names[13:(13 + arm_dofs)]
-    arm2_jnt_names = joint_names[4:(4 + arm_dofs)]
+    # design_var_names = [joint_names[0], joint_names[1], joint_names[2], joint_names[11], joint_names[3], joint_names[12]]
+    # arm1_jnt_names = joint_names[13:(13 + arm_dofs)]
+    # arm2_jnt_names = joint_names[4:(4 + arm_dofs)]
     
-    print("Design vars: ", joint_names)
-    print("Design vars: ", design_var_names)
-    print("Arm1 joints: ", arm1_jnt_names)
-    print("Arm2 joints: ", arm2_jnt_names)
+    # print("Design vars: ", joint_names)
+    # print("Design vars: ", design_var_names)
+    # print("Arm1 joints: ", arm1_jnt_names)
+    # print("Arm2 joints: ", arm2_jnt_names)
 
     # parameters
     n_q = kindyn.nq()
     n_v = kindyn.nv()
-    tf = 1.0
-    n_nodes = 10
+    tf = 5.0
+    n_nodes = 100
     dt = tf / n_nodes
     lbs = kindyn.q_min() 
     ubs = kindyn.q_max()
@@ -145,14 +148,14 @@ def main(args):
 
     # targets
 
-    r_init_pos = cs.vertcat(1.0, 0.2, 0.6)
+    r_init_pos = cs.vertcat(0.7, 0.2, 0.8)
     r_init_rot = quat2rot(np.array([0.61, -0.49, -0.58, 0.21])) 
 
     l_init_pos = r_init_pos
     l_init_rot = get_cocktail_aux_rot(r_init_rot)
 
-    r_trgt_pos = cs.vertcat(1.0, -0.2, 0.8)
-    r_trgt_rot = quat2rot(np.array([0.61, -0.49, -0.58, 0.21])) 
+    r_trgt_pos = cs.vertcat(1.2, 0.2, 1.0)
+    r_trgt_rot = quat2rot(np.array([0.2, 0.2, 0.2, 0.2])) 
 
     l_trgt_pos = r_trgt_pos
     l_trgt_rot = get_cocktail_aux_rot(r_trgt_rot)
@@ -160,7 +163,7 @@ def main(args):
     if args.rviz_replay and args.launch_rviz:
 
         pose_pub = PoseStampedPub("repair_frame_pub")
-        # pose_pub.add_pose(l_trgt_pos, l_trgt_rot, "/repair/trgt_pose_lft", "world")
+        pose_pub.add_pose(r_init_pos, r_init_rot, "/repair/trgt_pose_lft", "world")
         pose_pub.add_pose(r_trgt_pos, r_trgt_rot, "/repair/trgt_pose_rght", "world")
         pose_pub.pub_frames()
 
@@ -194,23 +197,25 @@ def main(args):
     # prb.createFinalConstraint("final_right_tcp_pos", rarm_tcp_pos - fk_arm_r(q = q_aux)["ee_pos"])
     # prb.createFinalConstraint("final_right_tcp_rot", rot_error2(fk_arm_r(q = q_aux)["ee_rot"], rarm_tcp_rot))
 
-    # Baretender pose tracking
+    if not soft_tracking:
 
-    # left arm
-    prb.createConstraint("init_left_tcp_pos", larm_cocktail_pos - l_init_pos, nodes = 0)
-    prb.createConstraint("init_left_tcp_rot", rot_error2(larm_cocktail_rot, l_init_rot), nodes = 0)
-    prb.createFinalConstraint("final_left_tcp_pos", larm_cocktail_pos - l_trgt_pos)
-    prb.createFinalConstraint("final_left_tcp_rot", rot_error2(larm_cocktail_rot, l_trgt_rot))
+        # Baretender pose tracking
 
-    # right arm
-    prb.createConstraint("init_right_tcp_pos", rarm_cocktail_pos - r_init_pos, nodes = 0)
-    prb.createConstraint("init_right_tcp_rot", rot_error2(rarm_cocktail_rot, r_init_rot), nodes = 0)
-    prb.createFinalConstraint("final_right_tcp_pos", rarm_cocktail_pos - r_trgt_pos)
-    prb.createFinalConstraint("final_right_tcp_rot", rot_error2(rarm_cocktail_rot, r_trgt_rot))
+        # left arm
+        prb.createConstraint("init_left_tcp_pos", larm_cocktail_pos - l_init_pos, nodes = 0)
+        # prb.createConstraint("init_left_tcp_rot", rot_error2(larm_cocktail_rot, l_init_rot, epsi = 0.001), nodes = 0)
+        prb.createFinalConstraint("final_left_tcp_pos", larm_cocktail_pos - l_trgt_pos)
+        # prb.createFinalConstraint("final_left_tcp_rot", rot_error2(larm_cocktail_rot, l_trgt_rot, epsi = 0.001))
 
-    # keep baretender pose throught the trajectory
-    prb.createConstraint("keep_baretender_pos", rarm_cocktail_pos - larm_cocktail_pos, nodes = range(0, n_nodes + 1))
-    prb.createConstraint("keep_baretender_rot", rot_error2( get_cocktail_aux_rot(rarm_cocktail_rot), larm_cocktail_rot), nodes = range(0, n_nodes + 1))
+        # right arm
+        # prb.createConstraint("init_right_tcp_pos", rarm_cocktail_pos - r_init_pos, nodes = 0)
+        # prb.createConstraint("init_right_tcp_rot", rot_error2(rarm_cocktail_rot, r_init_rot), nodes = 0)
+        # prb.createFinalConstraint("final_right_tcp_pos", rarm_cocktail_pos - r_trgt_pos)
+        # prb.createFinalConstraint("final_right_tcp_rot", rot_error2(rarm_cocktail_rot, r_trgt_rot))
+
+        # keep baretender pose throught the trajectory
+        prb.createConstraint("keep_baretender_pos", rarm_cocktail_pos - larm_cocktail_pos, nodes = range(1, n_nodes + 1))
+        prb.createConstraint("keep_baretender_rot", rot_error2( get_cocktail_aux_rot(rarm_cocktail_rot), larm_cocktail_rot), nodes = range(1, n_nodes + 1))
     
     # COSTS
 
@@ -218,15 +223,27 @@ def main(args):
 
     prb.createIntermediateCost("min_q_dot", 0.01 * cs.sumsqr(q_dot))  # minimizing the joint accelerations ("responsiveness" of the trajectory)
     
-    # # left arm pose error
-    # prb.createIntermediateCost("init_left_tcp_pos_error", 1000 * cs.sumsqr(larm_tcp_pos - fk_arm_l(q = q_init)["ee_pos"]), nodes = 0)
-    # prb.createFinalCost("final_left_tcp_pos_error", 1000 * cs.sumsqr(larm_tcp_pos - fk_arm_l(q = q_aux)["ee_pos"]))
-    # prb.createFinalCost("final_left_tcp_rot_error2", 100 * cs.sumsqr(rot_error2(l_trgt_rot, rarm_cocktail_rot)))
+    # prb.createIntermediateCost("min_input_diff", 0.001 * cs.sumsqr(q_dot - q_dot.getVarOffset(-1)), nodes = range(1, n_nodes))  
 
-    # # right arm pose error
-    # prb.createIntermediateCost("init_right_tcp_pos_error", 1000 * cs.sumsqr(rarm_tcp_pos - fk_arm_r(q = q_init)["ee_pos"]), nodes = 0)
-    # prb.createFinalCost("final_right_tcp_pos_error",  1000 * cs.sumsqr(rarm_tcp_pos - fk_arm_r(q = q_aux)["ee_pos"]))
-    # prb.createFinalCost("final_right_tcp_rot_error2", 100 * cs.sumsqr(rot_error2(fk_arm_r(q = q_aux)["ee_rot"], rarm_tcp_rot)))
+    if soft_tracking:
+
+    #Baretender pose tracking
+
+        # left arm
+        prb.createIntermediateCost("init_left_tcp_pos", cs.sumsqr(larm_cocktail_pos - l_init_pos), nodes = 0)
+        prb.createIntermediateCost("init_left_tcp_rot", cs.sumsqr(rot_error2(larm_cocktail_rot, l_init_rot, epsi = 0.001)), nodes = 0)
+        prb.createFinalCost("final_left_tcp_pos", cs.sumsqr(larm_cocktail_pos - l_trgt_pos))
+        prb.createFinalCost("final_left_tcp_rot", cs.sumsqr(rot_error2(larm_cocktail_rot, l_trgt_rot, epsi = 0.001)))
+
+        # right arm
+        prb.createIntermediateCost("init_right_tcp_pos", 10000 * cs.sumsqr(rarm_cocktail_pos - r_init_pos), nodes = 0)
+        prb.createIntermediateCost("init_right_tcp_rot", 1 * cs.sumsqr(rot_error2(rarm_cocktail_rot, r_init_rot, epsi = 0.001)), nodes = 0)
+        prb.createFinalCost("final_right_tcp_pos", 10000 * cs.sumsqr(rarm_cocktail_pos - r_trgt_pos))
+        prb.createFinalCost("final_right_tcp_rot", 1 * cs.sumsqr(rot_error2(rarm_cocktail_rot, r_trgt_rot, epsi = 0.001)))
+
+        # keep baretender pose throught the trajectory
+        prb.createIntermediateCost("keep_baretender_pos", 1 * cs.sumsqr(rarm_cocktail_pos - larm_cocktail_pos), nodes = range(1, n_nodes))
+        prb.createIntermediateCost("keep_baretender_rot", 1 * cs.sumsqr(rot_error2( get_cocktail_aux_rot(rarm_cocktail_rot), larm_cocktail_rot)), nodes = range(1, n_nodes))
 
     ## Creating the solver and solving the problem
     slvr = solver.Solver.make_solver(solver_type, prb, slvr_opt) 
@@ -281,6 +298,7 @@ if __name__ == '__main__':
     parser.add_argument('--dump_mat', '-dm', type=str2bool, help = 'whether to dump results to mat file', default = True)
     parser.add_argument('--launch_rviz', '-rvz', type=str2bool, help = 'whether to launch rviz or not', default = True)
     parser.add_argument('--rviz_replay', '-rpl', type=str2bool, help = 'whether to replay the solution on RViz', default = True)
+    parser.add_argument('--is_bartender', '-brt', type=str2bool, help = 'whether to employ baretender motion constraint', default = True)
 
     args = parser.parse_args()
     main(args)
