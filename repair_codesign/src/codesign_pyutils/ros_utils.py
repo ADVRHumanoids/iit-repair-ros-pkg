@@ -1,7 +1,9 @@
 from sympy import true
-import rospy
 
+import rospy
 import rospkg
+
+import numpy as np
 
 from geometry_msgs.msg import PoseStamped
 
@@ -86,17 +88,18 @@ class GenPosesFromRViz:
         self.base_link_name = base_link_name
         self.marker_scale = marker_scale
 
-        self.launch_rviz()
+        # self.launch_rviz()
 
         self.markers = [] # list of spawned markers
         self.servers = []
         self.marker_counter = 0
 
+        self.position = None
+        self.orientation = None 
+
         self.br = TransformBroadcaster()
 
         self.add_marker(position, "repair_poses")
-
-        self.add_marker([0, 1, 1], "repair_poses")
 
         rospy.spin()
 
@@ -113,7 +116,14 @@ class GenPosesFromRViz:
         self.servers[self.marker_counter - 1].applyChanges()
 
 
-    def processFeedback (self, feedback ):
+    def getPose(self):
+
+        return self.position, self.orientation
+
+    def processFeedback(self, feedback):
+
+        self.position = np.array([feedback.pose.position.x, feedback.pose.position.y, feedback.pose.position.z])
+        self.orientation = np.array([feedback.pose.orientation.w, feedback.pose.orientation.x, feedback.pose.orientation.y, feedback.pose.orientation.z]) # by default, real part is the first element of the quaternion
 
         if feedback.menu_entry_id == 1:
             

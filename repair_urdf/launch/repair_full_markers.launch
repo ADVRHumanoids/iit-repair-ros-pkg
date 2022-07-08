@@ -12,7 +12,7 @@
     </node>
     
     <group if="$(arg gui)">
-        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find repair_urdf)/config/repair_full_trgt_poses.rviz" />
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find repair_urdf)/config/repair_full_markers.rviz" />
     </group>
     
 </launch>
