@@ -13,7 +13,8 @@ Panels:
         - /RobotModel1/Links1/arm_2_tcp1
         - /RobotModel1/Links1/working_surface_link1
         - /RobotModel1/Links1/world1
-        - /Pose2
+        - /InteractiveMarkers1
+        - /InteractiveMarkers2
       Splitter Ratio: 0.5
     Tree Height: 674
   - Class: rviz/Selection
@@ -264,7 +265,7 @@ Visualization Manager:
       Show Axes: true
       Show Descriptions: true
       Show Visual Aids: false
-      Update Topic: /repair_poses1/update
+      Update Topic: /init_pose/update
       Value: true
     - Alpha: 1
       Axes Length: 0.10000000149011612
@@ -298,6 +299,15 @@ Visualization Manager:
       Topic: /repair/trgt_pose_rght
       Unreliable: false
       Value: true
+    - Class: rviz/InteractiveMarkers
+      Enable Transparency: true
+      Enabled: true
+      Name: InteractiveMarkers
+      Show Axes: true
+      Show Descriptions: true
+      Show Visual Aids: false
+      Update Topic: /trgt_pose/update
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 255; 255; 255
@@ -326,7 +336,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.2664780616760254
+      Distance: 1.989105463027954
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -334,17 +344,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.11007519066333771
-        Y: 0.21530233323574066
-        Z: 0.698272705078125
+        X: 0.8567709922790527
+        Y: 0.3460332453250885
+        Z: 0.6444218754768372
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4803975224494934
+      Pitch: 0.30539751052856445
       Target Frame: <Fixed Frame>
-      Yaw: 1.5835758447647095
+      Yaw: 1.7735792398452759
     Saved: ~
 Window Geometry:
   Displays:
@@ -362,5 +372,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1920
-  X: 1917
-  Y: -30
+  X: 2044
+  Y: -23
