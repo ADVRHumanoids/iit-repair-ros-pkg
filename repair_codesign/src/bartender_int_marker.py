@@ -21,7 +21,7 @@ import subprocess
 
 import rospkg
 
-from codesign_pyutils.ros_utils import MarkerGen
+from codesign_pyutils.ros_utils import MarkerGen, ReplaySol
 from codesign_pyutils.miscell_utils import str2bool
 from codesign_pyutils.horizon_utils import add_rpose_cnstrnt, add_lpose_cnstrnt, add_bartender_cnstrnt
 from codesign_pyutils.math_utils import quat2rot
@@ -82,7 +82,7 @@ def main(args):
     n_q = kindyn.nq()
     n_v = kindyn.nv()
     tf = 5.0
-    n_nodes = 1
+    n_nodes = 30
     dt = tf / n_nodes
     lbs = kindyn.q_min() 
     ubs = kindyn.q_max()
@@ -144,15 +144,16 @@ def main(args):
     keep_tcp2_above_ground = prb.createConstraint("keep_tcp2_above_ground", larm_tcp_pos_wrt_ws[2])
     keep_tcp2_above_ground.setBounds(0, cs.inf)
 
-    # keep baretender pose throught the trajectory
-    add_bartender_cnstrnt(0, prb, range(0, n_nodes + 1), larm_cocktail_pos,  rarm_cocktail_pos, larm_cocktail_rot, rarm_cocktail_rot)
+    # keep baretender pose throughout the trajectory
+    add_bartender_cnstrnt(0, prb, range(0, n_nodes + 1), larm_cocktail_pos,  rarm_cocktail_pos, larm_cocktail_rot, rarm_cocktail_rot, epsi = 0.0)
 
-    # with baretender constraint only one reference pose is sufficient for both arms --> right arm conventionally chosen as base
-    add_rpose_cnstrnt(0, prb, 0, rarm_cocktail_pos, rarm_cocktail_rot, init_pos, quat2rot(init_rot), is_only_pos = True, is_soft = False)
-    add_rpose_cnstrnt(1, prb, n_nodes, rarm_cocktail_pos, rarm_cocktail_rot, trgt_pos, quat2rot(trgt_rot), is_only_pos = True, is_soft = False)
-
-    # add_lpose_cnstrnt(0, prb, 0, larm_cocktail_pos, larm_cocktail_rot, init_pos, quat2rot(init_rot), is_only_pos = True, is_soft = False)
-    # add_lpose_cnstrnt(1, prb, n_nodes, larm_cocktail_pos, larm_cocktail_rot, trgt_pos, quat2rot(trgt_rot), is_only_pos = True, is_soft = False)
+    # right arm pose constraint
+    add_rpose_cnstrnt(0, prb, 0, rarm_cocktail_pos, rarm_cocktail_rot, init_pos, quat2rot(init_rot), is_only_pos = False, is_soft = False, epsi = 0.0)
+    add_rpose_cnstrnt(1, prb, n_nodes, rarm_cocktail_pos, rarm_cocktail_rot, trgt_pos, quat2rot(trgt_rot), is_only_pos = False, is_soft = False, epsi = 0.0)
+    
+    # left arm pose constraint
+    # add_lpose_cnstrnt(0, prb, 0, larm_cocktail_pos, larm_cocktail_rot, init_pos, quat2rot(init_rot), is_only_pos = False, is_soft = False, epsi = 0.0)
+    # add_lpose_cnstrnt(1, prb, n_nodes, larm_cocktail_pos, larm_cocktail_rot, trgt_pos, quat2rot(trgt_rot), is_only_pos = False, is_soft = False, epsi = 0.0)
     
     # min inputs 
 
@@ -182,8 +183,8 @@ def main(args):
         
         init_pos.assign(init_pos_trgt)
         init_rot.assign(init_rot_trgt)
-        init_pos.assign(trgt_pos_trgt)
-        init_rot.assign(trgt_rot_trgt)
+        trgt_pos.assign(trgt_pos_trgt)
+        trgt_rot.assign(trgt_rot_trgt)
 
         t = time.time()
 
@@ -194,9 +195,6 @@ def main(args):
             solution_time = time.time() - t
             print(f'solved in {solution_time} s')
 
-            init_pos = trgt_pos
-            trgt_rot = trgt_rot
-
             solution = slvr.getSolutionDict() # extracting solution
             cnstr_opt = slvr.getConstraintSolutionDict()
 
@@ -204,9 +202,10 @@ def main(args):
 
             if args.rviz_replay and args.launch_rviz:
 
-                rpl_traj = replay_trajectory(dt = dt, joint_list = joint_names, q_replay = q_sol)  
-                # rpl_traj.publish_joints(q_sol, is_floating_base = False)
-                rpl_traj.replay(is_floating_base = False)
+                sol_replayer = ReplaySol(dt = dt, joint_list = joint_names, q_replay = q_sol) 
+                # sol_replayer.sleep(1.0)
+                # sol_replayer.publish_joints(q_sol, is_floating_base = False, base_link = "world")
+                sol_replayer.replay(is_floating_base = False, play_once = True)
 
         except:
             
