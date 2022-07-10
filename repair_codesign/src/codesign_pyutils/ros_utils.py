@@ -19,6 +19,8 @@ from visualization_msgs.msg import *
 from geometry_msgs.msg import Point
 from tf.broadcaster import TransformBroadcaster
 
+import warnings
+
 class PoseStampedPub:
     def __init__(self, node_name, anonymous = False):
 
@@ -77,54 +79,78 @@ class PoseStampedPub:
         self.process = multiprocessing.Process(target = self.trgt_poses_pub)
         self.process.start()
 
-class GenPosesFromRViz:
+class MarkerGen:
 
-    def __init__(self, launch_name, package_name, base_link_name = "world", marker_scale = 0.5, position = [0, 0, 0]):
+    def __init__(self):
 
         self.node = rospy.init_node("marker_spawner", anonymous = True)
 
-        self.launch_name = launch_name 
-        self.package_name = package_name
-        self.base_link_name = base_link_name
-        self.marker_scale = marker_scale
+        self.base_link_name = None
+        self.marker_scale = None
 
-        # self.launch_rviz()
+        self.was_spin_called = False
 
         self.markers = [] # list of spawned markers
         self.servers = []
+        self.markers_access_map = {}
+
         self.marker_counter = 0
 
-        self.position = None
-        self.orientation = None 
+        self.positions = None
+        self.orientations = None
 
         self.br = TransformBroadcaster()
 
-        self.add_marker(position, "repair_poses")
+    def add_marker(self, base_link_name = "world", position = [0, 0, 0], topic_base_name = None, marker_scale = 0.5):
+        
+        if self.was_spin_called == False:
 
-        rospy.spin()
+            self.marker_scale = marker_scale
+            self.base_link_name = base_link_name
+            self.marker_counter = self.marker_counter + 1
 
-    def add_marker(self, position, topic_base_name = "repair_poses"):
+            if topic_base_name == None:
 
-        self.marker_counter = self.marker_counter + 1
+                topic_base_name = "marker_gen"
+                self.servers.append(InteractiveMarkerServer(topic_base_name + f"{self.marker_counter}"))
+            
+            else:
 
-        self.servers.append(InteractiveMarkerServer(topic_base_name + f"{self.marker_counter}"))
+                self.servers.append(InteractiveMarkerServer(topic_base_name))
 
-        self.add_dropdown_menu()
+            self.markers_access_map[topic_base_name] = self.marker_counter - 1 # 0-based indexing by convention
 
-        self.make6DofMarker(self.marker_counter - 1, InteractiveMarkerControl.NONE, Point(position[0], position[1], position[2]), True)
+            self.add_dropdown_menu()
 
-        self.servers[self.marker_counter - 1].applyChanges()
+            self.make6DofMarker(self.markers_access_map[topic_base_name], InteractiveMarkerControl.NONE, Point(position[0], position[1], position[2]), True)
 
+            self.servers[self.markers_access_map[topic_base_name]].applyChanges()
+        
+        else:
 
-    def getPose(self):
+            warnings.warn("Marker " + topic_base_name + " won't be added. add_marker(*) needs to be called before spin()!")
 
-        return self.position, self.orientation
+    def spin(self):
+        
+        self.positions = [None] * len(self.markers)
+        self.orientations = [None] * len(self.markers)
+
+        self.was_spin_called = True # once spin is called, markers cannot added anymore
+
+        self.process = multiprocessing.Process(target = rospy.spin)
+        self.process.start()
+
+    def getPose(self, marker_topic_name):
+        
+        marker_index = self.markers_access_map[marker_topic_name]
+
+        return self.positions[marker_index], self.orientations[marker_index]
 
     def processFeedback(self, feedback):
-
-        self.position = np.array([feedback.pose.position.x, feedback.pose.position.y, feedback.pose.position.z])
-        self.orientation = np.array([feedback.pose.orientation.w, feedback.pose.orientation.x, feedback.pose.orientation.y, feedback.pose.orientation.z]) # by default, real part is the first element of the quaternion
-
+        
+        self.positions[self.markers_access_map[feedback.marker_name]] = [feedback.pose.position.x, feedback.pose.position.y, feedback.pose.position.z]
+        self.orientations[self.markers_access_map[feedback.marker_name]] = [feedback.pose.orientation.w, feedback.pose.orientation.x, feedback.pose.orientation.y, feedback.pose.orientation.z] # by default, real part is the first element of the quaternion
+       
         if feedback.menu_entry_id == 1:
             
             print("sdsdfs")
@@ -153,13 +179,14 @@ class GenPosesFromRViz:
 
         return control
 
-    def make6DofMarker(self, srv_index, interaction_mode, position, show_6dof = True):
+    def make6DofMarker(self, marker_index, interaction_mode, position, show_6dof = True):
+
         int_marker = InteractiveMarker()
         int_marker.header.frame_id = self.base_link_name
         int_marker.pose.position = position
         int_marker.scale = self.marker_scale
 
-        int_marker.name = "repair_pose_marker"
+        int_marker.name = list(self.markers_access_map.keys())[list(self.markers_access_map.values()).index(marker_index)]
         int_marker.description = ""
 
         # insert a box
@@ -222,14 +249,10 @@ class GenPosesFromRViz:
             control.interaction_mode = InteractiveMarkerControl.MOVE_AXIS
             int_marker.controls.append(control)
 
-        self.servers[srv_index].insert(int_marker, self.processFeedback)
-        self.menu_handler.apply(self.servers[srv_index], int_marker.name )
+        self.servers[marker_index].insert(int_marker, self.processFeedback)
+        self.menu_handler.apply(self.servers[marker_index], int_marker.name )
 
         self.markers.append(int_marker)
-
-    def launch_rviz(self):
-
-        rviz_window = subprocess.Popen(["roslaunch", self.package_name, self.launch_name + ".launch"])
 
 
 
