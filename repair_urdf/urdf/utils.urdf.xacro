@@ -14,9 +14,9 @@
 <xacro:property name="z_joint_limit_margin" value="0.1" />
 <xacro:property name="z_joint_lb" value="0.5" />
 <xacro:property name="shoulder_width_lb" value="0.25" />
-<xacro:property name="shoulder_width_ub" value="0.6" />
-<xacro:property name="shoulder_roll_lb" value="-${PI/4}" />
-<xacro:property name="shoulder_roll_ub" value="${PI/4}" />
+<xacro:property name="shoulder_width_ub" value="0.8" />
+<xacro:property name="shoulder_roll_lb" value="-${PI}" />
+<xacro:property name="shoulder_roll_ub" value="${PI}" />
 <!-- color -->
 <material name="darkblue">
     <color rgba="0.0 0.3 0.9 1"/>

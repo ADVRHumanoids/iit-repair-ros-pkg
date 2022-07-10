@@ -23,7 +23,7 @@ import subprocess
 
 import rospkg
 
-from codesign_pyutils.ros_utils import PoseStampedPub, GenPosesFromRViz
+from codesign_pyutils.ros_utils import FramePub, GenPosesFromRViz
 from codesign_pyutils.math_utils import rot_error, rot_error2, quat2rot, get_cocktail_aux_rot
 from codesign_pyutils.miscell_utils import str2bool
 

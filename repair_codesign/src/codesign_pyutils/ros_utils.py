@@ -525,10 +525,7 @@ class ReplaySol:
             #     if k != ns-1:
             #         self.publishContactForces(t, q_first, k)
 
-            if self.__sleep > 0.:
-
-                time.sleep(self.__sleep)
-                print('Replaying traj ...')
+            print('Replaying traj ...')
 
             k = 0
             for qk in self.q_replay.T:
