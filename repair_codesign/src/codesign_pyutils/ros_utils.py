@@ -11,8 +11,6 @@ from codesign_pyutils import math_utils
 
 import multiprocessing
 
-import subprocess
-
 from interactive_markers.interactive_marker_server import *
 from interactive_markers.menu_handler import *
 from visualization_msgs.msg import *
@@ -137,7 +135,7 @@ class MarkerGen:
 
         self.was_spin_called = True # once spin is called, markers cannot added anymore
 
-        self.process = multiprocessing.Process(target = rospy.spin)
+        self.process = multiprocessing.Process(target = rospy.spin) # spin node on separate process to avoid blocking the main program
         self.process.start()
 
     def getPose(self, marker_topic_name):
@@ -153,11 +151,11 @@ class MarkerGen:
        
         if feedback.menu_entry_id == 1:
             
-            print("sdsdfs")
+            print("First entry pressed\n")
 
         if feedback.menu_entry_id == 2:
 
-            print("sdsdfs")
+            print("Second entry pressed\n")
             
         return true
     

@@ -18,13 +18,13 @@ from datetime import date
 import time
 
 import subprocess
-import multiprocessing
 
 import rospkg
 
 from codesign_pyutils.ros_utils import MarkerGen
-from codesign_pyutils.miscell_utils import str2bool, add_bartender_cnstrnt, add_lpose_cnstrnt, add_rpose_cnstrnt
-from codesign_pyutils.math_utils import quat2rot, rot_error, rot_error2, get_cocktail_aux_rot
+from codesign_pyutils.miscell_utils import str2bool
+from codesign_pyutils.horizon_utils import add_rpose_cnstrnt, add_lpose_cnstrnt, add_bartender_cnstrnt
+from codesign_pyutils.math_utils import quat2rot
 
 ## Getting/setting some useful variables
 today = date.today()
@@ -163,9 +163,6 @@ def main(args):
 
     init_pose_marker_topic = "init_pose"
     trgt_pose_marker_topic = "trgt_pose"
-    
-    # process = multiprocessing.Process(target = trgt_poses_pub)
-    # process.start()
 
     rviz_marker_gen = MarkerGen()
     rviz_marker_gen.add_marker("world", [0.7, 0.2, 0.7], init_pose_marker_topic, 0.3) 
@@ -176,7 +173,7 @@ def main(args):
 
         os.remove(urdf_full_path)
     
-    input("Press Enter to start solving the problem!!!\n")
+    input("Press Enter to start solving the problem!!! \n \n")
 
     while True:
     
