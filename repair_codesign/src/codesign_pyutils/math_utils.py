@@ -41,10 +41,10 @@ def Skew(vector):
     
     return S
 
-def rot_error(R_trgt, R_actual):
+def rot_error(R_trgt, R_actual, epsi = 0.0):
 
-    Q_trgt = rot2quat(R_trgt)
-    Q_actual = rot2quat(R_actual)
+    Q_trgt = rot2quat(R_trgt, epsi)
+    Q_actual = rot2quat(R_actual, epsi)
     
     rot_err = Q_trgt[0] * Q_actual[1:4] - Q_actual[0] * Q_trgt[1:4] - cs.mtimes(Skew(Q_actual[1:4]), Q_trgt[1:4])
     
