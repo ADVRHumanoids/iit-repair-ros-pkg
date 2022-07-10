@@ -124,13 +124,14 @@ class MarkerGen:
         self.markers = [] # list of spawned markers
         self.servers = []
         self.markers_access_map = {}
+        self.description_map = {}
 
         self.marker_counter = 0
 
         self.positions = None
         self.orientations = None
 
-    def add_marker(self, base_link_name = "world", position = [0, 0, 0], topic_base_name = None, marker_scale = 0.5):
+    def add_marker(self, base_link_name = "world", position = [0, 0, 0], topic_base_name = None, description = "", marker_scale = 0.5):
         
         if self.was_spin_called == False:
 
@@ -148,6 +149,7 @@ class MarkerGen:
                 self.servers.append(InteractiveMarkerServer(topic_base_name))
 
             self.markers_access_map[topic_base_name] = self.marker_counter - 1 # 0-based indexing by convention
+            self.description_map[topic_base_name] = description
 
             self.add_dropdown_menu()
 
@@ -216,7 +218,7 @@ class MarkerGen:
         int_marker.scale = self.marker_scale
 
         int_marker.name = list(self.markers_access_map.keys())[list(self.markers_access_map.values()).index(marker_index)]
-        int_marker.description = ""
+        int_marker.description = self.description_map[int_marker.name]
 
         # insert a box
         self.makeBoxControl(int_marker)
