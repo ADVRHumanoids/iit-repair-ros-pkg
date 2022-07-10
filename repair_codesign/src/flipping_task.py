@@ -208,30 +208,30 @@ def main(args):
     solve_failed = False
     while True:
     
-        init_pos_trgt, init_q_trgt = rviz_marker_gen.getPose(init_pose_marker_topic)
-        trgt_pos_trgt, trgt_q_trgt = rviz_marker_gen.getPose(trgt_pose_marker_topic)
+        init_pos_trgt, init_rot_trgt = rviz_marker_gen.getPose(init_pose_marker_topic)
+        trgt_pos_trgt, trgt_rot_trgt = rviz_marker_gen.getPose(trgt_pose_marker_topic)
         
         if is_first_loop:
 
             print("\n \n Please move both markers in order to start the solution loop!!\n \n ")
 
-            while (init_pos_trgt == None) or (trgt_pos_trgt == None) or (init_q_trgt == None) or (trgt_q_trgt == None):
+            while (init_pos_trgt == None) or (trgt_pos_trgt == None) or (init_rot_trgt == None) or (trgt_rot_trgt == None):
                 
                 # continue polling the positions until they become valid
-                init_pos_trgt, init_q_trgt = rviz_marker_gen.getPose(init_pose_marker_topic)
-                trgt_pos_trgt, trgt_q_trgt = rviz_marker_gen.getPose(trgt_pose_marker_topic)
+                init_pos_trgt, init_rot_trgt = rviz_marker_gen.getPose(init_pose_marker_topic)
+                trgt_pos_trgt, trgt_rot_trgt = rviz_marker_gen.getPose(trgt_pose_marker_topic)
 
                 time.sleep(0.1)
 
             print("\n \n Valid feedback from markers received! Starting solution loop ...\n \n ")
 
         init_pos.assign(init_pos_trgt)
-        init_rot.assign(init_q_trgt)
+        init_rot.assign(init_rot_trgt)
         trgt_pos.assign(trgt_pos_trgt)
-        trgt_rot.assign(trgt_q_trgt)
+        trgt_rot.assign(trgt_rot_trgt)
 
-        # pose_pub.set_pose(init_frame_name, init_pos_trgt, init_q_trgt)
-        # pose_pub.set_pose(trgt_frame_name, trgt_pos_trgt, trgt_q_trgt)
+        # pose_pub.set_pose(init_frame_name, init_pos_trgt, init_rot_trgt)
+        # pose_pub.set_pose(trgt_frame_name, trgt_pos_trgt, trgt_rot_trgt)
 
         solve_failed = False
         t = time.time()
@@ -276,9 +276,8 @@ def main(args):
                 
                     cnstr_opt = slvr.getConstraintSolutionDict()
 
-                    # storing pos and rots w.r.t. the working surface
                     tcp_pos = {"rTCP_pos_wrt_ws": (fk_arm_r(q = q_sol)["ee_pos"] - ws_link_pos).toarray() , "lTCP_pos_wrt_ws": (fk_arm_l(q = q_sol)["ee_pos"] - ws_link_pos).toarray() }
-                    # tcp_rot = {"rTCP_rot_wrt_ws": (np.linalg.inv(fk_arm_r(q = q_sol)["ee_rot"].toarray()) @ ws_link_rot) , "lTCP_rot_wrt_ws": (np.linalg.inv(fk_arm_l(q = q_sol)["ee_rot"].toarray()) @ ws_link_rot) }
+                    # tcp_rot = {"rTCP_rot_wrt_ws": (np.linalg.inv(fk_arm_r(q = q_sol)["ee_rot"]) @ ws_link_rot).toarray() , "lTCP_rot_wrt_ws": (np.linalg.inv(fk_arm_l(q = q_sol)["ee_rot"]) @ ws_link_rot).toarray() }
 
                     full_solution = {**solution, **cnstr_opt, **tcp_pos}
 
