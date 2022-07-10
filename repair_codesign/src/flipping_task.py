@@ -152,15 +152,15 @@ def main(args):
     keep_tcp2_above_ground.setBounds(0, cs.inf)
 
     # keep baretender pose throughout the trajectory
-    add_bartender_cnstrnt(0, prb, range(0, n_nodes + 1), larm_cocktail_pos,  rarm_cocktail_pos, larm_cocktail_rot, rarm_cocktail_rot, is_only_pos = False, is_soft = args.soft_bartender_cnstrnt, epsi = 0.0, weight_pos = 10000.0, weight_rot = 1000.0)
+    add_bartender_cnstrnt(0, prb, range(0, n_nodes + 1), larm_cocktail_pos,  rarm_cocktail_pos, larm_cocktail_rot, rarm_cocktail_rot, is_pos = True, is_rot = True, is_soft = args.soft_bartender_cnstrnt, epsi = 0.0, weight_pos = 10000.0, weight_rot = 1000.0)
 
     # right arm pose constraint
-    add_pose_cnstrnt(0, prb, 0, rarm_cocktail_pos, rarm_cocktail_rot, init_pos, quat2rot(init_rot), is_only_pos = False, is_soft = args.soft_pose_cnstrnt, epsi = 0.0, weight_pos = 10000.0, weight_rot = 1000.0)
-    add_pose_cnstrnt(1, prb, n_nodes, rarm_cocktail_pos, rarm_cocktail_rot, trgt_pos, quat2rot(trgt_rot), is_only_pos = False, is_soft = args.soft_pose_cnstrnt, epsi = 0.0, weight_pos = 10000.0, weight_rot = 1000.0)
+    add_pose_cnstrnt(0, prb, 0, rarm_cocktail_pos, rarm_cocktail_rot, init_pos, quat2rot(init_rot), is_pos = True, is_rot = True, is_soft = args.soft_pose_cnstrnt, epsi = 0.0, weight_pos = 10000.0, weight_rot = 1000.0)
+    add_pose_cnstrnt(1, prb, n_nodes, rarm_cocktail_pos, rarm_cocktail_rot, trgt_pos, quat2rot(trgt_rot), is_pos = True, is_rot = True, is_soft = args.soft_pose_cnstrnt, epsi = 0.0, weight_pos = 10000.0, weight_rot = 1000.0)
     
     # left arm pose constraint
-    # add_pose_cnstrnt(2, prb, 0, larm_cocktail_pos, larm_cocktail_rot, init_pos, quat2rot(init_rot), is_only_pos = False, is_soft = args.soft_pose_cnstrnt, epsi = 0.0)
-    # add_pose_cnstrnt(3, prb, n_nodes, larm_cocktail_pos, larm_cocktail_rot, trgt_pos, quat2rot(trgt_rot), is_only_pos = False, is_soft = args.soft_pose_cnstrnt, epsi = 0.0)
+    # add_pose_cnstrnt(2, prb, 0, larm_cocktail_pos, larm_cocktail_rot, init_pos, quat2rot(init_rot), is_pos = True, is_rot = True, is_soft = args.soft_pose_cnstrnt, epsi = 0.0)
+    # add_pose_cnstrnt(3, prb, n_nodes, larm_cocktail_pos, larm_cocktail_rot, trgt_pos, quat2rot(trgt_rot), is_pos = True, is_rot = True, is_soft = args.soft_pose_cnstrnt, epsi = 0.0)
     
     # min inputs 
 
@@ -208,6 +208,7 @@ def main(args):
 
     is_first_loop = True
     solve_failed = False
+    
     while True:
     
         init_pos_trgt, init_rot_trgt = rviz_marker_gen.getPose(init_pose_marker_topic)
