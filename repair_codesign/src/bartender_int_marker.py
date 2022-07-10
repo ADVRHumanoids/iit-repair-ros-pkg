@@ -23,7 +23,7 @@ import rospkg
 
 from codesign_pyutils.ros_utils import MarkerGen, ReplaySol
 from codesign_pyutils.miscell_utils import str2bool
-from codesign_pyutils.horizon_utils import add_rpose_cnstrnt, add_lpose_cnstrnt, add_bartender_cnstrnt
+from codesign_pyutils.horizon_utils import add_pose_cnstrnt, add_bartender_cnstrnt
 from codesign_pyutils.math_utils import quat2rot
 
 ## Getting/setting some useful variables
@@ -49,8 +49,6 @@ slvr_opt = {"ipopt.tol": 0.0001, "ipopt.max_iter": 1000}
 
 cocktail_size = 0.04
 
-soft_tracking = False
-
 def main(args):
 
     # preliminary ops
@@ -62,6 +60,7 @@ def main(args):
             print('Failed to generate URDF.')
 
     if args.launch_rviz:
+
         try:
 
             rviz_window = subprocess.Popen(["roslaunch", "repair_urdf", "repair_full_markers.launch"])
@@ -81,8 +80,8 @@ def main(args):
     # parameters
     n_q = kindyn.nq()
     n_v = kindyn.nv()
-    tf = 5.0
-    n_nodes = 30
+    tf = 3.0
+    n_nodes = 100
     dt = tf / n_nodes
     lbs = kindyn.q_min() 
     ubs = kindyn.q_max()
@@ -123,9 +122,9 @@ def main(args):
     larm_tcp_pos_wrt_ws = larm_tcp_pos - ws_link_pos # pose w.r.t. working surface
     larm_tcp_rot_wrt_ws = cs.inv(ws_tcp_rot) * larm_tcp_rot # orient w.r.t. working surface
 
-    rarm_cocktail_pos = rarm_tcp_pos + rarm_tcp_rot @ cs.vertcat(0, 0, cocktail_size)
+    rarm_cocktail_pos = rarm_tcp_pos + rarm_tcp_rot @ cs.vertcat(0, 0, cocktail_size / 2.0)
     rarm_cocktail_rot = rarm_tcp_rot
-    larm_cocktail_pos = larm_tcp_pos + larm_tcp_rot @ cs.vertcat(0, 0, cocktail_size)
+    larm_cocktail_pos = larm_tcp_pos + larm_tcp_rot @ cs.vertcat(0, 0, cocktail_size / 2.0)
     larm_cocktail_rot = larm_tcp_rot
 
     # roll and shoulder vars equal
@@ -145,15 +144,15 @@ def main(args):
     keep_tcp2_above_ground.setBounds(0, cs.inf)
 
     # keep baretender pose throughout the trajectory
-    add_bartender_cnstrnt(0, prb, range(0, n_nodes + 1), larm_cocktail_pos,  rarm_cocktail_pos, larm_cocktail_rot, rarm_cocktail_rot, epsi = 0.0)
+    add_bartender_cnstrnt(0, prb, range(0, n_nodes + 1), larm_cocktail_pos,  rarm_cocktail_pos, larm_cocktail_rot, rarm_cocktail_rot, is_only_pos = False, is_soft = False, epsi = 0.0, weight_pos = 10000.0, weight_rot = 1000.0)
 
     # right arm pose constraint
-    add_rpose_cnstrnt(0, prb, 0, rarm_cocktail_pos, rarm_cocktail_rot, init_pos, quat2rot(init_rot), is_only_pos = False, is_soft = False, epsi = 0.0)
-    add_rpose_cnstrnt(1, prb, n_nodes, rarm_cocktail_pos, rarm_cocktail_rot, trgt_pos, quat2rot(trgt_rot), is_only_pos = False, is_soft = False, epsi = 0.0)
+    add_pose_cnstrnt(0, prb, 0, rarm_cocktail_pos, rarm_cocktail_rot, init_pos, quat2rot(init_rot), is_only_pos = False, is_soft = True, epsi = 0.0, weight_pos = 10000.0, weight_rot = 1000.0)
+    add_pose_cnstrnt(1, prb, n_nodes, rarm_cocktail_pos, rarm_cocktail_rot, trgt_pos, quat2rot(trgt_rot), is_only_pos = False, is_soft = True, epsi = 0.0, weight_pos = 10000.0, weight_rot = 1000.0)
     
     # left arm pose constraint
-    # add_lpose_cnstrnt(0, prb, 0, larm_cocktail_pos, larm_cocktail_rot, init_pos, quat2rot(init_rot), is_only_pos = False, is_soft = False, epsi = 0.0)
-    # add_lpose_cnstrnt(1, prb, n_nodes, larm_cocktail_pos, larm_cocktail_rot, trgt_pos, quat2rot(trgt_rot), is_only_pos = False, is_soft = False, epsi = 0.0)
+    # add_pose_cnstrnt(2, prb, 0, larm_cocktail_pos, larm_cocktail_rot, init_pos, quat2rot(init_rot), is_only_pos = False, is_soft = False, epsi = 0.0)
+    # add_pose_cnstrnt(3, prb, n_nodes, larm_cocktail_pos, larm_cocktail_rot, trgt_pos, quat2rot(trgt_rot), is_only_pos = False, is_soft = False, epsi = 0.0)
     
     # min inputs 
 

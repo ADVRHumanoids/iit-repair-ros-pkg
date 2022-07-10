@@ -390,7 +390,7 @@ class ReplaySol:
         self.slow_down_rate = 1./slow_down_factor
 
     def publish_joints(self, qk, is_floating_base=True, base_link='base_link'):
-        
+
         joint_state_pub = JointState()
         joint_state_pub.header = Header()
         joint_state_pub.name = self.joint_list
@@ -480,6 +480,37 @@ class ReplaySol:
                     print('replaying traj ...')
         else:
 
+            # q_first = self.q_replay[0, :]
+            # if is_floating_base:
+            #     q_first = self.normalize_quaternion(q_first)
+
+            #     m.transform.translation.x = q_first[0]
+            #     m.transform.translation.y = q_first[1]
+            #     m.transform.translation.z = q_first[2]
+            #     m.transform.rotation.x = q_first[3]
+            #     m.transform.rotation.y = q_first[4]
+            #     m.transform.rotation.z = q_first[5]
+            #     m.transform.rotation.w = q_first[6]
+
+            #     br.sendTransform((m.transform.translation.x, m.transform.translation.y, m.transform.translation.z),
+            #                     (m.transform.rotation.x, m.transform.rotation.y, m.transform.rotation.z,
+            #                     m.transform.rotation.w),
+            #                     t, m.child_frame_id, m.header.frame_id)
+
+            # joint_state_pub.header.stamp = t
+            # joint_state_pub.position = q_first[7:nq] if is_floating_base else q_first
+            # joint_state_pub.velocity = []
+            # joint_state_pub.effort = []
+            # self.pub.publish(joint_state_pub)
+            # if self.frame_force_mapping:
+            #     if k != ns-1:
+            #         self.publishContactForces(t, q_first, k)
+
+            if self.__sleep > 0.:
+
+                time.sleep(self.__sleep)
+                print('Replaying traj ...')
+
             k = 0
             for qk in self.q_replay.T:
 
@@ -510,8 +541,11 @@ class ReplaySol:
                 if self.frame_force_mapping:
                     if k != ns-1:
                         self.publishContactForces(t, qk, k)
+
                 rate.sleep()
                 k += 1
+
             if self.__sleep > 0.:
+                
                 time.sleep(self.__sleep)
-                print('replaying traj ...')
+                print('Traj replayed.')
