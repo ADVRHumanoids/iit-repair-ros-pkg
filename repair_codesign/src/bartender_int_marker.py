@@ -200,7 +200,7 @@ def main(args):
 
             q_sol = solution["q"]
 
-            if args.rviz_replay and args.launch_rviz:
+            if args.rviz_replay:
 
                 sol_replayer = ReplaySol(dt = dt, joint_list = joint_names, q_replay = q_sol) 
                 # sol_replayer.sleep(1.0)
