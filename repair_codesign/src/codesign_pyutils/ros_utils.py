@@ -35,7 +35,7 @@ except ImportError:
 
 class FramePub:
 
-    def __init__(self, node_name, anonymous = False):
+    def __init__(self, node_name = "frame_publisher", anonymous = False):
 
         self.node_name = node_name
         self.anonymous = anonymous
@@ -75,13 +75,15 @@ class FramePub:
 
     def set_pose(self, frame_name, pos, Q):
 
+        # doesn't work!!!
+
         self.poses[self.topics_map[frame_name]].pose.position.x = pos[0]
         self.poses[self.topics_map[frame_name]].pose.position.x = pos[1]
         self.poses[self.topics_map[frame_name]].pose.position.x = pos[2]
         self.poses[self.topics_map[frame_name]].pose.orientation.x = Q[1]
         self.poses[self.topics_map[frame_name]].pose.orientation.y = Q[2]
         self.poses[self.topics_map[frame_name]].pose.orientation.z = Q[3]
-        self.poses[self.topics_map[frame_name]].pose.orientation.w = Q[4]
+        self.poses[self.topics_map[frame_name]].pose.orientation.w = Q[0]
 
     def trgt_poses_pub(self):
 
@@ -98,6 +100,8 @@ class FramePub:
             for i in range(len(self.topics)):
 
                 self.pose_stamped_pubs[i].publish(self.poses[i])
+
+                print(self.poses[i].pose.position)
 
             rate.sleep()
 

@@ -164,15 +164,17 @@ def main(args):
     init_pose_marker_topic = "init_pose"
     trgt_pose_marker_topic = "trgt_pose"
 
-    rviz_marker_gen = MarkerGen()
+    # pose_pub = FramePub("frame_pub")
+    # init_frame_name = "/repair/init_pose"
+    # trgt_frame_name = "/repair/trgt_pose"
+    # pose_pub.add_pose([0.1, 0.1, 0], [1, 0, 0, 0], init_frame_name, "world")
+    # pose_pub.add_pose([0.2, 0.2, 0.1], [1, 0, 0, 0], trgt_frame_name, "world")
+    # pose_pub.spin()
+
+    rviz_marker_gen = MarkerGen(node_name = "marker_gen")
     rviz_marker_gen.add_marker("world", [0.7, 0.2, 0.7], init_pose_marker_topic, 0.3) 
     rviz_marker_gen.add_marker("world", [0.7, 0.2, 0.8], trgt_pose_marker_topic, 0.3) 
     rviz_marker_gen.spin()
-
-    pose_pub = FramePub("repair_frame_pub")
-    pose_pub.add_pose([0.1, 0.1, 0], [1, 0, 0, 0], "/repair/init_pose", "world")
-    pose_pub.add_pose([0.2, 0.2, 0.1], [1, 0, 0, 0], "/repair/trgt_pose", "world")
-    pose_pub.spin()
 
     if exists(urdf_full_path): # clear generated urdf file
 
@@ -189,6 +191,9 @@ def main(args):
         init_rot.assign(init_rot_trgt)
         trgt_pos.assign(trgt_pos_trgt)
         trgt_rot.assign(trgt_rot_trgt)
+
+        # pose_pub.set_pose(init_frame_name, init_pos_trgt, init_rot_trgt)
+        # pose_pub.set_pose(trgt_frame_name, trgt_pos_trgt, trgt_rot_trgt)
 
         t = time.time()
 
