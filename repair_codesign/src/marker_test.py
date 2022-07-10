@@ -12,4 +12,4 @@ rviz_int_marker = MarkerGen()
 rviz_int_marker.add_marker("working_surface_link", [0, 0, 0.3], init_pose_marker_topic, 0.3) 
 rviz_int_marker.add_marker("working_surface_link", [0, 0, 0.5], trgt_pose_marker_topic, 0.3) 
 rviz_int_marker.spin()
-rviz_int_marker.add_marker("working_surface_link", [0, 0, 0.1], "scibidibi", 0.3) 
+rviz_int_marker.add_marker("working_surface_link", [0, 0, 0.1], "scibidibi", 0.3) # this will throw a warning

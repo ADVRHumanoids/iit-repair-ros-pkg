@@ -15,7 +15,7 @@ def quat2rot(Q):
               
     return R
 
-def rot2quat(R, epsi = 0):
+def rot2quat(R, epsi = 0.0):
 
     # convert matrix to quaternion representation
 
