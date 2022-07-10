@@ -188,7 +188,9 @@ def main(args):
 
         os.remove(urdf_full_path)
     
-    q_init_guess = np.random.uniform(low = lbs, high = ubs, size = (1, n_q)) # random initializations for the first iteration
+    if args.use_init_guess:
+
+        q_init_guess = np.random.uniform(low = lbs, high = ubs, size = (1, n_q)) # random initializations for the first iteration
 
     if args.dump_sol:
 
@@ -238,8 +240,8 @@ def main(args):
 
         try:
             
-            if not is_first_loop: # use initialization after first loop
-
+            if not is_first_loop and args.use_init_guess: # use initialization after first loop
+                
                 q.setInitialGuess(q_init_guess)
 
             slvr.solve()  # solving
@@ -265,7 +267,9 @@ def main(args):
 
             q_sol = solution["q"]
 
-            q_init_guess = q_sol # use q_sol for initializing next iteration
+            if args.use_init_guess:
+                
+                q_init_guess = q_sol # use q_sol for initializing next iteration
 
             if args.dump_sol:
 
