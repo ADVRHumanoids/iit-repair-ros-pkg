@@ -180,8 +180,8 @@ def main(args):
     # pose_pub.spin()
 
     rviz_marker_gen = MarkerGen(node_name = "marker_gen")
-    rviz_marker_gen.add_marker("world", [0.7, 0.2, 0.7], init_pose_marker_topic, 0.3) 
-    rviz_marker_gen.add_marker("world", [0.7, 0.2, 0.8], trgt_pose_marker_topic, 0.3) 
+    rviz_marker_gen.add_marker("world", [0.7, 0.2, 0.7], init_pose_marker_topic, "Init", 0.3) 
+    rviz_marker_gen.add_marker("world", [0.7, 0.2, 0.8], trgt_pose_marker_topic, "Trgt", 0.3) 
     rviz_marker_gen.spin()
 
     if exists(urdf_full_path): # clear generated urdf file

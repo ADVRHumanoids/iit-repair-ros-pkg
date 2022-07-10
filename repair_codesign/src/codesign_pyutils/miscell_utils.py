@@ -11,7 +11,7 @@ def str2bool(v):
 
 def wait_for_confirmation(do_something = "proceed", or_do_something_else = "stop", on_confirmation = "Confirmation received!", on_denial = "Stop received!"):
 
-  usr_input = input("\n \n Press Enter to " + do_something + " or type \"No\" to " + or_do_something_else + ". \n -> ")
+  usr_input = input("\n \n Press Enter to " + do_something + " or type \"N/n\" to " + or_do_something_else + ". \n -> ")
 
   if usr_input == "":
 
@@ -20,7 +20,7 @@ def wait_for_confirmation(do_something = "proceed", or_do_something_else = "stop
   
   else:
 
-      if (usr_input == "no" or usr_input == "No"):
+      if (usr_input == "no" or usr_input == "No" or usr_input == "N" or usr_input == "n"):
         
         print("\n" +  on_denial + "\n")
         go_on = False
