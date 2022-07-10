@@ -21,7 +21,7 @@ import subprocess
 
 import rospkg
 
-from codesign_pyutils.ros_utils import MarkerGen, ReplaySol
+from codesign_pyutils.ros_utils import MarkerGen, FramePub, ReplaySol
 from codesign_pyutils.miscell_utils import str2bool
 from codesign_pyutils.horizon_utils import add_pose_cnstrnt, add_bartender_cnstrnt
 from codesign_pyutils.math_utils import quat2rot
@@ -168,6 +168,11 @@ def main(args):
     rviz_marker_gen.add_marker("world", [0.7, 0.2, 0.7], init_pose_marker_topic, 0.3) 
     rviz_marker_gen.add_marker("world", [0.7, 0.2, 0.8], trgt_pose_marker_topic, 0.3) 
     rviz_marker_gen.spin()
+
+    pose_pub = FramePub("repair_frame_pub")
+    pose_pub.add_pose([0.1, 0.1, 0], [1, 0, 0, 0], "/repair/init_pose", "world")
+    pose_pub.add_pose([0.2, 0.2, 0.1], [1, 0, 0, 0], "/repair/trgt_pose", "world")
+    pose_pub.spin()
 
     if exists(urdf_full_path): # clear generated urdf file
 

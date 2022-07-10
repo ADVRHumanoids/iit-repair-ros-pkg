@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from markupsafe import soft_str
 from horizon import problem
 from horizon.utils import utils, kin_dyn, plotter, mat_storer
 from horizon.ros.replay_trajectory import *
@@ -23,7 +22,7 @@ import subprocess
 
 import rospkg
 
-from codesign_pyutils.ros_utils import PoseStampedPub, GenPosesFromRViz
+from codesign_pyutils.ros_utils import FramePub
 from codesign_pyutils.math_utils import rot_error, rot_error2, quat2rot, get_cocktail_aux_rot
 from codesign_pyutils.miscell_utils import str2bool
 
@@ -162,10 +161,10 @@ def main(args):
 
     if args.rviz_replay and args.launch_rviz:
 
-        pose_pub = PoseStampedPub("repair_frame_pub")
+        pose_pub = FramePub("repair_frame_pub")
         pose_pub.add_pose(r_init_pos, r_init_rot, "/repair/trgt_pose_lft", "world")
         pose_pub.add_pose(r_trgt_pos, r_trgt_rot, "/repair/trgt_pose_rght", "world")
-        pose_pub.pub_frames()
+        pose_pub.spin()
 
     # fixed x constraint
     # prb.createConstraint("fixed_x", q[0])
@@ -203,7 +202,7 @@ def main(args):
 
         # left arm
         prb.createConstraint("init_left_tcp_pos", larm_cocktail_pos - l_init_pos, nodes = 0)
-        # prb.createConstraint("init_left_tcp_rot", rot_error2(larm_cocktail_rot, l_init_rot, epsi = 0.001), nodes = 0)
+        prb.createConstraint("init_left_tcp_rot", rot_error2(larm_cocktail_rot, l_init_rot, epsi = 0.001), nodes = 0)
         prb.createFinalConstraint("final_left_tcp_pos", larm_cocktail_pos - l_trgt_pos)
         # prb.createFinalConstraint("final_left_tcp_rot", rot_error2(larm_cocktail_rot, l_trgt_rot, epsi = 0.001))
 
@@ -270,14 +269,14 @@ def main(args):
 
     q_sol = solution["q"]
 
-    opt_cost = solution["opt_cost"]
+    # opt_cost = solution["opt_cost"]
     
     tcp_pos = {"rTCP_pos": fk_arm_r(q = q_sol)["ee_pos"].toarray() , "lTCP_pos": fk_arm_l(q = q_sol)["ee_pos"].toarray() }
     tcp_rot = {"rTCP_rot": fk_arm_r(q = q_sol)["ee_rot"].toarray() , "lTCP_rot": fk_arm_l(q = q_sol)["ee_rot"].toarray() }
     tcp_pos_trgt = {"rTCP_trgt_pos": fk_arm_r(q = q_aux)["ee_pos"].toarray() , "lTCP_trgt_pos": fk_arm_l(q = q_aux)["ee_pos"].toarray() }
     tcp_rot_trgt = {"rTCP_trgt_rot": fk_arm_r(q = q_aux)["ee_rot"].toarray() , "lTCP_trgt_rot": fk_arm_l(q = q_aux)["ee_pos"].toarray() }
 
-    ms.store({**solution, **cnstr_opt, **tcp_pos, **tcp_rot, **tcp_pos_trgt, **tcp_rot_trgt})
+    # ms.store({**solution, **cnstr_opt, **tcp_pos, **tcp_rot, **tcp_pos_trgt, **tcp_rot_trgt})
 
     if exists(urdf_full_path): # clear generated urdf file
 
@@ -286,7 +285,7 @@ def main(args):
     if args.rviz_replay and args.launch_rviz:
 
         rpl_traj = replay_trajectory(dt = dt, joint_list = joint_names, q_replay = q_sol)  
-        rpl_traj.sleep(1.)
+        rpl_traj.sleep(1.0)
         rpl_traj.replay(is_floating_base = False)
 
 

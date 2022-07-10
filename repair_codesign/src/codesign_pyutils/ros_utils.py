@@ -33,7 +33,8 @@ except ImportError:
     from . import tf_broadcaster_simple as ros_tf
     print('will not use tf publisher')
 
-class PoseStampedPub:
+class FramePub:
+
     def __init__(self, node_name, anonymous = False):
 
         self.node_name = node_name
@@ -42,19 +43,23 @@ class PoseStampedPub:
         self.pose_stamped_pubs = []
 
         self.positions = []
-        self.rots = []
+        self.orientations = []
         self.topics = []
         self.base_link = []
         self.poses = []
+        self.topics_map = {}
 
-    def add_pose(self, pos, rot, topic, frame):
+        self.frame_counter = 0
+
+    def add_pose(self, pos, Q, topic, frame):
+
+        self.frame_counter = self.frame_counter + 1
 
         self.positions.append(pos)
-        self.rots.append(rot)
+        self.orientations.append(Q)
         self.topics.append(topic)
         self.base_link.append(frame)
-
-        Q = math_utils.rot2quat(rot)
+        self.topics_map[topic] = self.frame_counter - 1 # 0-based indexing
 
         pose = PoseStamped()
         pose.header.frame_id = frame
@@ -67,6 +72,16 @@ class PoseStampedPub:
         pose.pose.orientation.w = Q[0]
 
         self.poses.append(pose)
+
+    def set_pose(self, frame_name, pos, Q):
+
+        self.poses[self.topics_map[frame_name]].pose.position.x = pos[0]
+        self.poses[self.topics_map[frame_name]].pose.position.x = pos[1]
+        self.poses[self.topics_map[frame_name]].pose.position.x = pos[2]
+        self.poses[self.topics_map[frame_name]].pose.orientation.x = Q[1]
+        self.poses[self.topics_map[frame_name]].pose.orientation.y = Q[2]
+        self.poses[self.topics_map[frame_name]].pose.orientation.z = Q[3]
+        self.poses[self.topics_map[frame_name]].pose.orientation.w = Q[4]
 
     def trgt_poses_pub(self):
 
@@ -86,16 +101,16 @@ class PoseStampedPub:
 
             rate.sleep()
 
-    def pub_frames(self):
+    def spin(self):
 
         self.process = multiprocessing.Process(target = self.trgt_poses_pub)
         self.process.start()
 
 class MarkerGen:
 
-    def __init__(self):
+    def __init__(self, node_name = "marker_spawner"):
 
-        self.node = rospy.init_node("marker_spawner", anonymous = True)
+        self.node = rospy.init_node(node_name, anonymous = False)
 
         self.base_link_name = None
         self.marker_scale = None
