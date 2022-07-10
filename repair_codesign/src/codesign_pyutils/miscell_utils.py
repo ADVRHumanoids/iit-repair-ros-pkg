@@ -1,47 +1,67 @@
 import numpy as np
 
+from codesign_pyutils.math_utils import rot_error, rot_error2, get_cocktail_aux_rot
+
+# from math_utils import rot_error, rot_error2, get_cocktail_aux_rot
+
 def str2bool(v):
   #susendberg's function
   return v.lower() in ("yes", "true", "t", "1")
 
-# def PoseSampler():
+# def add_bartender_cnstrnt(index, prb, nodes, posl, posr, rotl, rotr, is_soft = False):
 
-#   def __init__(self, y_range, n_y_samples, z_pick):
-
-#     self.y_range = y_range
-
-#     self.n_y_samples = n_y_samples
-
-#     if n_y_samples == 1:
-      
-#       self.intervals = - 1
+#     pos_cnstrnt = prb.createConstraint("keep_baretender_pos" + str(index), posr - posl, nodes = nodes)
+#     rot_cnstrnt = prb.createConstraint("keep_baretender_rot" + str(index), rot_error2( get_cocktail_aux_rot(rotr), rotl), nodes = nodes)
     
-#     else:
+#     return pos_cnstrnt, rot_cnstrnt
 
-#       self.intervals = self.y_range / (n_y_samples - 1)
+# def add_lpose_cnstrnt(index, prb, nodes, pos, rot, pos_ref, rot_ref, weight_pos = 1.0, weight_rot = 1.0, is_only_pos = False, is_soft = False):
 
-#     self.z_pick = z_pick
+#   if is_soft:
 
-#     self.seed_pos = np.array([0.0, 0.0, 0.0])
-#     self.seed_q = np.array([0.0, - 1.0, 0.0, 0.0])
+#       pos_cnstrnt = prb.createConstraint("init_left_tcp_pos" + str(index), pos - pos_ref, nodes = nodes)
+  
+#       rot_cnstrnt = None
 
-#     self.Pick_pos = []
-#     self.Pick_q = []
+#       if not is_only_pos:
 
-#     if n_y_samples % 2 != 0:
+#           rot_cnstrnt = prb.createConstraint("init_left_tcp_rot" + str(index), rot_error2(rot, rot_ref, epsi = 0.001), nodes = nodes)
 
-#       self.Pick_pos.append(self.seed_pos)
-#       self.Pick_pos.append(self.seed_q)
+#   else:
 
-#       for i in range((n_y_samples - 1) / 2):
+#       pos_cnstrnt = prb.createIntermediateCost("init_left_tcp_pos_soft" + str(index), weight_pos * cs.sumsqr(pos - pos_ref), nodes = nodes)
 
-#         self.Pick_pos.append(self.seed_pos + np.array([0,  ]))
-#         self.Pick_pos.append(self.seed_q)
+#       rot_cnstrnt = None
 
-#     else:
+#       if not is_only_pos:
 
-#         self.Pick_pos.append(self.seed_pos)
-#         self.Pick_rot.append()
+#           rot_cnstrnt = prb.createIntermediateCost("init_left_tcp_soft" + str(index), weight_rot * cs.sumsqr(rot_error2(rot, rot_ref, epsi = 0.001)), nodes = nodes)
+
+#   return pos_cnstrnt, rot_cnstrnt
+
+# def add_rpose_cnstrnt(index, prb, nodes, pos, rot, pos_ref, rot_ref, weight_pos = 1.0, weight_rot = 1.0, is_only_pos = False, is_soft = False):
+
+#   if is_soft:
+
+#       pos_cnstrnt = prb.createConstraint("init_right_tcp_pos" + str(index), pos - pos_ref, nodes = nodes)
+      
+#       rot_cnstrnt = None
+      
+#       if not is_only_pos:
+
+#           rot_cnstrnt = prb.createConstraint("init_right_tcp_rot" + str(index), rot_error2(rot, rot_ref, epsi = 0.001), nodes = nodes)
+
+#   else:
+
+#       pos_cnstrnt = prb.createIntermediateCost("init_right_tcp_pos_soft" + str(index), weight_pos * cs.sumsqr(pos - pos_ref), nodes = nodes)
+
+#       rot_cnstrnt = None
+
+#       if not is_only_pos:
+
+#           rot_cnstrnt = prb.createIntermediateCost("init_right_tcp_rot_soft" + str(index), weight_rot * cs.sumsqr(rot_error2(rot, rot_ref, epsi = 0.001)), nodes = nodes)
+
+#   return pos_cnstrnt, rot_cnstrnt
 
     
 
