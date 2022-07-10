@@ -5,11 +5,13 @@ def quat2rot(Q):
     
     # first element = real component 
 
-    Q = Q / cs.sqrt(Q[0]* Q[0] + Q[1]* Q[1] + Q[2]* Q[2] + Q[3]* Q[3]) # normalize input quat
+    q = cs.vertcat(Q[0], Q[1], Q[2], Q[3])
+
+    q = q / cs.sqrt(q[0]* q[0] + q[1]* q[1] + q[2]* q[2] + q[3]* q[3]) # normalize input quat
     
-    R = cs.vertcat(cs.horzcat(2 * (Q[0] * Q[0] + Q[1] * Q[1]) - 1, 2 * (Q[1] * Q[2] - Q[0] * Q[3]), 2 * (Q[1] * Q[3] + Q[0] * Q[2])),\
-                   cs.horzcat(2 * (Q[1] * Q[2] + Q[0] * Q[3]), 2 * (Q[0] * Q[0] + Q[2] * Q[2]) - 1, 2 * (Q[2] * Q[3] - Q[0] * Q[1])),\
-                   cs.horzcat(2 * (Q[1] * Q[3] - Q[0] * Q[2]), 2 * (Q[2] * Q[3] + Q[0] * Q[1]), 2 * (Q[0] * Q[0] + Q[3] * Q[3]) - 1))
+    R = cs.vertcat(cs.horzcat(2 * (q[0] * q[0] + q[1] * q[1]) - 1, 2 * (q[1] * q[2] - q[0] * q[3]), 2 * (q[1] * q[3] + q[0] * q[2])),\
+                   cs.horzcat(2 * (q[1] * q[2] + q[0] * q[3]), 2 * (q[0] * q[0] + q[2] * q[2]) - 1, 2 * (q[2] * q[3] - q[0] * q[1])),\
+                   cs.horzcat(2 * (q[1] * q[3] - q[0] * q[2]), 2 * (q[2] * q[3] + q[0] * q[1]), 2 * (q[0] * q[0] + q[3] * q[3]) - 1))
               
     return R
 
