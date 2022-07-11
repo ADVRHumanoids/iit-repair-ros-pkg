@@ -101,8 +101,6 @@ class FramePub:
 
                 self.pose_stamped_pubs[i].publish(self.poses[i])
 
-                print(self.poses[i].pose.position)
-
             rate.sleep()
 
     def spin(self):

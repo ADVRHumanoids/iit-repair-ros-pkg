@@ -340,8 +340,8 @@ if __name__ == '__main__':
     parser.add_argument('--use_init_guess', '-ig', type=str2bool, help = 'whether to use initial guesses between solution loops', default = False)
     parser.add_argument('--soft_bartender_cnstrnt', '-sbc', type=str2bool, help = 'whether to use soft bartender constraints', default = False)
     parser.add_argument('--soft_pose_cnstrnt', '-spc', type=str2bool, help = 'whether to use soft pose constraints or not', default = True)
-    parser.add_argument('--weight_pos', '-wp', type=np.double, help = 'weight for position tracking (if soft_pose_cnstrnt == True)', default = 10000)
-    parser.add_argument('--weight_rot', '-wr', type=np.double, help = 'weight for orientation tracking (if soft_pose_cnstrnt == True)', default = 1000)
+    parser.add_argument('--weight_pos', '-wp', type = np.double, help = 'weight for position tracking (if soft_pose_cnstrnt == True)', default = 10000)
+    parser.add_argument('--weight_rot', '-wr', type = np.double, help = 'weight for orientation tracking (if soft_pose_cnstrnt == True)', default = 1000)
 
     args = parser.parse_args()
     main(args)
