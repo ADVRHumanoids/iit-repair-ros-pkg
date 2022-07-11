@@ -42,12 +42,8 @@ results_path = codesign_path + "/test_results"
 
 file_name = os.path.splitext(os.path.basename(__file__))[0]
 
-arm_dofs = 7 
-
 solver_type = 'ipopt'
 slvr_opt = {"ipopt.tol": 0.0001, "ipopt.max_iter": 1000} 
-
-tf = 5.0
 
 def main(args):
 
@@ -78,9 +74,9 @@ def main(args):
 
     # creating a flipping task
     flipping_task = FlippingTaskGen()
-    flipping_task.add_task(init_node = 0, filling_n_nodes = 0)
-    flipping_task.init_prb(urdf_full_path)
-    flipping_task.build_task(weight_pos = 10000, weight_rot = 10000)
+    flipping_task.add_task(init_node = 0, filling_n_nodes = 30)
+    flipping_task.init_prb(urdf_full_path, weight_pos = args.weight_pos, weight_rot = args.weight_rot,\
+                           weight_glob_man = args.weight_global_manip, is_soft_pose_cnstr = args.soft_pose_cnstrnt, epsi = 0.001)
 
     transcription_method = 'multiple_shooting'
     transcription_opts = dict(integrator='RK4')
@@ -105,52 +101,59 @@ def main(args):
         sol_dumper = SolDumper(results_path)
 
     solve_failed = False
+    t = time.time()
+
+    q_init = np.random.uniform(flipping_task.lbs, flipping_task.ubs, (1, flipping_task.nq))
         
-    # try:
+    try:
         
-    #     slvr.solve()  # solving
+        flipping_task.q.setInitialGuess(q_init.flatten())
 
-    #     solution_time = time.time() - t
-    #     print(f'solved in {solution_time} s')
+        slvr.solve()  # solving
 
-    # except:
+        solution_time = time.time() - t
+        print(f'solved in {solution_time} s')
+
+    except:
         
-    #     print('\n Failed to solve problem!! \n')
+        print('\n Failed to solve problem!! \n')
 
-    #     solve_failed = True
+        solve_failed = True
         
-    # if not solve_failed:
+    if not solve_failed:
         
-    #     solution = slvr.getSolutionDict() # extracting solution
+        solution = slvr.getSolutionDict() # extracting solution
 
-    #     q_sol = solution["q"]
+        print(solution["opt_cost"])
 
-    #     if args.dump_sol:
+        q_sol = solution["q"]
 
-    #         store_current_sol = wait_for_confirmation(do_something = "store the current solution", or_do_something_else = "avoid storing it", \
-    #                                                 on_confirmation = "Storing current solution  ...", on_denial = "Current solution will be discarted!")
+        if args.dump_sol:
 
-    #         if store_current_sol:
+            store_current_sol = wait_for_confirmation(do_something = "store the current solution", or_do_something_else = "avoid storing it", \
+                                                    on_confirmation = "Storing current solution  ...", on_denial = "Current solution will be discarted!")
+
+            if store_current_sol:
             
-    #             cnstr_opt = slvr.getConstraintSolutionDict()
+                cnstr_opt = slvr.getConstraintSolutionDict()
 
-    #             tcp_pos = {"rTCP_pos_wrt_ws": (fk_arm_r(q = q_sol)["ee_pos"] - ws_link_pos).toarray() , "lTCP_pos_wrt_ws": (fk_arm_l(q = q_sol)["ee_pos"] - ws_link_pos).toarray() }
+                full_solution = {**solution, **cnstr_opt}
 
-    #             full_solution = {**solution, **cnstr_opt, **tcp_pos}
+                sol_dumper.add_storer(full_solution, results_path, "flipping_repair", True)
 
-    #             sol_dumper.add_storer(full_solution, results_path, "flipping_repair", True)
+                sol_dumper.dump() 
+
+                print("\n Done \n")
         
-    #     if args.rviz_replay:
+        if args.rviz_replay:
 
-    #         sol_replayer = ReplaySol(dt = dt, joint_list = joint_names, q_replay = q_sol) 
-    #         # sol_replayer.sleep(1.0)
-    #         # sol_replayer.publish_joints(q_sol, is_floating_base = False, base_link = "world")
-    #         sol_replayer.replay(is_floating_base = False, play_once = False)
+            sol_replayer = ReplaySol(dt = flipping_task.dt, joint_list = flipping_task.joint_names, q_replay = q_sol) 
+            # sol_replayer.sleep(1.0)
+            # sol_replayer.publish_joints(q_sol, is_floating_base = False, base_link = "world")
+            sol_replayer.replay(is_floating_base = False, play_once = False)
 
-    # if args.dump_sol:
+        counter = counter + 1
 
-    #     sol_dumper.dump() 
-    
     # closing all child processes and exiting
     rviz_window.terminate()
     exit()
@@ -162,12 +165,13 @@ if __name__ == '__main__':
     parser.add_argument('--gen_urdf', '-g', type=str2bool, help = 'whether to generate urdf from xacro', default = True)
     parser.add_argument('--launch_rviz', '-rvz', type=str2bool, help = 'whether to launch rviz or not', default = True)
     parser.add_argument('--rviz_replay', '-rpl', type=str2bool, help = 'whether to replay the solution on RViz', default = True)
-    parser.add_argument('--dump_sol', '-ds', type=str2bool, help = 'whether to dump results to file', default = True)
+    parser.add_argument('--dump_sol', '-ds', type=str2bool, help = 'whether to dump results to file', default = False)
     parser.add_argument('--use_init_guess', '-ig', type=str2bool, help = 'whether to use initial guesses between solution loops', default = True)
     parser.add_argument('--soft_bartender_cnstrnt', '-sbc', type=str2bool, help = 'whether to use soft bartender constraints', default = False)
-    parser.add_argument('--soft_pose_cnstrnt', '-spc', type=str2bool, help = 'whether to use soft pose constraints or not', default = True)
+    parser.add_argument('--soft_pose_cnstrnt', '-spc', type=str2bool, help = 'whether to use soft pose constraints or not', default = False)
     parser.add_argument('--weight_pos', '-wp', type = np.double, help = 'weight for position tracking (if soft_pose_cnstrnt == True)', default = 10000)
-    parser.add_argument('--weight_rot', '-wr', type = np.double, help = 'weight for orientation tracking (if soft_pose_cnstrnt == True)', default = 1000)
+    parser.add_argument('--weight_rot', '-wr', type = np.double, help = 'weight for orientation tracking (if soft_pose_cnstrnt == True)', default = 10000)
+    parser.add_argument('--weight_global_manip', '-wman', type = np.double, help = 'weight for global manipulability cost function', default = 100)
 
     args = parser.parse_args()
     main(args)

@@ -122,13 +122,13 @@ def main(args):
     rarm_tcp_pos = fk_arm_r(q = q)["ee_pos"] # w.r.t. world
     rarm_tcp_rot = fk_arm_r(q = q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
     rarm_tcp_pos_wrt_ws = rarm_tcp_pos - ws_link_pos # pose w.r.t. working surface
-    rarm_tcp_rot_wrt_ws = cs.inv(ws_link_rot) * rarm_tcp_rot # orient w.r.t. working surface
+    rarm_tcp_rot_wrt_ws = cs.transpose(ws_link_rot) @ rarm_tcp_rot # orient w.r.t. working surface
 
     fk_arm_l = cs.Function.deserialize(kindyn.fk("arm_2_tcp"))  
     larm_tcp_pos = fk_arm_l(q = q)["ee_pos"] # w.r.t. world
     larm_tcp_rot = fk_arm_l(q = q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
     larm_tcp_pos_wrt_ws = larm_tcp_pos - ws_link_pos # pose w.r.t. working surface
-    larm_tcp_rot_wrt_ws = cs.inv(ws_link_rot) * larm_tcp_rot # orient w.r.t. working surface
+    larm_tcp_rot_wrt_ws = cs.transpose(ws_link_rot) @ larm_tcp_rot # orient w.r.t. working surface
 
     rarm_cocktail_pos = rarm_tcp_pos + rarm_tcp_rot @ cs.vertcat(0, 0, cocktail_size / 2.0)
     rarm_cocktail_rot = rarm_tcp_rot
@@ -208,7 +208,7 @@ def main(args):
 
     is_first_loop = True
     solve_failed = False
-    
+
     while True:
     
         init_pos_trgt, init_rot_trgt = rviz_marker_gen.getPose(init_pose_marker_topic)
