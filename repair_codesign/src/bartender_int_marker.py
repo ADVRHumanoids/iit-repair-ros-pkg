@@ -152,11 +152,11 @@ def main(args):
     keep_tcp2_above_ground.setBounds(0, cs.inf)
 
     # keep baretender pose throughout the trajectory
-    add_bartender_cnstrnt(0, prb, range(0, n_nodes + 1), larm_cocktail_pos,  rarm_cocktail_pos, larm_cocktail_rot, rarm_cocktail_rot, is_pos = True, is_rot = True, is_soft = args.soft_bartender_cnstrnt, epsi = 0.0, weight_pos = 10000.0, weight_rot = 1000.0)
+    add_bartender_cnstrnt(0, prb, range(0, n_nodes + 1), larm_cocktail_pos,  rarm_cocktail_pos, larm_cocktail_rot, rarm_cocktail_rot, is_pos = True, is_rot = True, is_soft = args.soft_bartender_cnstrnt, epsi = 0.0, weight_pos = args.weight_pos, weight_rot = args.weight_rot)
 
     # right arm pose constraint
-    add_pose_cnstrnt(0, prb, 0, rarm_cocktail_pos, rarm_cocktail_rot, init_pos, quat2rot(init_rot), is_pos = True, is_rot = True, is_soft = args.soft_pose_cnstrnt, epsi = 0.0, weight_pos = 10000.0, weight_rot = 1000.0)
-    add_pose_cnstrnt(1, prb, n_nodes, rarm_cocktail_pos, rarm_cocktail_rot, trgt_pos, quat2rot(trgt_rot), is_pos = True, is_rot = True, is_soft = args.soft_pose_cnstrnt, epsi = 0.0, weight_pos = 10000.0, weight_rot = 1000.0)
+    add_pose_cnstrnt(0, prb, 0, rarm_cocktail_pos, rarm_cocktail_rot, init_pos, quat2rot(init_rot), is_pos = True, is_rot = True, is_soft = args.soft_pose_cnstrnt, epsi = 0.0, weight_pos = args.weight_pos, weight_rot = args.weight_rot)
+    add_pose_cnstrnt(1, prb, n_nodes, rarm_cocktail_pos, rarm_cocktail_rot, trgt_pos, quat2rot(trgt_rot), is_pos = True, is_rot = True, is_soft = args.soft_pose_cnstrnt, epsi = 0.0, weight_pos = args.weight_pos, weight_rot = args.weight_rot)
     
     # left arm pose constraint
     # add_pose_cnstrnt(2, prb, 0, larm_cocktail_pos, larm_cocktail_rot, init_pos, quat2rot(init_rot), is_pos = True, is_rot = True, is_soft = args.soft_pose_cnstrnt, epsi = 0.0)
@@ -190,7 +190,7 @@ def main(args):
     
     if args.use_init_guess:
 
-        q_init_guess = np.random.uniform(low = lbs, high = ubs, size = (1, n_q)) # random initializations for the first iteration
+        q_init_guess = None
 
     if args.dump_sol:
 
@@ -241,8 +241,9 @@ def main(args):
 
         try:
             
-            if not is_first_loop and args.use_init_guess: # use initialization after first loop
+            if (not is_first_loop) and args.use_init_guess and (not (q_init_guess == None)): # use initialization after first loop
                 
+                print(q_init_guess)
                 q.setInitialGuess(q_init_guess)
 
             slvr.solve()  # solving
@@ -260,7 +261,16 @@ def main(args):
 
                 is_first_loop = False
 
-            continue
+            go_on = wait_for_confirmation(do_something = "go to the next solution loop", or_do_something_else = "exit here", \
+                                      on_confirmation = "Going to next solution loop ...", on_denial = "Breaking solution loop and exiting.")
+
+            if go_on:
+
+                continue
+
+            else:
+                
+                break
         
         if not solve_failed:
             
@@ -326,10 +336,12 @@ if __name__ == '__main__':
     parser.add_argument('--gen_urdf', '-g', type=str2bool, help = 'whether to generate urdf from xacro', default = True)
     parser.add_argument('--launch_rviz', '-rvz', type=str2bool, help = 'whether to launch rviz or not', default = True)
     parser.add_argument('--rviz_replay', '-rpl', type=str2bool, help = 'whether to replay the solution on RViz', default = True)
-    parser.add_argument('--dump_sol', '-ds', type=str2bool, help = 'whether to dump results to file', default = True)
-    parser.add_argument('--use_init_guess', '-ig', type=str2bool, help = 'whether to use initial guesses between solution loops', default = True)
+    parser.add_argument('--dump_sol', '-ds', type=str2bool, help = 'whether to dump results to file', default = False)
+    parser.add_argument('--use_init_guess', '-ig', type=str2bool, help = 'whether to use initial guesses between solution loops', default = False)
     parser.add_argument('--soft_bartender_cnstrnt', '-sbc', type=str2bool, help = 'whether to use soft bartender constraints', default = False)
     parser.add_argument('--soft_pose_cnstrnt', '-spc', type=str2bool, help = 'whether to use soft pose constraints or not', default = True)
+    parser.add_argument('--weight_pos', '-wp', type=np.double, help = 'weight for position tracking (if soft_pose_cnstrnt == True)', default = 10000)
+    parser.add_argument('--weight_rot', '-wr', type=np.double, help = 'weight for orientation tracking (if soft_pose_cnstrnt == True)', default = 1000)
 
     args = parser.parse_args()
     main(args)
