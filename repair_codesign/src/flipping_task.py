@@ -74,7 +74,7 @@ def main(args):
 
     # creating a flipping task
     flipping_task = FlippingTaskGen()
-    flipping_task.add_task(init_node = 0, filling_n_nodes = 30)
+    flipping_task.add_task(init_node = 0, filling_n_nodes = 30, right_arm_picks = False)
     flipping_task.init_prb(urdf_full_path, weight_pos = args.weight_pos, weight_rot = args.weight_rot,\
                            weight_glob_man = args.weight_global_manip, is_soft_pose_cnstr = args.soft_pose_cnstrnt, epsi = 0.001)
 
@@ -103,11 +103,13 @@ def main(args):
     solve_failed = False
     t = time.time()
 
-    q_init = np.random.uniform(flipping_task.lbs, flipping_task.ubs, (1, flipping_task.nq))
+    if args.use_init_guess:
+        q_init = np.random.uniform(flipping_task.lbs, flipping_task.ubs, (1, flipping_task.nq))
         
     try:
         
-        flipping_task.q.setInitialGuess(q_init.flatten())
+        if args.use_init_guess:
+            flipping_task.q.setInitialGuess(q_init.flatten())
 
         slvr.solve()  # solving
 
@@ -124,7 +126,7 @@ def main(args):
         
         solution = slvr.getSolutionDict() # extracting solution
 
-        print(solution["opt_cost"])
+        # print(solution["opt_cost"])
 
         q_sol = solution["q"]
 
@@ -152,8 +154,6 @@ def main(args):
             # sol_replayer.publish_joints(q_sol, is_floating_base = False, base_link = "world")
             sol_replayer.replay(is_floating_base = False, play_once = False)
 
-        counter = counter + 1
-
     # closing all child processes and exiting
     rviz_window.terminate()
     exit()
@@ -169,9 +169,9 @@ if __name__ == '__main__':
     parser.add_argument('--use_init_guess', '-ig', type=str2bool, help = 'whether to use initial guesses between solution loops', default = True)
     parser.add_argument('--soft_bartender_cnstrnt', '-sbc', type=str2bool, help = 'whether to use soft bartender constraints', default = False)
     parser.add_argument('--soft_pose_cnstrnt', '-spc', type=str2bool, help = 'whether to use soft pose constraints or not', default = False)
-    parser.add_argument('--weight_pos', '-wp', type = np.double, help = 'weight for position tracking (if soft_pose_cnstrnt == True)', default = 10000)
-    parser.add_argument('--weight_rot', '-wr', type = np.double, help = 'weight for orientation tracking (if soft_pose_cnstrnt == True)', default = 10000)
-    parser.add_argument('--weight_global_manip', '-wman', type = np.double, help = 'weight for global manipulability cost function', default = 100)
+    parser.add_argument('--weight_pos', '-wp', type = np.double, help = 'weight for position tracking (if soft_pose_cnstrnt == True)', default = 10000.0)
+    parser.add_argument('--weight_rot', '-wr', type = np.double, help = 'weight for orientation tracking (if soft_pose_cnstrnt == True)', default = 10000.0)
+    parser.add_argument('--weight_global_manip', '-wman', type = np.double, help = 'weight for global manipulability cost function', default = 100.0)
 
     args = parser.parse_args()
     main(args)

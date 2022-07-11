@@ -91,7 +91,7 @@ class FlippingTaskGen:
         self.cocktail_size = 0.05
         self.arm_dofs = 7
 
-        self.task_base_n_nodes = 2
+        self.task_base_n_nodes = 6
         self.phase_number = self.task_base_n_nodes - 1 # number of phases of the task
         self.total_nnodes = 0
         self.nodes_list = [] # used to iteratre through flipping task and nodes of each defined task
@@ -113,9 +113,9 @@ class FlippingTaskGen:
         self.lft_inward_q = np.array([- np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0])
         self.rght_inward_q = np.array([- np.sqrt(2.0)/2.0, np.sqrt(2.0)/2.0, 0.0, 0.0])
 
-        self.lft_pick_pos_wrt_ws_default = np.array([0, 0.18, 0.04])
+        self.lft_pick_pos_wrt_ws_default = np.array([0, - 0.18, 0.04])
         self.lft_pick_q_wrt_ws_default = np.array([0.0, 1.0, 0.0, 0.0])
-        self.rght_pick_pos_wrt_ws_default = np.array([0, - 0.18, 0.04])
+        self.rght_pick_pos_wrt_ws_default = np.array([0, 0.18, 0.04])
         self.rght_pick_q_wrt_ws_default = np.array([0.0, 1.0, 0.0, 0.0])
 
         self.contact_height_default = 0.4
@@ -314,14 +314,14 @@ class FlippingTaskGen:
                     if (self.rght_arm_picks[i]): # right arm picks
                         
                         # right arm
-                        add_pose_cnstrnt(i + j, self.prb, self.nodes_list[i][j * delta_offset], self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws, self.rght_pick_pos[i], quat2rot(self.rght_pick_q[i]), weight_pos = self.weight_pos, weight_rot = self.weight_rot, is_pos = True, is_rot = True, is_soft = is_soft_pose_cnstr, epsi = 0.00001)
+                        add_pose_cnstrnt(i + j, self.prb, self.nodes_list[i][j * delta_offset], self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws, self.rght_pick_pos[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.rght_pick_q[i]), weight_pos = self.weight_pos, weight_rot = self.weight_rot, is_pos = True, is_rot = True, is_soft = is_soft_pose_cnstr, epsi = 0.00001)
                         # left arm
-                        add_pose_cnstrnt(i + j + self.task_base_n_nodes * len(self.nodes_list), self.prb, self.nodes_list[i][j * delta_offset], self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws, self.lft_pick_pos[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.lft_pick_q[i]), weight_pos = self.weight_pos, weight_rot = self.weight_rot, is_pos = True, is_rot = True, is_soft = is_soft_pose_cnstr, epsi = 0.00001)
+                        add_pose_cnstrnt(i + j + self.task_base_n_nodes * len(self.nodes_list), self.prb, self.nodes_list[i][j * delta_offset], self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws, self.lft_pick_pos[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.lft_inward_q), weight_pos = self.weight_pos, weight_rot = self.weight_rot, is_pos = True, is_rot = True, is_soft = is_soft_pose_cnstr, epsi = 0.00001)
 
                     else: # left arm picks
                         
                         # right arm
-                        add_pose_cnstrnt(i + j, self.prb, self.nodes_list[i][j * delta_offset], self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws, self.rght_pick_pos[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.rght_pick_q[i]), weight_pos = self.weight_pos, weight_rot = self.weight_rot, is_pos = True, is_rot = True, is_soft = is_soft_pose_cnstr, epsi = 0.00001)
+                        add_pose_cnstrnt(i + j, self.prb, self.nodes_list[i][j * delta_offset], self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws, self.rght_pick_pos[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.rght_inward_q), weight_pos = self.weight_pos, weight_rot = self.weight_rot, is_pos = True, is_rot = True, is_soft = is_soft_pose_cnstr, epsi = 0.00001)
                         # left arm
                         add_pose_cnstrnt(i + j + self.task_base_n_nodes * len(self.nodes_list), self.prb, self.nodes_list[i][j * delta_offset], self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws, self.lft_pick_pos[i], quat2rot(self.lft_pick_q[i]), weight_pos = self.weight_pos, weight_rot = self.weight_rot, is_pos = True, is_rot = True, is_soft = is_soft_pose_cnstr, epsi = 0.00001)
 
@@ -330,7 +330,7 @@ class FlippingTaskGen:
                     if (self.rght_arm_picks[i]): # right arm picks
                         
                         # right arm
-                        add_pose_cnstrnt(i + j, self.prb, self.nodes_list[i][j * delta_offset], self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws, self.rght_pick_pos[i], quat2rot(self.rght_pick_q[i]), weight_pos = self.weight_pos, weight_rot = self.weight_rot, is_pos = True, is_rot = True, is_soft = is_soft_pose_cnstr, epsi = 0.00001)
+                        add_pose_cnstrnt(i + j, self.prb, self.nodes_list[i][j * delta_offset], self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws, self.rght_pick_pos[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.rght_pick_q[i]), weight_pos = self.weight_pos, weight_rot = self.weight_rot, is_pos = True, is_rot = True, is_soft = is_soft_pose_cnstr, epsi = 0.00001)
                         # left arm
                         add_pose_cnstrnt(i + j + self.task_base_n_nodes * len(self.nodes_list), self.prb, self.nodes_list[i][j * delta_offset], self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws, self.lft_pick_pos[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.lft_pick_q[i]), weight_pos = self.weight_pos, weight_rot = self.weight_rot, is_pos = True, is_rot = True, is_soft = is_soft_pose_cnstr, epsi = 0.00001)
 
@@ -346,9 +346,9 @@ class FlippingTaskGen:
                     if (self.rght_arm_picks[i]): # right arm picks
                         
                         # right arm
-                        add_pose_cnstrnt(i + j, self.prb, self.nodes_list[i][j * delta_offset], self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws, self.rght_pick_pos[i], quat2rot(self.rght_pick_q[i]), weight_pos = self.weight_pos, weight_rot = self.weight_rot, is_pos = True, is_rot = True, is_soft = is_soft_pose_cnstr, epsi = 0.00001)
+                        add_pose_cnstrnt(i + j, self.prb, self.nodes_list[i][j * delta_offset], self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws, self.rght_pick_pos[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.rght_pick_q[i]), weight_pos = self.weight_pos, weight_rot = self.weight_rot, is_pos = True, is_rot = True, is_soft = is_soft_pose_cnstr, epsi = 0.00001)
                         # left arm
-                        add_pose_cnstrnt(i + j + self.task_base_n_nodes * len(self.nodes_list), self.prb, self.nodes_list[i][j * delta_offset], self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws, self.lft_pick_pos[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.lft_pick_q[i]), weight_pos = self.weight_pos, weight_rot = self.weight_rot, is_pos = True, is_rot = True, is_soft = is_soft_pose_cnstr, epsi = 0.00001)
+                        add_pose_cnstrnt(i + j + self.task_base_n_nodes * len(self.nodes_list), self.prb, self.nodes_list[i][j * delta_offset], self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws, self.lft_pick_pos[i], quat2rot(self.lft_pick_q[i]), weight_pos = self.weight_pos, weight_rot = self.weight_rot, is_pos = True, is_rot = True, is_soft = is_soft_pose_cnstr, epsi = 0.00001)
 
                     else: # left arm picks
                         
