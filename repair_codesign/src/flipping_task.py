@@ -44,12 +44,14 @@ results_path = codesign_path + "/test_results"
 file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 right_arm_picks = True
-filling_n_nodes = 0
+filling_n_nodes = 20
 
-seed = 1
+seed = 10
 np.random.seed(10)
 
-refinement_scale = 1 
+refinement_scale = 1
+
+cocktail_size = 0.08
 
 def solve_prb_standalone(task, slvr, q_init=None, prbl_name = "Problem", on_failure = "\n Failed to solve problem!! \n'"):
 
@@ -192,13 +194,13 @@ def main(args):
     if args.soft_warmstart:
 
         # "hard" flipping task
-        flipping_task = FlippingTaskGen()
-        flipping_task.add_task(init_node = 0, filling_n_nodes = filling_n_nodes, right_arm_picks = right_arm_picks)
+        flipping_task = FlippingTaskGen(cocktail_size = cocktail_size)
+        flipping_task.add_in_place_flip_task(init_node = 0, filling_n_nodes = filling_n_nodes, right_arm_picks = right_arm_picks)
         flipping_task.init_prb(urdf_full_path, weight_glob_man = args.weight_global_manip, is_soft_pose_cnstr = False, epsi = 0.0)
 
         # "soft" flipping task to be used as initialization to the hard
-        flipping_task_init = FlippingTaskGen()
-        flipping_task_init.add_task(init_node = 0, filling_n_nodes = filling_n_nodes, right_arm_picks = right_arm_picks)
+        flipping_task_init = FlippingTaskGen(cocktail_size = cocktail_size)
+        flipping_task_init.add_in_place_flip_task(init_node = 0, filling_n_nodes = filling_n_nodes, right_arm_picks = right_arm_picks)
         flipping_task_init.init_prb(urdf_full_path, weight_pos = args.weight_pos, weight_rot = args.weight_rot,\
                            weight_glob_man = args.weight_global_manip, is_soft_pose_cnstr = True, epsi = 0.0)
 
@@ -219,8 +221,8 @@ def main(args):
     else:
         # generate a single task depending on the arguments
 
-        flipping_task = FlippingTaskGen()
-        flipping_task.add_task(init_node = 0, filling_n_nodes = filling_n_nodes, right_arm_picks = right_arm_picks)
+        flipping_task = FlippingTaskGen(cocktail_size = cocktail_size)
+        flipping_task.add_in_place_flip_task(init_node = 0, filling_n_nodes = filling_n_nodes, right_arm_picks = right_arm_picks)
         flipping_task.init_prb(urdf_full_path, weight_pos = args.weight_pos, weight_rot = args.weight_rot,\
                            weight_glob_man = args.weight_global_manip, is_soft_pose_cnstr = args.soft_pose_cnstrnt, epsi = 0.001)
 
@@ -238,8 +240,8 @@ def main(args):
     pose_pub = FramePub("frame_pub")
     init_frame_name = "/repair/init_pose"
     trgt_frame_name = "/repair/trgt_pose"
-    pose_pub.add_pose(flipping_task.rght_pick_pos_wrt_ws_default, flipping_task.rght_pick_q_wrt_ws_default, init_frame_name, "working_surface_link")
-    pose_pub.add_pose(flipping_task.lft_pick_pos_wrt_ws_default, flipping_task.lft_pick_q_wrt_ws_default, trgt_frame_name, "working_surface_link")
+    pose_pub.add_pose(flipping_task.rght_pick_pos[0], flipping_task.rght_pick_q[0], init_frame_name, "working_surface_link")
+    pose_pub.add_pose(flipping_task.lft_pick_pos[0], flipping_task.lft_pick_q[0], trgt_frame_name, "working_surface_link")
     pose_pub.spin()
 
     if exists(urdf_full_path): # clear generated urdf file
@@ -263,8 +265,8 @@ def main(args):
         q_init_hard = np.random.uniform(flipping_task.lbs, flipping_task.ubs, (1, flipping_task.nq)).flatten()
         q_init_soft = np.random.uniform(flipping_task.lbs, flipping_task.ubs, (1, flipping_task.nq)).flatten()
 
-        print("Initialization for hard problem: ", q_init_hard)
-        print("Initalization for soft problem: ", q_init_soft)
+        # print("Initialization for hard problem: ", q_init_hard)
+        # print("Initalization for soft problem: ", q_init_soft)
 
     # Solve
     if not args.soft_warmstart:
@@ -388,7 +390,7 @@ if __name__ == '__main__':
     parser.add_argument('--weight_global_manip', '-wman', type = np.double, help = 'weight for global manipulability cost function', default = 0.1)
     parser.add_argument('--soft_warmstart', '-sws', type=str2bool, help = 'whether to use the solution to the soft problem as initialization for the hard one', default = False)
     parser.add_argument('--replay_soft_and_hard', '-rsh', type=str2bool, help = 'whether to replay both soft and hard solution on RVIz (only valid if soft_warmstart == True)', default = False)
-    parser.add_argument('--refine_sol', '-rs', type=str2bool, help = 'whether to resample the obtained solution before replaying it', default = True)
+    parser.add_argument('--refine_sol', '-rs', type=str2bool, help = 'whether to resample the obtained solution before replaying it', default = False)
 
     args = parser.parse_args()
     main(args)
