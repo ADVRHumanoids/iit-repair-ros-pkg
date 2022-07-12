@@ -287,7 +287,7 @@ class MarkerGen:
 
 class ReplaySol:
 
-    def __init__(self, dt, joint_list, q_replay, frame_force_mapping = None, force_reference_frame = cas_kin_dyn.CasadiKinDyn.LOCAL, kindyn = None):
+    def __init__(self, dt, joint_list, q_replay, frame_force_mapping = None, force_reference_frame = cas_kin_dyn.CasadiKinDyn.LOCAL, kindyn = None, srt_msg = "\nReplaying trajectory ...\n", stop_msg = "Finished.\n"):
         
         """
         Contructor
@@ -300,6 +300,8 @@ class ReplaySol:
             kindyn: needed if forces are in LOCAL_WORLD_ALIGNED
 
         """
+        self.srt_msg = srt_msg
+        self.stop_msg = stop_msg
 
         if frame_force_mapping is None:
             frame_force_mapping = {}
@@ -461,7 +463,11 @@ class ReplaySol:
         ns = np.shape(self.q_replay)[1]
 
         if not play_once:
+
             while not rospy.is_shutdown():
+                
+                print(self.srt_msg)
+
                 k = 0
                 for qk in self.q_replay.T:
 
@@ -496,36 +502,10 @@ class ReplaySol:
                     k += 1
                 if self.__sleep > 0.:
                     time.sleep(self.__sleep)
-                    print('replaying traj ...')
+                    print(self.stop_msg)
         else:
 
-            # q_first = self.q_replay[0, :]
-            # if is_floating_base:
-            #     q_first = self.normalize_quaternion(q_first)
-
-            #     m.transform.translation.x = q_first[0]
-            #     m.transform.translation.y = q_first[1]
-            #     m.transform.translation.z = q_first[2]
-            #     m.transform.rotation.x = q_first[3]
-            #     m.transform.rotation.y = q_first[4]
-            #     m.transform.rotation.z = q_first[5]
-            #     m.transform.rotation.w = q_first[6]
-
-            #     br.sendTransform((m.transform.translation.x, m.transform.translation.y, m.transform.translation.z),
-            #                     (m.transform.rotation.x, m.transform.rotation.y, m.transform.rotation.z,
-            #                     m.transform.rotation.w),
-            #                     t, m.child_frame_id, m.header.frame_id)
-
-            # joint_state_pub.header.stamp = t
-            # joint_state_pub.position = q_first[7:nq] if is_floating_base else q_first
-            # joint_state_pub.velocity = []
-            # joint_state_pub.effort = []
-            # self.pub.publish(joint_state_pub)
-            # if self.frame_force_mapping:
-            #     if k != ns-1:
-            #         self.publishContactForces(t, q_first, k)
-
-            print('Replaying traj ...')
+            print(self.srt_msg)
 
             k = 0
             for qk in self.q_replay.T:
@@ -564,4 +544,4 @@ class ReplaySol:
             if self.__sleep > 0.:
                 
                 time.sleep(self.__sleep)
-                print('Traj replayed.')
+                print(self.stop_msg)
