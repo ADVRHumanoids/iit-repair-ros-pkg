@@ -218,7 +218,7 @@ def main(args):
 
             print("\n \n Please move both markers in order to start the solution loop!!\n \n ")
 
-            while (init_pos_trgt == None) or (trgt_pos_trgt == None) or (init_rot_trgt == None) or (trgt_rot_trgt == None):
+            while (init_pos_trgt is None) or (trgt_pos_trgt is None) or (init_rot_trgt is None) or (trgt_rot_trgt is None):
                 
                 # continue polling the positions until they become valid
                 init_pos_trgt, init_rot_trgt = rviz_marker_gen.getPose(init_pose_marker_topic)
@@ -241,7 +241,7 @@ def main(args):
 
         try:
             
-            if (not is_first_loop) and args.use_init_guess and (not (q_init_guess == None)): # use initialization after first loop
+            if (not is_first_loop) and args.use_init_guess and (not (q_init_guess is None)): # use initialization after first loop
                 
                 print(q_init_guess)
                 q.setInitialGuess(q_init_guess)

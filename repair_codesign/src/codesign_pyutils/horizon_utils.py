@@ -2,11 +2,13 @@ import numpy as np
 
 import casadi as cs
 
-from codesign_pyutils.math_utils import quat2rot, rot_error, rot_error2, get_cocktail_aux_rot
+from codesign_pyutils.math_utils import quat2rot, rot_error, rot_error2, rot_error3, get_cocktail_aux_rot
 
 from horizon import problem
 
 from casadi_kin_dyn import pycasadi_kin_dyn as cas_kin_dyn
+
+rot_error_approach = "traversaro" # options: "arturo", "traversaro"
 
 def add_bartender_cnstrnt(index, prb, nodes, posl, posr, rotl, rotr, is_pos = True, is_rot = True, weight_pos = 1.0, weight_rot = 1.0, is_soft = False, epsi = 0.001):
 
@@ -20,8 +22,19 @@ def add_bartender_cnstrnt(index, prb, nodes, posl, posr, rotl, rotr, is_pos = Tr
             pos_cnstrnt = prb.createConstraint("keep_baretender_pos" + str(index), posr - posl, nodes = nodes)
 
         if is_rot:
+            
+            if rot_error_approach == "arturo":
+                
+                rot_cnstrnt = prb.createConstraint("keep_baretender_rot" + str(index), rot_error2( get_cocktail_aux_rot(rotr), rotl, epsi), nodes = nodes)
+            
+            if rot_error_approach == "traversaro":
 
-            rot_cnstrnt = prb.createConstraint("keep_baretender_rot" + str(index), rot_error2( get_cocktail_aux_rot(rotr), rotl, epsi), nodes = nodes)
+                rot_cnstrnt = prb.createConstraint("keep_baretender_rot" + str(index), rot_error3( get_cocktail_aux_rot(rotr), rotl, epsi), nodes = nodes)
+
+            if rot_error_approach != "traversaro" and rot_error_approach != "arturo":
+
+                raise Exception('Choose a valid rotation error computation approach')
+
     
     else:
 
@@ -34,7 +47,18 @@ def add_bartender_cnstrnt(index, prb, nodes, posl, posr, rotl, rotr, is_pos = Tr
 
         if is_rot:
             
-            rot_cnstrnt = prb.createIntermediateCost("keep_baretender_rot" + str(index), weight_rot * cs.sumsqr(rot_error2( get_cocktail_aux_rot(rotr), rotl, epsi)), nodes = nodes)
+            if rot_error_approach == "arturo":
+                
+                rot_cnstrnt = prb.createIntermediateCost("keep_baretender_rot" + str(index), weight_rot * cs.sumsqr(rot_error2( get_cocktail_aux_rot(rotr), rotl, epsi)), nodes = nodes)
+            
+            if rot_error_approach == "traversaro":
+
+                rot_cnstrnt = prb.createIntermediateCost("keep_baretender_rot" + str(index), weight_rot * (rot_error3( get_cocktail_aux_rot(rotr), rotl, epsi)), nodes = nodes)
+
+            if rot_error_approach != "traversaro" and rot_error_approach != "arturo":
+
+                raise Exception('Choose a valid rotation error computation approach')
+                
 
     return pos_cnstrnt, rot_cnstrnt
 
@@ -50,9 +74,19 @@ def add_pose_cnstrnt(index, prb, nodes, pos, rot, pos_ref, rot_ref, weight_pos =
             pos_cnstrnt = prb.createConstraint("pos" + str(index), pos - pos_ref, nodes = nodes)
 
         if is_rot:
+            
+            if rot_error_approach == "arturo":
+                
+                rot_cnstrnt = prb.createConstraint("rot" + str(index), rot_error2(rot, rot_ref, epsi), nodes = nodes)
+            
+            if rot_error_approach == "traversaro":
 
-            rot_cnstrnt = prb.createConstraint("rot" + str(index), rot_error2(rot, rot_ref, epsi), nodes = nodes)
+                rot_cnstrnt = prb.createConstraint("rot" + str(index), rot_error3(rot, rot_ref, epsi), nodes = nodes)
 
+            if rot_error_approach != "traversaro" and rot_error_approach != "arturo":
+
+                raise Exception('Choose a valid rotation error computation approach')
+            
   else:
 
         pos_cnstrnt = None
@@ -64,7 +98,19 @@ def add_pose_cnstrnt(index, prb, nodes, pos, rot, pos_ref, rot_ref, weight_pos =
 
         if is_rot:
 
-            rot_cnstrnt = prb.createIntermediateCost("rot_soft" + str(index), weight_rot * cs.sumsqr(rot_error2(rot, rot_ref, epsi)), nodes = nodes)
+            if rot_error_approach == "arturo":
+                
+                rot_cnstrnt = prb.createIntermediateCost("rot_soft" + str(index), weight_rot * cs.sumsqr(rot_error2(rot, rot_ref, epsi)), nodes = nodes)
+            
+            if rot_error_approach == "traversaro":
+
+                rot_cnstrnt = prb.createIntermediateCost("rot_soft" + str(index), weight_rot * (rot_error3(rot, rot_ref, epsi)), nodes = nodes)
+
+            if rot_error_approach != "traversaro" and rot_error_approach != "arturo":
+
+                raise Exception('Choose a valid rotation error computation approach')
+
+            
 
   return pos_cnstrnt, rot_cnstrnt
 
@@ -113,9 +159,9 @@ class FlippingTaskGen:
         self.lft_inward_q = np.array([- np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0])
         self.rght_inward_q = np.array([- np.sqrt(2.0)/2.0, np.sqrt(2.0)/2.0, 0.0, 0.0])
 
-        self.lft_pick_pos_wrt_ws_default = np.array([0, - 0.18, 0.04])
+        self.lft_pick_pos_wrt_ws_default = np.array([0, 0.18, 0.04])
         self.lft_pick_q_wrt_ws_default = np.array([0.0, 1.0, 0.0, 0.0])
-        self.rght_pick_pos_wrt_ws_default = np.array([0, 0.18, 0.04])
+        self.rght_pick_pos_wrt_ws_default = np.array([0, - 0.18, 0.04])
         self.rght_pick_q_wrt_ws_default = np.array([0.0, 1.0, 0.0, 0.0])
 
         self.contact_height_default = 0.4
@@ -128,7 +174,7 @@ class FlippingTaskGen:
 
         return main_nodes_offset
 
-    def add_task(self, init_node, filling_n_nodes = 0, right_arm_picks = True, lft_pick_pos_wrt_ws = None, lft_pick_q_wrt_ws = None, rght_pick_pos_wrt_ws = None, rght_pick_q_wrt_ws = None, contact_height = None):
+    def add_task(self, init_node, filling_n_nodes = 0, right_arm_picks = True, lft_pick_pos_wrt_ws=None, lft_pick_q_wrt_ws=None, rght_pick_pos_wrt_ws=None, rght_pick_q_wrt_ws=None, contact_height=None):
    
         total_n_nodes = self.phase_number * filling_n_nodes + self.task_base_n_nodes # total number of nodes required to perform the task
         final_node = init_node + total_n_nodes - 1 # node index at the end of the task
@@ -139,28 +185,28 @@ class FlippingTaskGen:
 
         self.total_nnodes = self.total_nnodes + total_n_nodes
 
-        if lft_pick_pos_wrt_ws == None:
+        if lft_pick_pos_wrt_ws is None:
             self.lft_pick_pos.append(self.lft_pick_pos_wrt_ws_default)
         else:
             self.lft_pick_pos.append(lft_pick_pos_wrt_ws)
         
-        if lft_pick_q_wrt_ws == None:
+        if lft_pick_q_wrt_ws is None:
             self.lft_pick_q.append(self.lft_pick_q_wrt_ws_default)
         else:
             self.lft_pick_q.append(lft_pick_q_wrt_ws)
         
-        if rght_pick_pos_wrt_ws == None:
+        if rght_pick_pos_wrt_ws is None:
             self.rght_pick_pos.append(self.rght_pick_pos_wrt_ws_default)
         else:
             self.rght_pick_pos.append(rght_pick_pos_wrt_ws)
         
-        if rght_pick_q_wrt_ws == None:
+        if rght_pick_q_wrt_ws is None:
             self.rght_pick_q.append(self.rght_pick_q_wrt_ws_default)
         else:
             self.rght_pick_q.append(rght_pick_q_wrt_ws)  
         
 
-        if contact_height == None:
+        if contact_height is None:
             self.contact_heights.append(self.contact_height_default)
         else:
             self.contact_heights.append(contact_height)
@@ -216,13 +262,13 @@ class FlippingTaskGen:
 
         rarm_cocktail_pos = rarm_tcp_pos + rarm_tcp_rot @ cs.vertcat(0, 0, self.cocktail_size / 2.0)
         rarm_cocktail_rot = rarm_tcp_rot
-        rarm_cocktail_rot_wrt_ws = cs.transpose(ws_link_rot) @ rarm_cocktail_rot
-        rarm_cocktail_pos_wrt_ws = ws_link_rot @ (rarm_cocktail_pos - ws_link_pos)
+        rarm_cocktail_rot_wrt_ws = ws_link_rot.T @ rarm_cocktail_rot
+        rarm_cocktail_pos_wrt_ws = ws_link_rot.T @ (rarm_cocktail_pos - ws_link_pos)
 
         larm_cocktail_pos = larm_tcp_pos + larm_tcp_rot @ cs.vertcat(0, 0, self.cocktail_size / 2.0)
         larm_cocktail_rot = larm_tcp_rot
-        larm_cocktail_rot_wrt_ws = cs.transpose(ws_link_rot) @ larm_cocktail_rot
-        larm_cocktail_pos_wrt_ws = ws_link_rot @ (larm_cocktail_pos - ws_link_pos)
+        larm_cocktail_rot_wrt_ws = ws_link_rot.T @ larm_cocktail_rot
+        larm_cocktail_pos_wrt_ws = ws_link_rot.T @ (larm_cocktail_pos - ws_link_pos)
 
         self.lft_tcp_pos_wrt_ws = larm_cocktail_pos_wrt_ws
         self.lft_tcp_rot_wrt_ws = larm_cocktail_rot_wrt_ws
@@ -252,6 +298,10 @@ class FlippingTaskGen:
         self.build_task(is_soft_pose_cnstr = is_soft_pose_cnstr, epsi = epsi)
 
     def build_task(self, is_soft_pose_cnstr = True, epsi = 0.00001):
+
+        self.build_pick_and_place_task(is_soft_pose_cnstr, epsi)
+
+    def build_pick_and_place_task(self, is_soft_pose_cnstr = True, epsi = 0.00001):
 
         for i in range(len(self.nodes_list)): # iterate through multiple flipping tasks
             
@@ -353,9 +403,9 @@ class FlippingTaskGen:
                     else: # left arm picks
                         
                         # right arm
-                        add_pose_cnstrnt(i + j, self.prb, self.nodes_list[i][j * delta_offset], self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws, self.rght_pick_pos[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.rght_pick_q[i]), weight_pos = self.weight_pos, weight_rot = self.weight_rot, is_pos = True, is_rot = True, is_soft = is_soft_pose_cnstr, epsi = 0.00001)
+                        add_pose_cnstrnt(i + j, self.prb, self.nodes_list[i][j * delta_offset], self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws, self.rght_pick_pos[i], quat2rot(self.rght_pick_q[i]), weight_pos = self.weight_pos, weight_rot = self.weight_rot, is_pos = True, is_rot = True, is_soft = is_soft_pose_cnstr, epsi = 0.00001)
                         # left arm
-                        add_pose_cnstrnt(i + j + self.task_base_n_nodes * len(self.nodes_list), self.prb, self.nodes_list[i][j * delta_offset], self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws, self.lft_pick_pos[i], quat2rot(self.lft_pick_q[i]), weight_pos = self.weight_pos, weight_rot = self.weight_rot, is_pos = True, is_rot = True, is_soft = is_soft_pose_cnstr, epsi = 0.00001)
+                        add_pose_cnstrnt(i + j + self.task_base_n_nodes * len(self.nodes_list), self.prb, self.nodes_list[i][j * delta_offset], self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws, self.lft_pick_pos[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.lft_pick_q[i]), weight_pos = self.weight_pos, weight_rot = self.weight_rot, is_pos = True, is_rot = True, is_soft = is_soft_pose_cnstr, epsi = 0.00001)
 
         
 

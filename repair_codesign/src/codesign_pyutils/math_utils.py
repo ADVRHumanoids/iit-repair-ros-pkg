@@ -66,6 +66,14 @@ def rot_error2(R_trgt, R_actual, epsi = 0.0):
 
     return r / cs.sqrt(epsi + 1 + cs.trace(R_err))
 
+def rot_error3(R_trgt, R_actual, epsi = 0.0):
+
+    M_err = cs.DM_eye(3) - R_actual @ R_trgt.T
+
+    err = cs.trace(M_err)
+
+    return err
+
 def get_cocktail_aux_rot(R):
 
     # Conventionally, given a target frame for one arm
