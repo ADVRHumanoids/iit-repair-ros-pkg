@@ -12,7 +12,7 @@ from casadi_kin_dyn import pycasadi_kin_dyn as cas_kin_dyn
 
 import time
 
-rot_error_approach = "arturo" # options: "siciliano", "arturo", "traversaro"
+rot_error_approach = "traversaro" # options: "siciliano", "arturo", "traversaro"
 
 def add_bartender_cnstrnt(index, prb, nodes, posl, posr, rotl, rotr, is_pos = True,\
                           is_rot = True, weight_pos = 1.0, weight_rot = 1.0,\
