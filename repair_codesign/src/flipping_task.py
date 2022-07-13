@@ -46,20 +46,26 @@ results_path = codesign_path + "/test_results"
 file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 right_arm_picks = True
-filling_n_nodes = 20
+filling_n_nodes = 0
 
-seed = 10
+seed = 4
 np.random.seed(10)
 
-refinement_scale = 1
+refinement_scale = 10
 
 cocktail_size = 0.08
+
+solver_type = 'ipopt'
+slvr_opt = {
+    "ipopt.tol": 0.0001, 
+    "ipopt.max_iter": 10000,
+    "ilqr.verbose": True}
 
 def solve_prb_standalone(task, slvr, q_init=None, prbl_name = "Problem",
                          on_failure = "\n Failed to solve problem!! \n'"):
 
     solve_failed = False
-
+    
     try:
         
         if q_init is not None:
@@ -211,19 +217,55 @@ def main(args):
 
         # "hard" flipping task
         flipping_task = FlippingTaskGen(cocktail_size = cocktail_size)
-        flipping_task.add_in_place_flip_task(init_node = 0,\
+        final_node_first_task = flipping_task.add_in_place_flip_task(init_node = 0,\
+                                             object_pos_wrt_ws = np.array([0.0, -0.2, 0.0]), \
+                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+                                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
+                                             filling_n_nodes = filling_n_nodes,\
+                                             right_arm_picks = right_arm_picks)
+
+        final_node_second_task = flipping_task.add_in_place_flip_task(init_node = final_node_first_task + 1,\
+                                             object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]), \
+                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+                                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
                                              filling_n_nodes = filling_n_nodes,
                                              right_arm_picks = right_arm_picks)
+
+        final_node_third_task = flipping_task.add_in_place_flip_task(init_node = final_node_second_task + 1,\
+                                             object_pos_wrt_ws = np.array([0.0, 0.2, 0.0]), \
+                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+                                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
+                                             filling_n_nodes = filling_n_nodes,
+                                             right_arm_picks = right_arm_picks)
+
         flipping_task.init_prb(urdf_full_path, weight_glob_man = args.weight_global_manip,\
                                is_soft_pose_cnstr = False, epsi = 0.0)
 
         # "soft" flipping task to be used as initialization to the hard
         flipping_task_init = FlippingTaskGen(cocktail_size = cocktail_size)
-        flipping_task_init.add_in_place_flip_task(init_node = 0,\
-                                                  filling_n_nodes = filling_n_nodes,\
-                                                  right_arm_picks = right_arm_picks)
+        final_node_first_task = flipping_task_init.add_in_place_flip_task(init_node = 0,\
+                                             object_pos_wrt_ws = np.array([0.0, -0.2, 0.0]), \
+                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+                                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
+                                             filling_n_nodes = filling_n_nodes,\
+                                             right_arm_picks = right_arm_picks)
+
+        final_node_second_task = flipping_task_init.add_in_place_flip_task(init_node = final_node_first_task + 1,\
+                                             object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]), \
+                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+                                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
+                                             filling_n_nodes = filling_n_nodes,
+                                             right_arm_picks = right_arm_picks)
+
+        final_node_third_task = flipping_task_init.add_in_place_flip_task(init_node = final_node_second_task + 1,\
+                                             object_pos_wrt_ws = np.array([0.0, 0.2, 0.0]), \
+                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+                                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
+                                             filling_n_nodes = filling_n_nodes,
+                                             right_arm_picks = right_arm_picks)
+
         flipping_task_init.init_prb(urdf_full_path,\
-                                    weight_pos = args.weight_pos, weight_rot = args.weight_rot,\
+                                    weight_pos = args.base_weight_pos, weight_rot = args.base_weight_rot,\
                                     weight_glob_man = args.weight_global_manip,\
                                     is_soft_pose_cnstr = True, epsi = 0.0)
 
@@ -231,53 +273,79 @@ def main(args):
         transcription_opts_soft = dict(integrator='RK4')
         transcription_opts_hard = dict(integrator='RK4')
 
-        solver_type = 'ipopt'
-        slvr_opt = {"ipopt.tol": 0.0001, "ipopt.max_iter": 1000} 
+        if solver_type != "ilqr":
 
-        Transcriptor.make_method(transcription_method,\
-                                 flipping_task.prb,\
-                                 transcription_opts_hard)  # setting the transcriptor for the main hard problem
-        Transcriptor.make_method(transcription_method,\
-                                 flipping_task_init.prb,\
-                                 transcription_opts_soft)  # setting the transcriptor for the initialization problem
+            Transcriptor.make_method(transcription_method,\
+                                    flipping_task.prb,\
+                                    transcription_opts_hard)  # setting the transcriptor for the main hard problem
+            Transcriptor.make_method(transcription_method,\
+                                    flipping_task_init.prb,\
+                                    transcription_opts_soft)  # setting the transcriptor for the initialization problem
 
         ## Creating the solver
         slvr = solver.Solver.make_solver(solver_type, flipping_task.prb, slvr_opt)
         slvr_init = solver.Solver.make_solver(solver_type, flipping_task_init.prb, slvr_opt)
 
+        if solver_type == "ilqr":
+
+            slvr.set_iteration_callback()
+            slvr_init.set_iteration_callback()
+
     else:
         # generate a single task depending on the arguments
 
         flipping_task = FlippingTaskGen(cocktail_size = cocktail_size)
-        flipping_task.add_in_place_flip_task(init_node = 0,\
-                                            filling_n_nodes = filling_n_nodes,\
-                                            right_arm_picks = right_arm_picks)
+        final_node_first_task = flipping_task.add_in_place_flip_task(init_node = 0,\
+                                             object_pos_wrt_ws = np.array([0.0, -0.2, 0.0]), \
+                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+                                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
+                                             filling_n_nodes = filling_n_nodes,\
+                                             right_arm_picks = right_arm_picks)
+
+        final_node_second_task = flipping_task.add_in_place_flip_task(init_node = final_node_first_task + 1,\
+                                             object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]), \
+                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+                                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
+                                             filling_n_nodes = filling_n_nodes,
+                                             right_arm_picks = right_arm_picks)
+
+        final_node_third_task = flipping_task.add_in_place_flip_task(init_node = final_node_second_task + 1,\
+                                             object_pos_wrt_ws = np.array([0.0, 0.2, 0.0]), \
+                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+                                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
+                                             filling_n_nodes = filling_n_nodes,
+                                             right_arm_picks = right_arm_picks)
+                                    
+        
         flipping_task.init_prb(urdf_full_path,\
-                               weight_pos = args.weight_pos,\
-                               weight_rot = args.weight_rot,\
+                               weight_pos = args.base_weight_pos,\
+                               weight_rot = args.base_weight_rot,\
                                weight_glob_man = args.weight_global_manip,\
                                is_soft_pose_cnstr = args.soft_pose_cnstrnt, epsi = 0.001)
 
         transcription_method = 'multiple_shooting'
         transcription_opts = dict(integrator='RK4')
 
-        solver_type = 'ipopt'
-        slvr_opt = {"ipopt.tol": 0.0001, "ipopt.max_iter": 1000} 
-
-        Transcriptor.make_method(transcription_method,\
-                                 flipping_task.prb,\
-                                 transcription_opts)  # setting the transcriptor
+        if solver_type != "ilqr":
+            
+            Transcriptor.make_method(transcription_method,\
+                                    flipping_task.prb,\
+                                    transcription_opts)  # setting the transcriptor
 
         ## Creating the solver
         slvr = solver.Solver.make_solver(solver_type, flipping_task.prb, slvr_opt)
+
+        if solver_type == "ilqr":
+
+            slvr.set_iteration_callback()
     
     pose_pub = FramePub("frame_pub")
     init_frame_name = "/repair/init_pose"
     trgt_frame_name = "/repair/trgt_pose"
-    pose_pub.add_pose(flipping_task.rght_pick_pos[0], flipping_task.rght_pick_q[0],\
+    pose_pub.add_pose(flipping_task.object_pos_lft[0], flipping_task.object_q_lft[0],\
                       init_frame_name, "working_surface_link")
-    pose_pub.add_pose(flipping_task.lft_pick_pos[0], flipping_task.lft_pick_q[0],\
-                      trgt_frame_name, "working_surface_link")
+    # pose_pub.add_pose(flipping_task.lft_pick_pos[0], flipping_task.lft_pick_q[0],\
+    #                   trgt_frame_name, "working_surface_link")
     pose_pub.spin()
 
     if exists(urdf_full_path): # clear generated urdf file
@@ -365,7 +433,7 @@ def main(args):
             q_replay = None
             q_replay_soft = None
 
-            if args.refine_sol:
+            if args.resample_sol:
                 
                 dt_res = flipping_task.dt / refinement_scale
 
@@ -388,7 +456,7 @@ def main(args):
 
             if args.replay_soft_and_hard and (not soft_sol_failed):
                 
-                if args.refine_sol:
+                if args.resample_sol:
 
                     dt_res = flipping_task_init.dt / refinement_scale
                     q_replay_soft = resampler(solution_soft["q"], solution_soft["q_dot"],\
@@ -432,19 +500,32 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         description='just a simple test file for RePAIR co-design')
-    parser.add_argument('--gen_urdf', '-g', type=str2bool, help = 'whether to generate urdf from xacro', default = True)
-    parser.add_argument('--launch_rviz', '-rvz', type=str2bool, help = 'whether to launch rviz or not', default = True)
-    parser.add_argument('--rviz_replay', '-rpl', type=str2bool, help = 'whether to replay the solution on RViz', default = True)
-    parser.add_argument('--dump_sol', '-ds', type=str2bool, help = 'whether to dump results to file', default = False)
-    parser.add_argument('--use_init_guess', '-ig', type=str2bool, help = 'whether to use initial guesses between solution loops', default = True)
-    parser.add_argument('--soft_bartender_cnstrnt', '-sbc', type=str2bool, help = 'whether to use soft bartender constraints', default = False)
-    parser.add_argument('--soft_pose_cnstrnt', '-spc', type=str2bool, help = 'whether to use soft pose constraints or not', default = False)
-    parser.add_argument('--weight_pos', '-wp', type = np.double, help = 'weight for position tracking (if soft_pose_cnstrnt == True)', default = 1.0)
-    parser.add_argument('--weight_rot', '-wr', type = np.double, help = 'weight for orientation tracking (if soft_pose_cnstrnt == True)', default = 1.0)
-    parser.add_argument('--weight_global_manip', '-wman', type = np.double, help = 'weight for global manipulability cost function', default = 0.1)
-    parser.add_argument('--soft_warmstart', '-sws', type=str2bool, help = 'whether to use the solution to the soft problem as initialization for the hard one', default = True)
-    parser.add_argument('--replay_soft_and_hard', '-rsh', type=str2bool, help = 'whether to replay both soft and hard solution on RVIz (only valid if soft_warmstart == True)', default = False)
-    parser.add_argument('--refine_sol', '-rs', type=str2bool, help = 'whether to resample the obtained solution before replaying it', default = False)
+    parser.add_argument('--gen_urdf', '-g', type=str2bool,\
+                        help = 'whether to generate urdf from xacro', default = True)
+    parser.add_argument('--launch_rviz', '-rvz', type=str2bool,\
+                        help = 'whether to launch rviz or not', default = True)
+    parser.add_argument('--rviz_replay', '-rpl', type=str2bool,\
+                        help = 'whether to replay the solution on RViz', default = True)
+    parser.add_argument('--dump_sol', '-ds', type=str2bool,\
+                        help = 'whether to dump results to file', default = False)
+    parser.add_argument('--use_init_guess', '-ig', type=str2bool,\
+                        help = 'whether to use initial guesses between solution loops', default = True)
+    parser.add_argument('--soft_bartender_cnstrnt', '-sbc', type=str2bool,\
+                        help = 'whether to use soft bartender constraints', default = False)
+    parser.add_argument('--soft_pose_cnstrnt', '-spc', type=str2bool,\
+                        help = 'whether to use soft pose constraints or not', default = False)
+    parser.add_argument('--base_weight_pos', '-wp', type = np.double,\
+                        help = 'base weight for position tracking (if using soft constraints)', default = 0.001)
+    parser.add_argument('--base_weight_rot', '-wr', type = np.double,\
+                        help = 'base weight for orientation tracking (if using soft constraints)', default = 0.001)
+    parser.add_argument('--weight_global_manip', '-wman', type = np.double,\
+                        help = 'weight for global manipulability cost function', default = 0.01)
+    parser.add_argument('--soft_warmstart', '-sws', type=str2bool,\
+                        help = 'whether to use the solution to the soft problem as initialization for the hard one', default = True)
+    parser.add_argument('--replay_soft_and_hard', '-rsh', type=str2bool,\
+                        help = 'whether to replay both soft and hard solution on RVIz (only valid if soft_warmstart == True)', default = False)
+    parser.add_argument('--resample_sol', '-rs', type=str2bool,\
+                        help = 'whether to resample the obtained solution before replaying it', default = False)
 
     args = parser.parse_args()
     main(args)
