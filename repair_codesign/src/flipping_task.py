@@ -23,8 +23,10 @@ import subprocess
 import rospkg
 
 from codesign_pyutils.ros_utils import MarkerGen, FramePub, ReplaySol
-from codesign_pyutils.miscell_utils import str2bool, SolDumper, wait_for_confirmation
-from codesign_pyutils.horizon_utils import add_pose_cnstrnt, add_bartender_cnstrnt, FlippingTaskGen
+from codesign_pyutils.miscell_utils import str2bool, SolDumper,\
+                                           wait_for_confirmation
+from codesign_pyutils.horizon_utils import add_pose_cnstrnt, add_bartender_cnstrnt,\
+                                           FlippingTaskGen
 from codesign_pyutils.math_utils import quat2rot
 
 ## Getting/setting some useful variables
@@ -53,7 +55,8 @@ refinement_scale = 1
 
 cocktail_size = 0.08
 
-def solve_prb_standalone(task, slvr, q_init=None, prbl_name = "Problem", on_failure = "\n Failed to solve problem!! \n'"):
+def solve_prb_standalone(task, slvr, q_init=None, prbl_name = "Problem",
+                         on_failure = "\n Failed to solve problem!! \n'"):
 
     solve_failed = False
 
@@ -83,7 +86,9 @@ def solve_prb_standalone(task, slvr, q_init=None, prbl_name = "Problem", on_fail
     
     return solve_failed
 
-def solve_main_prb_soft_init(args, task, slvr_init, slvr, q_init_hard=None, prbl_name = "Problem", on_failure = "\n Failed to solve problem with soft initialization!! \n'"):
+def solve_main_prb_soft_init(args, task, slvr_init, slvr, q_init_hard=None,\
+                             prbl_name = "Problem",\
+                             on_failure = "\n Failed to solve problem with soft initialization!! \n'"):
 
     task.q.setInitialGuess(slvr_init.getSolutionDict()["q"])
    
@@ -105,8 +110,11 @@ def solve_main_prb_soft_init(args, task, slvr_init, slvr, q_init_hard=None, prbl
         
         print(on_failure)
 
-        proceed_to_hard_anyway = wait_for_confirmation(do_something = "try to solve the main problem without soft initialization", or_do_something_else = "stop here", \
-                                        on_confirmation = "Trying to solve the main problem  without soft initialization...", on_denial = "Stopping here!")
+        proceed_to_hard_anyway = wait_for_confirmation(\
+                                 do_something = "try to solve the main problem without soft initialization",\
+                                 or_do_something_else = "stop here", \
+                                 on_confirmation = "Trying to solve the main problem  without soft initialization...",\
+                                 on_denial = "Stopping here!")
         
         if proceed_to_hard_anyway:
             
@@ -124,7 +132,8 @@ def solve_main_prb_soft_init(args, task, slvr_init, slvr, q_init_hard=None, prbl
 
     return solve_failed
 
-def try_init_solve_or_go_on(args, init_task, init_slvr, task, slvr, q_init_hard=None, q_init_soft=None):
+def try_init_solve_or_go_on(args, init_task, init_slvr, task, slvr,\
+                            q_init_hard=None, q_init_soft=None):
         
         soft_sol_failed =  False
         sol_failed = False
@@ -151,8 +160,11 @@ def try_init_solve_or_go_on(args, init_task, init_slvr, task, slvr, q_init_hard=
 
             print('\n Failed to solve the soft initialization problem!! \n')
 
-            proceed_to_hard_anyway = wait_for_confirmation(do_something = "try to solve the main problem anyway", or_do_something_else = "stop here", \
-                                                on_confirmation = "Trying to solve the main problem  ...", on_denial = "Stopping here!")
+            proceed_to_hard_anyway = wait_for_confirmation(\
+                                     do_something = "try to solve the main problem anyway",\
+                                     or_do_something_else = "stop here", \
+                                     on_confirmation = "Trying to solve the main problem  ...",\
+                                     on_denial = "Stopping here!")
 
             if proceed_to_hard_anyway:
                 
@@ -171,7 +183,9 @@ def main(args):
 
         try:
 
-            xacro_gen = subprocess.check_call(["xacro", "-o", urdf_full_path, xacro_full_path])
+            xacro_gen = subprocess.check_call(["xacro", "-o",\
+                                               urdf_full_path,\
+                                               xacro_full_path])
             
         except:
 
@@ -181,7 +195,9 @@ def main(args):
 
         try:
 
-            rviz_window = subprocess.Popen(["roslaunch", "repair_urdf", "repair_full_markers.launch"])
+            rviz_window = subprocess.Popen(["roslaunch",\
+                                            "repair_urdf",\
+                                            "repair_full_markers.launch"])
 
         except:
 
@@ -195,14 +211,21 @@ def main(args):
 
         # "hard" flipping task
         flipping_task = FlippingTaskGen(cocktail_size = cocktail_size)
-        flipping_task.add_in_place_flip_task(init_node = 0, filling_n_nodes = filling_n_nodes, right_arm_picks = right_arm_picks)
-        flipping_task.init_prb(urdf_full_path, weight_glob_man = args.weight_global_manip, is_soft_pose_cnstr = False, epsi = 0.0)
+        flipping_task.add_in_place_flip_task(init_node = 0,\
+                                             filling_n_nodes = filling_n_nodes,
+                                             right_arm_picks = right_arm_picks)
+        flipping_task.init_prb(urdf_full_path, weight_glob_man = args.weight_global_manip,\
+                               is_soft_pose_cnstr = False, epsi = 0.0)
 
         # "soft" flipping task to be used as initialization to the hard
         flipping_task_init = FlippingTaskGen(cocktail_size = cocktail_size)
-        flipping_task_init.add_in_place_flip_task(init_node = 0, filling_n_nodes = filling_n_nodes, right_arm_picks = right_arm_picks)
-        flipping_task_init.init_prb(urdf_full_path, weight_pos = args.weight_pos, weight_rot = args.weight_rot,\
-                           weight_glob_man = args.weight_global_manip, is_soft_pose_cnstr = True, epsi = 0.0)
+        flipping_task_init.add_in_place_flip_task(init_node = 0,\
+                                                  filling_n_nodes = filling_n_nodes,\
+                                                  right_arm_picks = right_arm_picks)
+        flipping_task_init.init_prb(urdf_full_path,\
+                                    weight_pos = args.weight_pos, weight_rot = args.weight_rot,\
+                                    weight_glob_man = args.weight_global_manip,\
+                                    is_soft_pose_cnstr = True, epsi = 0.0)
 
         transcription_method = 'multiple_shooting'
         transcription_opts_soft = dict(integrator='RK4')
@@ -211,8 +234,12 @@ def main(args):
         solver_type = 'ipopt'
         slvr_opt = {"ipopt.tol": 0.0001, "ipopt.max_iter": 1000} 
 
-        Transcriptor.make_method(transcription_method, flipping_task.prb, transcription_opts_hard)  # setting the transcriptor for the main hard problem
-        Transcriptor.make_method(transcription_method, flipping_task_init.prb, transcription_opts_soft)  # setting the transcriptor for the initialization problem
+        Transcriptor.make_method(transcription_method,\
+                                 flipping_task.prb,\
+                                 transcription_opts_hard)  # setting the transcriptor for the main hard problem
+        Transcriptor.make_method(transcription_method,\
+                                 flipping_task_init.prb,\
+                                 transcription_opts_soft)  # setting the transcriptor for the initialization problem
 
         ## Creating the solver
         slvr = solver.Solver.make_solver(solver_type, flipping_task.prb, slvr_opt)
@@ -222,9 +249,14 @@ def main(args):
         # generate a single task depending on the arguments
 
         flipping_task = FlippingTaskGen(cocktail_size = cocktail_size)
-        flipping_task.add_in_place_flip_task(init_node = 0, filling_n_nodes = filling_n_nodes, right_arm_picks = right_arm_picks)
-        flipping_task.init_prb(urdf_full_path, weight_pos = args.weight_pos, weight_rot = args.weight_rot,\
-                           weight_glob_man = args.weight_global_manip, is_soft_pose_cnstr = args.soft_pose_cnstrnt, epsi = 0.001)
+        flipping_task.add_in_place_flip_task(init_node = 0,\
+                                            filling_n_nodes = filling_n_nodes,\
+                                            right_arm_picks = right_arm_picks)
+        flipping_task.init_prb(urdf_full_path,\
+                               weight_pos = args.weight_pos,\
+                               weight_rot = args.weight_rot,\
+                               weight_glob_man = args.weight_global_manip,\
+                               is_soft_pose_cnstr = args.soft_pose_cnstrnt, epsi = 0.001)
 
         transcription_method = 'multiple_shooting'
         transcription_opts = dict(integrator='RK4')
@@ -232,7 +264,9 @@ def main(args):
         solver_type = 'ipopt'
         slvr_opt = {"ipopt.tol": 0.0001, "ipopt.max_iter": 1000} 
 
-        Transcriptor.make_method(transcription_method, flipping_task.prb, transcription_opts)  # setting the transcriptor
+        Transcriptor.make_method(transcription_method,\
+                                 flipping_task.prb,\
+                                 transcription_opts)  # setting the transcriptor
 
         ## Creating the solver
         slvr = solver.Solver.make_solver(solver_type, flipping_task.prb, slvr_opt)
@@ -240,8 +274,10 @@ def main(args):
     pose_pub = FramePub("frame_pub")
     init_frame_name = "/repair/init_pose"
     trgt_frame_name = "/repair/trgt_pose"
-    pose_pub.add_pose(flipping_task.rght_pick_pos[0], flipping_task.rght_pick_q[0], init_frame_name, "working_surface_link")
-    pose_pub.add_pose(flipping_task.lft_pick_pos[0], flipping_task.lft_pick_q[0], trgt_frame_name, "working_surface_link")
+    pose_pub.add_pose(flipping_task.rght_pick_pos[0], flipping_task.rght_pick_q[0],\
+                      init_frame_name, "working_surface_link")
+    pose_pub.add_pose(flipping_task.lft_pick_pos[0], flipping_task.lft_pick_q[0],\
+                      trgt_frame_name, "working_surface_link")
     pose_pub.spin()
 
     if exists(urdf_full_path): # clear generated urdf file
@@ -262,8 +298,10 @@ def main(args):
     
     if args.use_init_guess:
 
-        q_init_hard = np.random.uniform(flipping_task.lbs, flipping_task.ubs, (1, flipping_task.nq)).flatten()
-        q_init_soft = np.random.uniform(flipping_task.lbs, flipping_task.ubs, (1, flipping_task.nq)).flatten()
+        q_init_hard = np.random.uniform(flipping_task.lbs, flipping_task.ubs,\
+                                        (1, flipping_task.nq)).flatten()
+        q_init_soft = np.random.uniform(flipping_task.lbs, flipping_task.ubs,\
+                                        (1, flipping_task.nq)).flatten()
 
         # print("Initialization for hard problem: ", q_init_hard)
         # print("Initalization for soft problem: ", q_init_soft)
@@ -275,12 +313,16 @@ def main(args):
 
     else:
 
-        soft_sol_failed, solve_failed = try_init_solve_or_go_on(args, flipping_task_init, slvr_init, flipping_task, slvr, q_init_hard = q_init_hard, q_init_soft = q_init_soft)
+        soft_sol_failed, solve_failed = try_init_solve_or_go_on(args,\
+                                        flipping_task_init, slvr_init,\
+                                        flipping_task, slvr,\
+                                        q_init_hard = q_init_hard,\
+                                        q_init_soft = q_init_soft)
 
         if not soft_sol_failed: # soft solution succedeed
 
-            solve_failed = solve_main_prb_soft_init(args, flipping_task, slvr_init, slvr)
-
+            solve_failed = solve_main_prb_soft_init(args, flipping_task,\
+                                                    slvr_init, slvr)
 
     # Postprocessing
     if not solve_failed:
@@ -295,30 +337,30 @@ def main(args):
 
         if args.dump_sol:
 
-            store_current_sol = wait_for_confirmation(do_something = "store the current solution", or_do_something_else = "avoid storing it", \
-                                                    on_confirmation = "Storing current solution  ...", on_denial = "Current solution will be discarted!")
+            store_current_sol = wait_for_confirmation(do_something = "store the current solution",\
+                                or_do_something_else = "avoid storing it",\
+                                on_confirmation = "Storing current solution  ...",\
+                                on_denial = "Current solution will be discarted!")
 
             if store_current_sol:
                 
                 cnstr_opt = slvr.getConstraintSolutionDict()
                 full_solution = {**solution, **cnstr_opt}
-                sol_dumper.add_storer(full_solution, results_path, "flipping_repair", True)
+                sol_dumper.add_storer(full_solution, results_path,\
+                                      "flipping_repair", True)
 
                 if args.soft_warmstart and (soft_sol_failed != True):
 
                     cnstr_opt_soft = slvr.getConstraintSolutionDict()
                     full_solution_soft = {**solution_soft, **cnstr_opt_soft}
-                    sol_dumper.add_storer(full_solution_soft, results_path, "flipping_repair_soft", True)
+                    sol_dumper.add_storer(full_solution_soft, results_path,\
+                                          "flipping_repair_soft", True)
 
                 sol_dumper.dump() 
 
                 print("\nSolutions dumped. \n")
         
         if args.rviz_replay:
-            
-            # dt_res = flipping_task.dt / 50.0
-            # q_res = resampler(solution["q"], solution["q_dot"], flipping_task.dt, dt_res, {'x': flipping_task.q, 'p': flipping_task.q_dot, 'ode': flipping_task.q_dot, 'quad': 0})
-            # print(q_res)
 
             q_replay = None
             q_replay_soft = None
@@ -327,34 +369,46 @@ def main(args):
                 
                 dt_res = flipping_task.dt / refinement_scale
 
-                q_replay = resampler(solution["q"], solution["q_dot"], flipping_task.dt, dt_res, {'x': flipping_task.q, 'p': flipping_task.q_dot, 'ode': flipping_task.q_dot, 'quad': 0})
+                q_replay = resampler(solution["q"], solution["q_dot"],\
+                                     flipping_task.dt, dt_res,\
+                                     {'x': flipping_task.q, 'p': flipping_task.q_dot,\
+                                     'ode': flipping_task.q_dot, 'quad': 0})
 
-                sol_replayer = ReplaySol(dt_res, joint_list = flipping_task.joint_names, q_replay = q_replay) 
+                sol_replayer = ReplaySol(dt_res,
+                                         joint_list = flipping_task.joint_names,
+                                         q_replay = q_replay) 
 
             else:
                 
                 q_replay = solution["q"]
 
-                sol_replayer = ReplaySol(dt = flipping_task.dt, joint_list = flipping_task.joint_names, q_replay = q_replay) 
-
-            
+                sol_replayer = ReplaySol(dt = flipping_task.dt,\
+                                         joint_list = flipping_task.joint_names,\
+                                         q_replay = q_replay) 
 
             if args.replay_soft_and_hard and (not soft_sol_failed):
                 
                 if args.refine_sol:
 
                     dt_res = flipping_task_init.dt / refinement_scale
-                    q_replay_soft = resampler(solution_soft["q"], solution_soft["q_dot"], flipping_task_init.dt, dt_res, {'x': flipping_task_init.q, 'p': flipping_task_init.q_dot, 'ode': flipping_task_init.q_dot, 'quad': 0})
+                    q_replay_soft = resampler(solution_soft["q"], solution_soft["q_dot"],\
+                                        flipping_task_init.dt, dt_res,\
+                                        {'x': flipping_task_init.q,\
+                                         'p': flipping_task_init.q_dot,\
+                                         'ode': flipping_task_init.q_dot,\
+                                         'quad': 0})
                     
-                    sol_replayer_soft = ReplaySol(dt_res, joint_list = flipping_task_init.joint_names,\
-                                              q_replay = q_replay_soft, srt_msg = "\nReplaying soft trajectory") 
+                    sol_replayer_soft = ReplaySol(dt_res,\
+                                            joint_list = flipping_task_init.joint_names,\
+                                            q_replay = q_replay_soft, srt_msg = "\nReplaying soft trajectory") 
 
                 else:
 
                     q_replay_soft = solution_soft["q"]
 
-                    sol_replayer_soft = ReplaySol(dt = flipping_task_init.dt, joint_list = flipping_task_init.joint_names,\
-                                              q_replay = q_replay_soft, srt_msg = "\nReplaying soft trajectory")
+                    sol_replayer_soft = ReplaySol(dt = flipping_task_init.dt,\
+                                            joint_list = flipping_task_init.joint_names,\
+                                            q_replay = q_replay_soft, srt_msg = "\nReplaying soft trajectory")
                 
 
                 while True:
@@ -388,7 +442,7 @@ if __name__ == '__main__':
     parser.add_argument('--weight_pos', '-wp', type = np.double, help = 'weight for position tracking (if soft_pose_cnstrnt == True)', default = 1.0)
     parser.add_argument('--weight_rot', '-wr', type = np.double, help = 'weight for orientation tracking (if soft_pose_cnstrnt == True)', default = 1.0)
     parser.add_argument('--weight_global_manip', '-wman', type = np.double, help = 'weight for global manipulability cost function', default = 0.1)
-    parser.add_argument('--soft_warmstart', '-sws', type=str2bool, help = 'whether to use the solution to the soft problem as initialization for the hard one', default = False)
+    parser.add_argument('--soft_warmstart', '-sws', type=str2bool, help = 'whether to use the solution to the soft problem as initialization for the hard one', default = True)
     parser.add_argument('--replay_soft_and_hard', '-rsh', type=str2bool, help = 'whether to replay both soft and hard solution on RVIz (only valid if soft_warmstart == True)', default = False)
     parser.add_argument('--refine_sol', '-rs', type=str2bool, help = 'whether to resample the obtained solution before replaying it', default = False)
 

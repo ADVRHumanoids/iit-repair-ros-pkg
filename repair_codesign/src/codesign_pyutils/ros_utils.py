@@ -91,7 +91,8 @@ class FramePub:
 
         for i in range(len(self.topics)):
             
-            self.pose_stamped_pubs.append(rospy.Publisher(self.topics[i], PoseStamped, queue_size = 10))
+            self.pose_stamped_pubs.append(rospy.Publisher(self.topics[i],\
+                                          PoseStamped, queue_size = 10))
         
         rate = rospy.Rate(10) # 10hz
 
@@ -129,7 +130,8 @@ class MarkerGen:
         self.positions = None
         self.orientations = None
 
-    def add_marker(self, base_link_name = "world", position = [0, 0, 0], topic_base_name = None, description = "", marker_scale = 0.5):
+    def add_marker(self, base_link_name = "world", position = [0, 0, 0],\
+                   topic_base_name=None, description = "", marker_scale = 0.5):
         
         if self.was_spin_called == False:
 
@@ -140,7 +142,8 @@ class MarkerGen:
             if topic_base_name == None:
 
                 topic_base_name = "marker_gen"
-                self.servers.append(InteractiveMarkerServer(topic_base_name + f"{self.marker_counter}"))
+                self.servers.append(InteractiveMarkerServer(topic_base_name + \
+                                                            f"{self.marker_counter}"))
             
             else:
 
@@ -151,13 +154,17 @@ class MarkerGen:
 
             self.add_dropdown_menu()
 
-            self.make6DofMarker(self.markers_access_map[topic_base_name], InteractiveMarkerControl.NONE, Point(position[0], position[1], position[2]), True)
+            self.make6DofMarker(self.markers_access_map[topic_base_name],\
+                                InteractiveMarkerControl.NONE, \
+                                Point(position[0], position[1], position[2]),\
+                                True)
 
             self.servers[self.markers_access_map[topic_base_name]].applyChanges()
         
         else:
 
-            warnings.warn("Marker " + topic_base_name + " won't be added. add_marker(*) needs to be called before spin()!")
+            warnings.warn("Marker " + topic_base_name + \
+                          " won't be added. add_marker(*) needs to be called before spin()!")
 
     def spin(self):
         
@@ -177,8 +184,16 @@ class MarkerGen:
 
     def processFeedback(self, feedback):
         
-        self.positions[self.markers_access_map[feedback.marker_name]] = [feedback.pose.position.x, feedback.pose.position.y, feedback.pose.position.z]
-        self.orientations[self.markers_access_map[feedback.marker_name]] = [feedback.pose.orientation.w, feedback.pose.orientation.x, feedback.pose.orientation.y, feedback.pose.orientation.z] # by default, real part is the first element of the quaternion
+        self.positions[self.markers_access_map[feedback.marker_name]] = \
+                                                    [feedback.pose.position.x, \
+                                                     feedback.pose.position.y, \
+                                                     feedback.pose.position.z]
+
+        self.orientations[self.markers_access_map[feedback.marker_name]] = \
+                                                    [feedback.pose.orientation.w, \
+                                                     feedback.pose.orientation.x, \
+                                                     feedback.pose.orientation.y, \
+                                                     feedback.pose.orientation.z] # by default, real part is the first element of the quaternion
        
         if feedback.menu_entry_id == 1:
             
@@ -194,8 +209,11 @@ class MarkerGen:
 
         self.menu_handler = MenuHandler()
 
-        self.menu_handler.insert( "Spawn other marker", callback = self.processFeedback )
-        self.menu_handler.insert( "is_trgt_pose", callback = self.processFeedback )
+        self.menu_handler.insert("Spawn other marker", \
+                                 callback = self.processFeedback)
+        self.menu_handler.insert("is_trgt_pose",\
+                                 callback = self.processFeedback )
+
         # sub_menu_handle = self.menu_handler.insert( "Submenu" )
         # self.menu_handler.insert( "First Entry", parent = sub_menu_handle, callback = self.processFeedback )
 
@@ -208,14 +226,16 @@ class MarkerGen:
 
         return control
 
-    def make6DofMarker(self, marker_index, interaction_mode, position, show_6dof = True):
+    def make6DofMarker(self, marker_index, interaction_mode, position,\
+                       show_6dof = True):
 
         int_marker = InteractiveMarker()
         int_marker.header.frame_id = self.base_link_name
         int_marker.pose.position = position
         int_marker.scale = self.marker_scale
 
-        int_marker.name = list(self.markers_access_map.keys())[list(self.markers_access_map.values()).index(marker_index)]
+        int_marker.name = \
+            list(self.markers_access_map.keys())[list(self.markers_access_map.values()).index(marker_index)]
         int_marker.description = self.description_map[int_marker.name]
 
         # insert a box
@@ -283,11 +303,12 @@ class MarkerGen:
 
         self.markers.append(int_marker)
 
-
-
 class ReplaySol:
 
-    def __init__(self, dt, joint_list, q_replay, frame_force_mapping = None, force_reference_frame = cas_kin_dyn.CasadiKinDyn.LOCAL, kindyn = None, srt_msg = "\nReplaying trajectory ...\n", stop_msg = "Finished.\n"):
+    def __init__(self, dt, joint_list, q_replay, frame_force_mapping=None,\
+                 force_reference_frame = cas_kin_dyn.CasadiKinDyn.LOCAL,\
+                 kindyn=None, srt_msg = "\nReplaying trajectory ...\n",\
+                 stop_msg = "Finished.\n"):
         
         """
         Contructor
@@ -346,7 +367,9 @@ class ReplaySol:
 
         if self.frame_force_mapping:
             for key in self.frame_force_mapping:
-                self.force_pub.append(rospy.Publisher(key+'_forces', geometry_msgs.msg.WrenchStamped, queue_size=10))
+                self.force_pub.append(rospy.Publisher(key+'_forces',\
+                                                      geometry_msgs.msg.WrenchStamped,\
+                                                      queue_size=10))
 
 
     def normalize_quaternion(q):

@@ -9,9 +9,15 @@ def quat2rot(Q):
 
     q = q / cs.sqrt(q[0]* q[0] + q[1]* q[1] + q[2]* q[2] + q[3]* q[3]) # normalize input quat
     
-    R = cs.vertcat(cs.horzcat(2 * (q[0] * q[0] + q[1] * q[1]) - 1, 2 * (q[1] * q[2] - q[0] * q[3]), 2 * (q[1] * q[3] + q[0] * q[2])),\
-                   cs.horzcat(2 * (q[1] * q[2] + q[0] * q[3]), 2 * (q[0] * q[0] + q[2] * q[2]) - 1, 2 * (q[2] * q[3] - q[0] * q[1])),\
-                   cs.horzcat(2 * (q[1] * q[3] - q[0] * q[2]), 2 * (q[2] * q[3] + q[0] * q[1]), 2 * (q[0] * q[0] + q[3] * q[3]) - 1))
+    R = cs.vertcat(cs.horzcat(2 * (q[0] * q[0] + q[1] * q[1]) - 1,\
+                   2 * (q[1] * q[2] - q[0] * q[3]),\
+                   2 * (q[1] * q[3] + q[0] * q[2])),\
+                   cs.horzcat(2 * (q[1] * q[2] + q[0] * q[3]),\
+                   2 * (q[0] * q[0] + q[2] * q[2]) - 1,\
+                   2 * (q[2] * q[3] - q[0] * q[1])),\
+                   cs.horzcat(2 * (q[1] * q[3] - q[0] * q[2]),\
+                   2 * (q[2] * q[3] + q[0] * q[1]),\
+                   2 * (q[0] * q[0] + q[3] * q[3]) - 1))
               
     return R
 
@@ -46,12 +52,8 @@ def rot_error(R_trgt, R_actual, epsi = 0.0):
     Q_trgt = rot2quat(R_trgt, epsi)
     Q_actual = rot2quat(R_actual, epsi)
     
-    rot_err = Q_trgt[0] * Q_actual[1:4] - Q_actual[0] * Q_trgt[1:4] - cs.mtimes(Skew(Q_actual[1:4]), Q_trgt[1:4])
-    
-    # rot_err1 = Q_trgt[0] * Q_actual[1] - Q_actual[0] * Q_trgt[1] + Q_actual[3] * Q_trgt[2] - Q_actual[2] * Q_trgt[3]
-    # rot_err2 = Q_trgt[0] * Q_actual[2] - Q_actual[0] * Q_trgt[2] - Q_actual[3] * Q_trgt[1] + Q_actual[1] * Q_trgt[3]
-    # rot_err3 = Q_trgt[0] * Q_actual[3] - Q_actual[0] * Q_trgt[3] + Q_actual[2] * Q_trgt[1] - Q_actual[1] * Q_trgt[2]
-    # return cs.vertcat(rot_err1, rot_err2, rot_err3)
+    rot_err = Q_trgt[0] * Q_actual[1:4] - Q_actual[0] * Q_trgt[1:4] - \
+              cs.mtimes(Skew(Q_actual[1:4]), Q_trgt[1:4])
 
     return rot_err
 

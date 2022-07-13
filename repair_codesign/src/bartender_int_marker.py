@@ -146,21 +146,44 @@ def main(args):
     q.setBounds(lbs, ubs) 
 
     # TCPs above working surface
-    keep_tcp1_above_ground = prb.createConstraint("keep_tcp1_above_ground", rarm_tcp_pos_wrt_ws[2])
+    keep_tcp1_above_ground = prb.createConstraint("keep_tcp1_above_ground",\
+                                                  rarm_tcp_pos_wrt_ws[2])
     keep_tcp1_above_ground.setBounds(0, cs.inf)
-    keep_tcp2_above_ground = prb.createConstraint("keep_tcp2_above_ground", larm_tcp_pos_wrt_ws[2])
+    keep_tcp2_above_ground = prb.createConstraint("keep_tcp2_above_ground",\
+                                                  larm_tcp_pos_wrt_ws[2])
     keep_tcp2_above_ground.setBounds(0, cs.inf)
 
     # keep baretender pose throughout the trajectory
-    add_bartender_cnstrnt(0, prb, range(0, n_nodes + 1), larm_cocktail_pos,  rarm_cocktail_pos, larm_cocktail_rot, rarm_cocktail_rot, is_pos = True, is_rot = True, is_soft = args.soft_bartender_cnstrnt, epsi = 0.0, weight_pos = args.weight_pos, weight_rot = args.weight_rot)
+    add_bartender_cnstrnt(0, prb, range(0, n_nodes + 1),\
+                         larm_cocktail_pos,  rarm_cocktail_pos,\
+                         larm_cocktail_rot, rarm_cocktail_rot,\
+                         is_pos = True, is_rot = True,\
+                         is_soft = args.soft_bartender_cnstrnt,\
+                         epsi = 0.0, weight_pos = args.weight_pos,\
+                         weight_rot = args.weight_rot)
 
     # right arm pose constraint
-    add_pose_cnstrnt(0, prb, 0, rarm_cocktail_pos, rarm_cocktail_rot, init_pos, quat2rot(init_rot), is_pos = True, is_rot = True, is_soft = args.soft_pose_cnstrnt, epsi = 0.0, weight_pos = args.weight_pos, weight_rot = args.weight_rot)
-    add_pose_cnstrnt(1, prb, n_nodes, rarm_cocktail_pos, rarm_cocktail_rot, trgt_pos, quat2rot(trgt_rot), is_pos = True, is_rot = True, is_soft = args.soft_pose_cnstrnt, epsi = 0.0, weight_pos = args.weight_pos, weight_rot = args.weight_rot)
+    add_pose_cnstrnt(0, prb, 0, rarm_cocktail_pos, rarm_cocktail_rot,\
+                     init_pos, quat2rot(init_rot),\
+                     is_pos = True, is_rot = True,\
+                     is_soft = args.soft_pose_cnstrnt,\
+                     epsi = 0.0, weight_pos = args.weight_pos, weight_rot = args.weight_rot)
+    add_pose_cnstrnt(1, prb, n_nodes, rarm_cocktail_pos, rarm_cocktail_rot,\
+                     trgt_pos, quat2rot(trgt_rot),\
+                     is_pos = True, is_rot = True,\
+                     is_soft = args.soft_pose_cnstrnt,\
+                     epsi = 0.0, weight_pos = args.weight_pos, weight_rot = args.weight_rot)
     
     # left arm pose constraint
-    # add_pose_cnstrnt(2, prb, 0, larm_cocktail_pos, larm_cocktail_rot, init_pos, quat2rot(init_rot), is_pos = True, is_rot = True, is_soft = args.soft_pose_cnstrnt, epsi = 0.0)
-    # add_pose_cnstrnt(3, prb, n_nodes, larm_cocktail_pos, larm_cocktail_rot, trgt_pos, quat2rot(trgt_rot), is_pos = True, is_rot = True, is_soft = args.soft_pose_cnstrnt, epsi = 0.0)
+    # add_pose_cnstrnt(2, prb, 0,\
+    #                  larm_cocktail_pos, larm_cocktail_rot,\
+    #                  init_pos, quat2rot(init_rot),\
+    #                  is_pos = True, is_rot = True,\
+    #                  is_soft = args.soft_pose_cnstrnt, epsi = 0.0)
+    # add_pose_cnstrnt(3, prb, n_nodes, larm_cocktail_pos, larm_cocktail_rot,\
+    #                  trgt_pos, quat2rot(trgt_rot),\
+    #                  is_pos = True, is_rot = True,\
+    #                  is_soft = args.soft_pose_cnstrnt, epsi = 0.0)
     
     # min inputs 
 
@@ -180,8 +203,10 @@ def main(args):
     # pose_pub.spin()
 
     rviz_marker_gen = MarkerGen(node_name = "marker_gen")
-    rviz_marker_gen.add_marker("world", [0.7, 0.2, 0.7], init_pose_marker_topic, "Init", 0.3) 
-    rviz_marker_gen.add_marker("world", [0.7, 0.2, 0.8], trgt_pose_marker_topic, "Trgt", 0.3) 
+    rviz_marker_gen.add_marker("world", [0.7, 0.2, 0.7], init_pose_marker_topic,\
+                               "Init", 0.3) 
+    rviz_marker_gen.add_marker("world", [0.7, 0.2, 0.8], trgt_pose_marker_topic,\
+                               "Trgt", 0.3) 
     rviz_marker_gen.spin()
 
     if exists(urdf_full_path): # clear generated urdf file
@@ -196,16 +221,6 @@ def main(args):
 
         sol_dumper = SolDumper(results_path)
 
-    # start_solving = wait_for_confirmation(do_something = "start solving", or_do_something_else = "exit here", \
-    #                                       on_confirmation = "Entering solution loop ...", on_denial = "Aborting!")
-    # if not start_solving:
-
-    #     # closing all child processes
-    #     rviz_window.terminate()
-    #     rviz_marker_gen.process.terminate()
-
-    #     exit()
-
     is_first_loop = True
     solve_failed = False
 
@@ -218,7 +233,8 @@ def main(args):
 
             print("\n \n Please move both markers in order to start the solution loop!!\n \n ")
 
-            while (init_pos_trgt is None) or (trgt_pos_trgt is None) or (init_rot_trgt is None) or (trgt_rot_trgt is None):
+            while (init_pos_trgt is None) or (trgt_pos_trgt is None) \
+               or (init_rot_trgt is None) or (trgt_rot_trgt is None):
                 
                 # continue polling the positions until they become valid
                 init_pos_trgt, init_rot_trgt = rviz_marker_gen.getPose(init_pose_marker_topic)
@@ -261,8 +277,10 @@ def main(args):
 
                 is_first_loop = False
 
-            go_on = wait_for_confirmation(do_something = "go to the next solution loop", or_do_something_else = "exit here", \
-                                      on_confirmation = "Going to next solution loop ...", on_denial = "Breaking solution loop and exiting.")
+            go_on = wait_for_confirmation(do_something = "go to the next solution loop",\
+                                          or_do_something_else = "exit here", \
+                                          on_confirmation = "Going to next solution loop ...",\
+                                          on_denial = "Breaking solution loop and exiting.")
 
             if go_on:
 
@@ -284,15 +302,19 @@ def main(args):
 
             if args.dump_sol:
 
-                store_current_sol = wait_for_confirmation(do_something = "store the current solution", or_do_something_else = "avoid storing it", \
-                                                      on_confirmation = "Storing current solution  ...", on_denial = "Current solution will be discarted!")
+                store_current_sol = wait_for_confirmation(do_something = "store the current solution",\
+                                            or_do_something_else = "avoid storing it", \
+                                            on_confirmation = "Storing current solution  ...",\
+                                            on_denial = "Current solution will be discarted!")
 
                 if store_current_sol:
                 
                     cnstr_opt = slvr.getConstraintSolutionDict()
 
-                    tcp_pos = {"rTCP_pos_wrt_ws": (fk_arm_r(q = q_sol)["ee_pos"] - ws_link_pos).toarray() , "lTCP_pos_wrt_ws": (fk_arm_l(q = q_sol)["ee_pos"] - ws_link_pos).toarray() }
-                    # tcp_rot = {"rTCP_rot_wrt_ws": (np.linalg.inv(fk_arm_r(q = q_sol)["ee_rot"]) @ ws_link_rot).toarray() , "lTCP_rot_wrt_ws": (np.linalg.inv(fk_arm_l(q = q_sol)["ee_rot"]) @ ws_link_rot).toarray() }
+                    tcp_pos = {"rTCP_pos_wrt_ws": (fk_arm_r(q = q_sol)["ee_pos"] - ws_link_pos).toarray(),\
+                               "lTCP_pos_wrt_ws": (fk_arm_l(q = q_sol)["ee_pos"] - ws_link_pos).toarray() }
+                    # tcp_rot = {"rTCP_rot_wrt_ws": (np.linalg.inv(fk_arm_r(q = q_sol)["ee_rot"]) @ ws_link_rot).toarray() ,\
+                    #            "lTCP_rot_wrt_ws": (np.linalg.inv(fk_arm_l(q = q_sol)["ee_rot"]) @ ws_link_rot).toarray() }
 
                     full_solution = {**solution, **cnstr_opt, **tcp_pos}
 
@@ -310,8 +332,10 @@ def main(args):
             is_first_loop = False
 
 
-        go_on = wait_for_confirmation(do_something = "go to the next solution loop", or_do_something_else = "exit here", \
-                                      on_confirmation = "Going to next solution loop ...", on_denial = "Breaking solution loop and exiting.")
+        go_on = wait_for_confirmation(do_something = "go to the next solution loop",\
+                                      or_do_something_else = "exit here", \
+                                      on_confirmation = "Going to next solution loop ...",\
+                                      on_denial = "Breaking solution loop and exiting.")
         if go_on:
 
             continue
