@@ -12,7 +12,7 @@ from casadi_kin_dyn import pycasadi_kin_dyn as cas_kin_dyn
 
 import time
 
-rot_error_approach = "traversaro" # options: "siciliano", "arturo", "traversaro"
+rot_error_approach = "arturo" # options: "siciliano", "arturo", "traversaro"
 
 def add_bartender_cnstrnt(index, prb, nodes, posl, posr, rotl, rotr, is_pos = True,\
                           is_rot = True, weight_pos = 1.0, weight_rot = 1.0,\
@@ -48,7 +48,8 @@ def add_bartender_cnstrnt(index, prb, nodes, posl, posr, rotl, rotr, is_pos = Tr
                                     rot_error3( get_cocktail_aux_rot(rotr), rotl, epsi),\
                                     nodes = nodes)
 
-            if rot_error_approach != "traversaro" and rot_error_approach != "arturo":
+            if rot_error_approach != "traversaro" and rot_error_approach != "arturo"\
+                and rot_error_approach != "siciliano":
 
                 raise Exception('Choose a valid rotation error computation approach')
 
@@ -84,7 +85,8 @@ def add_bartender_cnstrnt(index, prb, nodes, posl, posr, rotl, rotr, is_pos = Tr
                     weight_rot * (rot_error3( get_cocktail_aux_rot(rotr), rotl, epsi)),\
                     nodes = nodes)
 
-            if rot_error_approach != "traversaro" and rot_error_approach != "arturo":
+            if rot_error_approach != "traversaro" and rot_error_approach != "arturo"\
+                 and rot_error_approach != "siciliano":
 
                 raise Exception('Choose a valid rotation error computation approach')
                 
@@ -123,7 +125,8 @@ def add_pose_cnstrnt(index, prb, nodes, pos, rot, pos_ref, rot_ref,\
                 rot_cnstrnt = prb.createConstraint("rot" + str(index),\
                                     rot_error3(rot, rot_ref, epsi), nodes = nodes)
 
-            if rot_error_approach != "traversaro" and rot_error_approach != "arturo":
+            if rot_error_approach != "traversaro" and rot_error_approach != "arturo"\
+                 and rot_error_approach != "siciliano":
 
                 raise Exception('Choose a valid rotation error computation approach')
             
@@ -158,7 +161,8 @@ def add_pose_cnstrnt(index, prb, nodes, pos, rot, pos_ref, rot_ref,\
                             weight_rot * (rot_error3(rot, rot_ref, epsi)),\
                             nodes = nodes)
 
-            if rot_error_approach != "traversaro" and rot_error_approach != "arturo":
+            if rot_error_approach != "traversaro" and rot_error_approach != "arturo"\
+                 and rot_error_approach != "siciliano":
 
                 raise Exception('Choose a valid rotation error computation approach')
 
