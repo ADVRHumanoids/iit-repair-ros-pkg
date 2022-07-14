@@ -30,6 +30,8 @@ from codesign_pyutils.math_utils import quat2rot
 
 from horizon.utils import mat_storer
 
+import warnings
+
 ## Getting/setting some useful variables
 today = date.today()
 today_is = today.strftime("%d-%m-%Y")
@@ -47,9 +49,9 @@ results_path = codesign_path + "/test_results"
 file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 right_arm_picks = True
-filling_n_nodes = 0
+filling_n_nodes = 10
 
-seed = 10
+seed = 1
 np.random.seed(10)
 
 refinement_scale = 10
@@ -62,10 +64,8 @@ slvr_opt = {
     "ipopt.max_iter": 10000,
     "ilqr.verbose": True}
 
-init_load_abs_path = results_path + "/init_guess/" + "init2.mat"
-ms_load = mat_storer.matStorer(init_load_abs_path)
-loaded_sol=ms_load.load() # loading the solution dictionary
-loaded_init_guess = loaded_sol["q"]
+init_guess_filename = "init2.mat"
+init_load_abs_path = results_path + "/init_guess/" + init_guess_filename
 
 def solve_prb_standalone(task, slvr, q_init=None, prbl_name = "Problem",
                          on_failure = "\n Failed to solve problem!! \n'"):
@@ -190,23 +190,34 @@ def try_init_solve_or_go_on(args, init_task, init_slvr, task, slvr,\
 def build_multiple_flipping_tasks(args, flipping_task, right_arm_picks, urdf_full_path, is_soft_pose_cnstr = False):
 
     next_node1 = flipping_task.add_in_place_flip_task(init_node = 0,\
-                                            object_pos_wrt_ws = np.array([0.0, -0.2, 0.0]), \
+                                            object_pos_wrt_ws = np.array([0.0, 0.3, 0.0]), \
                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
                                             #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]),\
                                             right_arm_picks = right_arm_picks)
 
     next_node2 = flipping_task.add_in_place_flip_task(init_node = next_node1,\
-                                        object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]), \
-                                        object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-                                        #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
-                                        right_arm_picks = right_arm_picks)
-
-    final_node_third_task = flipping_task.add_in_place_flip_task(init_node = next_node2,\
                                         object_pos_wrt_ws = np.array([0.0, 0.2, 0.0]), \
                                         object_q_wrt_ws = np.array([0, 1, 0, 0]), \
                                         #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
                                         right_arm_picks = right_arm_picks)
+
+    next_node3 = flipping_task.add_in_place_flip_task(init_node = next_node2,\
+                                        object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]), \
+                                        object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+                                        #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
+                                        right_arm_picks = right_arm_picks)
     
+    next_node4 = flipping_task.add_in_place_flip_task(init_node = next_node3,\
+                                        object_pos_wrt_ws = np.array([0.0, - 0.2, 0.0]), \
+                                        object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+                                        #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
+                                        right_arm_picks = right_arm_picks)
+
+    next_node5 = flipping_task.add_in_place_flip_task(init_node = next_node4,\
+                                        object_pos_wrt_ws = np.array([0.0, - 0.3, 0.0]), \
+                                        object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+                                        #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
+                                        right_arm_picks = right_arm_picks)
 
     print(flipping_task.nodes_list)
     print(flipping_task.total_nnodes)
@@ -343,18 +354,38 @@ def main(args):
         
         if args.load_initial_guess:
             
-            q_init_hard = loaded_init_guess
-            q_init_soft = loaded_init_guess
+            try:
             
+                ms_ig_load = mat_storer.matStorer(init_load_abs_path)
+
+                q_init_hard = ms_ig_load.load()["q"]
+                q_init_soft = q_init_hard
+            
+            except:
+                
+                warnings.warn("Failed to load initial guess from file! I will use random intialization.")
+
+                q_init_hard = np.random.uniform(flipping_task.lbs, flipping_task.ubs,\
+                                        (1, flipping_task.nq)).flatten()
+                q_init_soft = q_init_hard
+
+
+            # insert check on correct initialization dimensions!!!!!
+                        
         else:
 
             q_init_hard = np.random.uniform(flipping_task.lbs, flipping_task.ubs,\
                                         (1, flipping_task.nq)).flatten()
-            q_init_soft = np.random.uniform(flipping_task.lbs, flipping_task.ubs,\
-                                        (1, flipping_task.nq)).flatten()
+            q_init_soft = q_init_hard
 
-        # print("Initialization for hard problem: ", q_init_hard)
-        # print("Initalization for soft problem: ", q_init_soft)
+        # if not args.soft_warmstart:
+
+        #     print("Initialization for hard problem: ", q_init_hard)
+        
+        # else:
+            
+        #     print("Initalization for soft problem: ", q_init_soft)
+        #     print("Initalization for hard problem: ", q_init_hard)
 
     # Solve
     if not args.soft_warmstart:
