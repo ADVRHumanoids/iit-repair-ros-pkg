@@ -28,6 +28,8 @@ from codesign_pyutils.miscell_utils import str2bool, SolDumper,\
 from codesign_pyutils.horizon_utils import FlippingTaskGen
 from codesign_pyutils.math_utils import quat2rot
 
+from horizon.utils import mat_storer
+
 ## Getting/setting some useful variables
 today = date.today()
 today_is = today.strftime("%d-%m-%Y")
@@ -45,9 +47,9 @@ results_path = codesign_path + "/test_results"
 file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 right_arm_picks = True
-filling_n_nodes = 2
+filling_n_nodes = 0
 
-seed = 4
+seed = 10
 np.random.seed(10)
 
 refinement_scale = 10
@@ -60,6 +62,11 @@ slvr_opt = {
     "ipopt.max_iter": 10000,
     "ilqr.verbose": True}
 
+init_load_abs_path = results_path + "/init_guess/" + "init2.mat"
+ms_load = mat_storer.matStorer(init_load_abs_path)
+loaded_sol=ms_load.load() # loading the solution dictionary
+loaded_init_guess = loaded_sol["q"]
+
 def solve_prb_standalone(task, slvr, q_init=None, prbl_name = "Problem",
                          on_failure = "\n Failed to solve problem!! \n'"):
 
@@ -69,7 +76,6 @@ def solve_prb_standalone(task, slvr, q_init=None, prbl_name = "Problem",
         
         if q_init is not None:
 
-            print(q_init)
             task.q.setInitialGuess(q_init) # random initialization
 
         t = time.time()
@@ -189,11 +195,11 @@ def build_multiple_flipping_tasks(args, flipping_task, right_arm_picks, urdf_ful
                                             #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]),\
                                              right_arm_picks = right_arm_picks)
 
-    final_node_second_task = flipping_task.add_in_place_flip_task(init_node = final_node_first_task + 1,\
-                                         object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]), \
-                                         object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-                                        #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
-                                         right_arm_picks = right_arm_picks)
+    # final_node_second_task = flipping_task.add_in_place_flip_task(init_node = final_node_first_task + 1,\
+    #                                      object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]), \
+    #                                      object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+    #                                     #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
+    #                                      right_arm_picks = right_arm_picks)
 
     # final_node_third_task = flipping_task.add_in_place_flip_task(init_node = final_node_second_task + 1,\
     #                                      object_pos_wrt_ws = np.array([0.0, 0.2, 0.0]), \
@@ -334,10 +340,17 @@ def main(args):
     q_init_soft=None
     
     if args.use_init_guess:
+        
+        if args.load_initial_guess:
+            
+            q_init_hard = loaded_init_guess
+            q_init_soft = loaded_init_guess
+            
+        else:
 
-        q_init_hard = np.random.uniform(flipping_task.lbs, flipping_task.ubs,\
+            q_init_hard = np.random.uniform(flipping_task.lbs, flipping_task.ubs,\
                                         (1, flipping_task.nq)).flatten()
-        q_init_soft = np.random.uniform(flipping_task.lbs, flipping_task.ubs,\
+            q_init_soft = np.random.uniform(flipping_task.lbs, flipping_task.ubs,\
                                         (1, flipping_task.nq)).flatten()
 
         # print("Initialization for hard problem: ", q_init_hard)
@@ -382,8 +395,15 @@ def main(args):
             if store_current_sol:
                 
                 cnstr_opt = slvr.getConstraintSolutionDict()
-                dt = {"dt": flipping_task.dt}
-                full_solution = {**solution, **cnstr_opt, **dt}
+                other_stuff = {"dt": flipping_task.dt, "filling_nodes": flipping_task.filling_n_nodes,
+                                "task_base_nnodes": flipping_task.task_base_n_nodes,
+                                "right_arm_picks": flipping_task.rght_arm_picks, \
+                                "wman_base": args.weight_global_manip, \
+                                "wpo_bases": args.base_weight_pos, "wrot_base": args.base_weight_rot, \
+                                "wman_actual": flipping_task.weight_glob_man, \
+                                "wpos_actual": flipping_task.weight_pos, "wrot_actual": flipping_task.weight_rot}
+
+                full_solution = {**solution, **cnstr_opt, **other_stuff}
                 
 
                 sol_dumper.add_storer(full_solution, results_path,\
@@ -392,8 +412,15 @@ def main(args):
                 if args.soft_warmstart and (soft_sol_failed != True):
 
                     cnstr_opt_soft = slvr.getConstraintSolutionDict()
-                    dt = {"dt": flipping_task_init.dt}
-                    full_solution_soft = {**solution_soft, **cnstr_opt_soft, **dt}
+                    other_stuff = {"dt": flipping_task.dt, "filling_nodes": flipping_task.filling_n_nodes,
+                                "task_base_nnodes": flipping_task.task_base_n_nodes,
+                                "right_arm_picks": flipping_task.rght_arm_picks, \
+                                "wman_base": args.weight_global_manip, \
+                                "wpo_bases": args.base_weight_pos, "wrot_base": args.base_weight_rot, \
+                                "wman_actual": flipping_task.weight_glob_man, \
+                                "wpos_actual": flipping_task.weight_pos, "wrot_actual": flipping_task.weight_rot}
+                                
+                    full_solution_soft = {**solution_soft, **cnstr_opt_soft, **other_stuff}
                     
                     sol_dumper.add_storer(full_solution_soft, results_path,\
                                           "flipping_repair_soft", True)
@@ -402,8 +429,6 @@ def main(args):
 
                 print("\nSolutions dumped. \n")
         
-        print("ascxas:", flipping_task.nodes_list)
-
         if args.rviz_replay:
 
             q_replay = None
@@ -502,6 +527,8 @@ if __name__ == '__main__':
                         help = 'whether to replay both soft and hard solution on RVIz (only valid if soft_warmstart == True)', default = False)
     parser.add_argument('--resample_sol', '-rs', type=str2bool,\
                         help = 'whether to resample the obtained solution before replaying it', default = False)
+    parser.add_argument('--load_initial_guess', '-lig', type=str2bool,\
+                        help = 'whether to load the initial guess from file', default = False)
 
     args = parser.parse_args()
     main(args)
