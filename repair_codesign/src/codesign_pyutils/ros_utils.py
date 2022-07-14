@@ -324,6 +324,12 @@ class ReplaySol:
         self.srt_msg = srt_msg
         self.stop_msg = stop_msg
 
+        self.is_floating_base = False
+        self.base_link = ""
+        self.play_once = False
+        
+        self.process = []
+
         if frame_force_mapping is None:
             frame_force_mapping = {}
         self.dt = dt
@@ -433,59 +439,23 @@ class ReplaySol:
         '''
         self.slow_down_rate = 1./slow_down_factor
 
-    def publish_joints(self, qk, is_floating_base=True, base_link='base_link'):
+    def replay_sol(self):
 
-        joint_state_pub = JointState()
-        joint_state_pub.header = Header()
-        joint_state_pub.name = self.joint_list
-        t = rospy.Time.now()
-        br = self.br
-        nq = len(qk)
-
-        if is_floating_base:
-            
-            qk = self.normalize_quaternion(qk)
-            
-            m = geometry_msgs.msg.TransformStamped()
-            m.header.frame_id = 'world'
-            m.child_frame_id = base_link
-            m.transform.translation.x = qk[0]
-            m.transform.translation.y = qk[1]
-            m.transform.translation.z = qk[2]
-            m.transform.rotation.x = qk[3]
-            m.transform.rotation.y = qk[4]
-            m.transform.rotation.z = qk[5]
-            m.transform.rotation.w = qk[6]
-
-            br.sendTransform((m.transform.translation.x, m.transform.translation.y, m.transform.translation.z),
-                                (m.transform.rotation.x, m.transform.rotation.y, m.transform.rotation.z,
-                                m.transform.rotation.w),
-                                t, m.child_frame_id, m.header.frame_id)
-
-        
-        joint_state_pub.header.stamp = t
-        joint_state_pub.position = qk[7:nq] if is_floating_base else qk
-        joint_state_pub.velocity = []
-        joint_state_pub.effort = []
-        self.pub.publish(joint_state_pub)
-
-
-    def replay(self, is_floating_base = True, base_link = 'base_link', play_once = False):
         rate = rospy.Rate(self.slow_down_rate / self.dt)
         joint_state_pub = JointState()
         joint_state_pub.header = Header()
         joint_state_pub.name = self.joint_list
 
-        if is_floating_base:
+        if self.is_floating_base:
             br = ros_tf.TransformBroadcaster()
             m = geometry_msgs.msg.TransformStamped()
             m.header.frame_id = 'world'
-            m.child_frame_id = base_link
+            m.child_frame_id = self.base_link
 
         nq = np.shape(self.q_replay)[0]
         ns = np.shape(self.q_replay)[1]
 
-        if not play_once:
+        if not self.play_once:
 
             while not rospy.is_shutdown():
                 
@@ -496,7 +466,7 @@ class ReplaySol:
 
                     t = rospy.Time.now()
 
-                    if is_floating_base:
+                    if self.is_floating_base:
                         qk = self.normalize_quaternion(qk)
 
                         m.transform.translation.x = qk[0]
@@ -514,7 +484,7 @@ class ReplaySol:
 
                     
                     joint_state_pub.header.stamp = t
-                    joint_state_pub.position = qk[7:nq] if is_floating_base else qk
+                    joint_state_pub.position = qk[7:nq] if self.is_floating_base else qk
                     joint_state_pub.velocity = []
                     joint_state_pub.effort = []
                     self.pub.publish(joint_state_pub)
@@ -535,7 +505,7 @@ class ReplaySol:
 
                 t = rospy.Time.now()
 
-                if is_floating_base:
+                if self.is_floating_base:
                     qk = self.normalize_quaternion(qk)
 
                     m.transform.translation.x = qk[0]
@@ -553,7 +523,7 @@ class ReplaySol:
 
                 
                 joint_state_pub.header.stamp = t
-                joint_state_pub.position = qk[7:nq] if is_floating_base else qk
+                joint_state_pub.position = qk[7:nq] if self.is_floating_base else qk
                 joint_state_pub.velocity = []
                 joint_state_pub.effort = []
                 self.pub.publish(joint_state_pub)
@@ -568,3 +538,16 @@ class ReplaySol:
                 
                 time.sleep(self.__sleep)
                 print(self.stop_msg)
+
+
+    def replay(self, is_floating_base = True, base_link = 'base_link', play_once = False, is_blocking = True):
+
+        self.is_floating_base = is_floating_base
+        self.base_link = base_link
+        self.play_once = play_once
+
+        if not is_blocking:
+            self.process = multiprocessing.Process(target = self.replay_sol) # run replayer on different process to avoid blocking main code
+            self.process.start()
+            
+        self.replay_sol()

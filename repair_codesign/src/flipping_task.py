@@ -65,7 +65,7 @@ def solve_prb_standalone(task, slvr, q_init=None, prbl_name = "Problem",
                          on_failure = "\n Failed to solve problem!! \n'"):
 
     solve_failed = False
-    
+
     try:
         
         if q_init is not None:
@@ -182,6 +182,30 @@ def try_init_solve_or_go_on(args, init_task, init_slvr, task, slvr,\
             
         return soft_sol_failed, sol_failed
 
+def build_multiple_flipping_tasks(args, flipping_task, right_arm_picks, urdf_full_path, is_soft_pose_cnstr = False):
+
+    final_node_first_task = flipping_task.add_in_place_flip_task(init_node = 0,\
+                                             object_pos_wrt_ws = np.array([0.0, -0.2, 0.0]), \
+                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+                                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]),\
+                                             right_arm_picks = right_arm_picks)
+
+    final_node_second_task = flipping_task.add_in_place_flip_task(init_node = final_node_first_task + 1,\
+                                         object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]), \
+                                         object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+                                        #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
+                                         right_arm_picks = right_arm_picks)
+
+    # final_node_third_task = flipping_task.add_in_place_flip_task(init_node = final_node_second_task + 1,\
+    #                                      object_pos_wrt_ws = np.array([0.0, 0.2, 0.0]), \
+    #                                      object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+    #                                     #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
+    #                                      right_arm_picks = right_arm_picks)
+
+    flipping_task.init_prb(urdf_full_path, weight_glob_man = args.weight_global_manip,\
+                            is_soft_pose_cnstr = False, epsi = 0.0)
+
+
 def main(args):
 
     # preliminary ops
@@ -216,58 +240,16 @@ def main(args):
     if args.soft_warmstart:
 
         # "hard" flipping task
-        flipping_task = FlippingTaskGen(cocktail_size = cocktail_size)
-        final_node_first_task = flipping_task.add_in_place_flip_task(init_node = 0,\
-                                             object_pos_wrt_ws = np.array([0.0, -0.2, 0.0]), \
-                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-                                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
-                                             filling_n_nodes = filling_n_nodes,\
-                                             right_arm_picks = right_arm_picks)
-
-        final_node_second_task = flipping_task.add_in_place_flip_task(init_node = final_node_first_task + 1,\
-                                             object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]), \
-                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-                                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
-                                             filling_n_nodes = filling_n_nodes,
-                                             right_arm_picks = right_arm_picks)
-
-        final_node_third_task = flipping_task.add_in_place_flip_task(init_node = final_node_second_task + 1,\
-                                             object_pos_wrt_ws = np.array([0.0, 0.2, 0.0]), \
-                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-                                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
-                                             filling_n_nodes = filling_n_nodes,
-                                             right_arm_picks = right_arm_picks)
-
-        flipping_task.init_prb(urdf_full_path, weight_glob_man = args.weight_global_manip,\
-                               is_soft_pose_cnstr = False, epsi = 0.0)
+        flipping_task = FlippingTaskGen(cocktail_size = cocktail_size, filling_n_nodes = filling_n_nodes)
+        build_multiple_flipping_tasks(args, flipping_task,\
+                                     right_arm_picks, urdf_full_path,\
+                                     is_soft_pose_cnstr = False)
 
         # "soft" flipping task to be used as initialization to the hard
-        flipping_task_init = FlippingTaskGen(cocktail_size = cocktail_size)
-        final_node_first_task = flipping_task_init.add_in_place_flip_task(init_node = 0,\
-                                             object_pos_wrt_ws = np.array([0.0, -0.2, 0.0]), \
-                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-                                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
-                                             filling_n_nodes = filling_n_nodes,\
-                                             right_arm_picks = right_arm_picks)
-
-        final_node_second_task = flipping_task_init.add_in_place_flip_task(init_node = final_node_first_task + 1,\
-                                             object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]), \
-                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-                                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
-                                             filling_n_nodes = filling_n_nodes,
-                                             right_arm_picks = right_arm_picks)
-
-        final_node_third_task = flipping_task_init.add_in_place_flip_task(init_node = final_node_second_task + 1,\
-                                             object_pos_wrt_ws = np.array([0.0, 0.2, 0.0]), \
-                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-                                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
-                                             filling_n_nodes = filling_n_nodes,
-                                             right_arm_picks = right_arm_picks)
-
-        flipping_task_init.init_prb(urdf_full_path,\
-                                    weight_pos = args.base_weight_pos, weight_rot = args.base_weight_rot,\
-                                    weight_glob_man = args.weight_global_manip,\
-                                    is_soft_pose_cnstr = True, epsi = 0.0)
+        flipping_task_init = FlippingTaskGen(cocktail_size = cocktail_size, filling_n_nodes = filling_n_nodes)
+        build_multiple_flipping_tasks(args, flipping_task_init,\
+                                     right_arm_picks, urdf_full_path,\
+                                     is_soft_pose_cnstr = True)
 
         transcription_method = 'multiple_shooting'
         transcription_opts_soft = dict(integrator='RK4')
@@ -294,27 +276,10 @@ def main(args):
     else:
         # generate a single task depending on the arguments
 
-        flipping_task = FlippingTaskGen(cocktail_size = cocktail_size)
-        final_node_first_task = flipping_task.add_in_place_flip_task(init_node = 0,\
-                                             object_pos_wrt_ws = np.array([0.0, -0.2, 0.0]), \
-                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-                                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
-                                             filling_n_nodes = filling_n_nodes,\
-                                             right_arm_picks = right_arm_picks)
-
-        final_node_second_task = flipping_task.add_in_place_flip_task(init_node = final_node_first_task + 1,\
-                                             object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]), \
-                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-                                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
-                                             filling_n_nodes = filling_n_nodes,
-                                             right_arm_picks = right_arm_picks)
-
-        final_node_third_task = flipping_task.add_in_place_flip_task(init_node = final_node_second_task + 1,\
-                                             object_pos_wrt_ws = np.array([0.0, 0.2, 0.0]), \
-                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-                                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
-                                             filling_n_nodes = filling_n_nodes,
-                                             right_arm_picks = right_arm_picks)
+        flipping_task = FlippingTaskGen(cocktail_size = cocktail_size, filling_n_nodes = filling_n_nodes)
+        build_multiple_flipping_tasks(args, flipping_task,\
+                                     right_arm_picks, urdf_full_path,\
+                                     is_soft_pose_cnstr = False)
                                     
         
         flipping_task.init_prb(urdf_full_path,\
@@ -413,14 +378,19 @@ def main(args):
             if store_current_sol:
                 
                 cnstr_opt = slvr.getConstraintSolutionDict()
-                full_solution = {**solution, **cnstr_opt}
+                dt = {"dt": flipping_task.dt}
+                full_solution = {**solution, **cnstr_opt, **dt}
+                
+
                 sol_dumper.add_storer(full_solution, results_path,\
                                       "flipping_repair", True)
 
                 if args.soft_warmstart and (soft_sol_failed != True):
 
                     cnstr_opt_soft = slvr.getConstraintSolutionDict()
-                    full_solution_soft = {**solution_soft, **cnstr_opt_soft}
+                    dt = {"dt": flipping_task_init.dt}
+                    full_solution_soft = {**solution_soft, **cnstr_opt_soft, **dt}
+                    
                     sol_dumper.add_storer(full_solution_soft, results_path,\
                                           "flipping_repair_soft", True)
 
@@ -491,7 +461,7 @@ def main(args):
 
                 sol_replayer.sleep(0.5)
                 sol_replayer.replay(is_floating_base = False, play_once = False)
-    
+
     # closing all child processes and exiting
     rviz_window.terminate()
     exit()
