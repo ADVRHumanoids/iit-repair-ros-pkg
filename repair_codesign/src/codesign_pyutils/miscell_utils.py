@@ -4,6 +4,7 @@ from horizon.utils import mat_storer
 from datetime import datetime
 from datetime import date
 
+import numpy as np
 
 def str2bool(v):
   #susendberg's function
@@ -49,7 +50,7 @@ def check_str_list(comp_list = ["x", "y", "z"], input = []):
 
         presence_array[i] = True
 
-  return presence_array
+  return np.where(presence_array)[0]
 
 class SolDumper():
 

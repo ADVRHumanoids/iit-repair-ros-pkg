@@ -25,8 +25,7 @@ import rospkg
 from codesign_pyutils.ros_utils import MarkerGen, FramePub, ReplaySol
 from codesign_pyutils.miscell_utils import str2bool, SolDumper,\
                                            wait_for_confirmation
-from codesign_pyutils.horizon_utils import add_pose_cnstrnt, add_bartender_cnstrnt,\
-                                           FlippingTaskGen
+from codesign_pyutils.horizon_utils import FlippingTaskGen
 from codesign_pyutils.math_utils import quat2rot
 
 ## Getting/setting some useful variables
@@ -46,7 +45,7 @@ results_path = codesign_path + "/test_results"
 file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 right_arm_picks = True
-filling_n_nodes = 0
+filling_n_nodes = 2
 
 seed = 4
 np.random.seed(10)
@@ -201,6 +200,11 @@ def build_multiple_flipping_tasks(args, flipping_task, right_arm_picks, urdf_ful
     #                                      object_q_wrt_ws = np.array([0, 1, 0, 0]), \
     #                                     #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
     #                                      right_arm_picks = right_arm_picks)
+    
+
+    print(flipping_task.nodes_list)
+    print(flipping_task.total_nnodes)
+    print(flipping_task.n_of_tasks)
 
     flipping_task.init_prb(urdf_full_path, weight_glob_man = args.weight_global_manip,\
                             is_soft_pose_cnstr = False, epsi = 0.0)
@@ -307,8 +311,8 @@ def main(args):
     pose_pub = FramePub("frame_pub")
     init_frame_name = "/repair/init_pose"
     trgt_frame_name = "/repair/trgt_pose"
-    pose_pub.add_pose(flipping_task.object_pos_lft[0], flipping_task.object_q_lft[0],\
-                      init_frame_name, "working_surface_link")
+    # pose_pub.add_pose(flipping_task.object_pos_lft[0], flipping_task.object_q_lft[0],\
+    #                   init_frame_name, "working_surface_link")
     # pose_pub.add_pose(flipping_task.lft_pick_pos[0], flipping_task.lft_pick_q[0],\
     #                   trgt_frame_name, "working_surface_link")
     pose_pub.spin()
@@ -398,6 +402,8 @@ def main(args):
 
                 print("\nSolutions dumped. \n")
         
+        print("ascxas:", flipping_task.nodes_list)
+
         if args.rviz_replay:
 
             q_replay = None
@@ -489,7 +495,7 @@ if __name__ == '__main__':
     parser.add_argument('--base_weight_rot', '-wr', type = np.double,\
                         help = 'base weight for orientation tracking (if using soft constraints)', default = 0.001)
     parser.add_argument('--weight_global_manip', '-wman', type = np.double,\
-                        help = 'weight for global manipulability cost function', default = 0.01)
+                        help = 'weight for global manipulability cost function', default = 0.08)
     parser.add_argument('--soft_warmstart', '-sws', type=str2bool,\
                         help = 'whether to use the solution to the soft problem as initialization for the hard one', default = True)
     parser.add_argument('--replay_soft_and_hard', '-rsh', type=str2bool,\

@@ -76,28 +76,17 @@ def rot_error3(R_trgt, R_actual, epsi = 0.0):
 
     return err
 
-def get_cocktail_aux_rot(R):
-
-    # Conventionally, given a target frame for one arm
-    # ^z
-    # |
-    # |
-    # o_ _ _ > x
-    #
-    # The target reference frame for the other arm is 
-    # chosen with same origin and the following orientation:
-    # 
-    # o_ _ _ > x
-    # |
-    # |
-    # ˇ z
-    # This is done to make the renowed "baretender" pose
+def get_cocktail_matching_rot(R):
     
+    # given the rotation matrix of the TCP of one arm, 
+    # computes the necessary rotation matrix to be used
+    # for the other arm so that the resulting TCP poses are
+    # specular
+      
+    cocktail_aux_rot = cs.DM([[-1.0, 0.0, 0.0],\
+                              [0.0, 1.0, 0.0],\
+                              [0.0, 0.0, - 1.0]]) 
 
-    cocktail_aux_rot = cs.DM([[0.0, 1.0, 0.0],\
-                                   [1.0, 0.0, 0.0],\
-                                   [0.0, 0.0, - 1.0]]) 
-
-    R_aux = cs.mtimes(R, cocktail_aux_rot)
+    R_aux = R @ cocktail_aux_rot
 
     return R_aux
