@@ -37,6 +37,20 @@ def wait_for_confirmation(do_something = "proceed",\
 
   return go_on
 
+def check_str_list(comp_list = ["x", "y", "z"], input = []):
+  
+  presence_array = [False] * len(comp_list)
+
+  for i in range(len(comp_list)):
+
+    for j in range(len(input)):
+
+      if (input[j] == comp_list[i] or input[j] == comp_list[i].upper()) and presence_array[i] != True:
+
+        presence_array[i] = True
+
+  return presence_array
+
 class SolDumper():
 
   def __init__(self, dump_path, backend_name = "matStorer"):
