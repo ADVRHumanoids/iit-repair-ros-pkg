@@ -60,9 +60,9 @@ def rot_error(R_trgt, R_actual, epsi = 0.0):
 
 def rot_error2(R_trgt, R_actual, epsi = 0.0):
 
-    R_err = R_actual @ R_trgt.T
+    R_err = R_trgt @ R_actual.T # orientation or actual frame w.r.t. target frame
 
-    S = (R_err - R_err.T) / 2
+    S = (R_err - R_err.T) / 2 # constant angular velocity necessary to bring frame actual to frame trgt ( * dt)
 
     r = cs.vertcat(S[2, 1], S[0, 2], S[1, 0])
 
