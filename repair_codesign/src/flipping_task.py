@@ -189,23 +189,23 @@ def try_init_solve_or_go_on(args, init_task, init_slvr, task, slvr,\
 
 def build_multiple_flipping_tasks(args, flipping_task, right_arm_picks, urdf_full_path, is_soft_pose_cnstr = False):
 
-    final_node_first_task = flipping_task.add_in_place_flip_task(init_node = 0,\
-                                             object_pos_wrt_ws = np.array([0.0, -0.2, 0.0]), \
-                                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+    next_node1 = flipping_task.add_in_place_flip_task(init_node = 0,\
+                                            object_pos_wrt_ws = np.array([0.0, -0.2, 0.0]), \
+                                            object_q_wrt_ws = np.array([0, 1, 0, 0]), \
                                             #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]),\
-                                             right_arm_picks = right_arm_picks)
+                                            right_arm_picks = right_arm_picks)
 
-    # final_node_second_task = flipping_task.add_in_place_flip_task(init_node = final_node_first_task + 1,\
-    #                                      object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]), \
-    #                                      object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-    #                                     #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
-    #                                      right_arm_picks = right_arm_picks)
+    next_node2 = flipping_task.add_in_place_flip_task(init_node = next_node1,\
+                                        object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]), \
+                                        object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+                                        #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
+                                        right_arm_picks = right_arm_picks)
 
-    # final_node_third_task = flipping_task.add_in_place_flip_task(init_node = final_node_second_task + 1,\
-    #                                      object_pos_wrt_ws = np.array([0.0, 0.2, 0.0]), \
-    #                                      object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-    #                                     #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
-    #                                      right_arm_picks = right_arm_picks)
+    final_node_third_task = flipping_task.add_in_place_flip_task(init_node = next_node2,\
+                                        object_pos_wrt_ws = np.array([0.0, 0.2, 0.0]), \
+                                        object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+                                        #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
+                                        right_arm_picks = right_arm_picks)
     
 
     print(flipping_task.nodes_list)
@@ -520,7 +520,7 @@ if __name__ == '__main__':
     parser.add_argument('--base_weight_rot', '-wr', type = np.double,\
                         help = 'base weight for orientation tracking (if using soft constraints)', default = 0.001)
     parser.add_argument('--weight_global_manip', '-wman', type = np.double,\
-                        help = 'weight for global manipulability cost function', default = 0.08)
+                        help = 'weight for global manipulability cost function', default = 0.1)
     parser.add_argument('--soft_warmstart', '-sws', type=str2bool,\
                         help = 'whether to use the solution to the soft problem as initialization for the hard one', default = True)
     parser.add_argument('--replay_soft_and_hard', '-rsh', type=str2bool,\

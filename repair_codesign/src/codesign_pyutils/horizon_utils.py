@@ -8,8 +8,6 @@ from codesign_pyutils.miscell_utils import check_str_list, wait_for_confirmation
 
 from horizon import problem
 
-from horizon.utils import mat_storer
-
 from casadi_kin_dyn import pycasadi_kin_dyn as cas_kin_dyn
 
 import time
@@ -305,20 +303,19 @@ class FlippingTaskGen:
 
             self.total_nnodes = self.total_nnodes + total_n_task_nodes  + filling_n_nodes
 
-            final_node = init_node + total_n_task_nodes  + filling_n_nodes - 1 # from the second task on, filling nodes between tasks are included in the nodes array
+            next_task_node = init_node + total_n_task_nodes  + filling_n_nodes  # from the second task on, filling nodes between tasks are included in the nodes array
 
-            self.nodes_list.append(list(range(init_node + filling_n_nodes, final_node + 1)))
+            self.nodes_list.append(list(range(init_node + filling_n_nodes, next_task_node + 1)))
 
         else: # first added task
             
             self.total_nnodes = total_n_task_nodes
 
-            final_node = init_node + total_n_task_nodes - 1 
+            next_task_node = init_node + total_n_task_nodes  
             
-            self.nodes_list.append(list(range(init_node, final_node + 1)))
+            self.nodes_list.append(list(range(init_node, next_task_node + 1)))
         
-
-        return final_node
+        return next_task_node
 
     def add_pick_and_place_task(self, init_node,\
                                 right_arm_picks = True,\
@@ -399,9 +396,9 @@ class FlippingTaskGen:
         self.hor_offsets.append(hor_offset)
         self.rght_arm_picks.append(right_arm_picks)
 
-        final_node = self.compute_nodes(init_node, self.filling_n_nodes)
+        next_task_node = self.compute_nodes(init_node, self.filling_n_nodes)
 
-        return final_node
+        return next_task_node
 
     def init_prb(self, urdf_full_path, weight_pos = 0.001, weight_rot = 0.001,\
                  weight_glob_man = 0.0001, is_soft_pose_cnstr = True,\
