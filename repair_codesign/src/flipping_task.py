@@ -6,13 +6,11 @@ from horizon.utils.resampler_trajectory import resampler
 from horizon.ros.replay_trajectory import *
 from horizon.transcriptions.transcriptor import Transcriptor
 
-from casadi_kin_dyn import pycasadi_kin_dyn as cas_kin_dyn
 from horizon.solvers import solver
 import os, argparse
 from os.path import exists
 
 import numpy as np
-import casadi as cs
 
 from datetime import datetime
 from datetime import date
@@ -22,22 +20,22 @@ import subprocess
 
 import rospkg
 
-from codesign_pyutils.ros_utils import MarkerGen, FramePub, ReplaySol
+from codesign_pyutils.ros_utils import FramePub, ReplaySol
 from codesign_pyutils.miscell_utils import str2bool, SolDumper,\
                                            wait_for_confirmation
 from codesign_pyutils.horizon_utils import FlippingTaskGen
-from codesign_pyutils.math_utils import quat2rot
 
 from horizon.utils import mat_storer
 
 import warnings
 
-## Getting/setting some useful variables
+## getting some useful information to be used for data storage
 today = date.today()
 today_is = today.strftime("%d-%m-%Y")
 now = datetime.now()
 current_time = now.strftime("_%H_%M_%S")
 
+# useful paths
 rospackage = rospkg.RosPack() # Only for taking the path to the leg package
 urdfs_path = rospackage.get_path("repair_urdf") + "/urdf"
 urdf_name = "repair_full"
@@ -48,28 +46,48 @@ results_path = codesign_path + "/test_results"
 
 file_name = os.path.splitext(os.path.basename(__file__))[0]
 
+# task-specific options
 right_arm_picks = True
 filling_n_nodes = 10
 rot_error_epsi = 0.001
 
+# generating samples along working surface y direction
+n_y_samples = 5
+y_sampl_ub = 0.3 
+y_sampl_lb = - y_sampl_ub
+dy = (y_sampl_ub - y_sampl_lb) / (n_y_samples - 1)
+
+y_sampling = np.array( [0.0] * n_y_samples)
+for i in range(n_y_samples):
+    
+    y_sampling[i] = y_sampl_lb + dy * i
+
+# random init settings( if used)
 seed = 1
 np.random.seed(seed)
 
+# resampler option (if used)
 refinement_scale = 10
 
+# longitudinal extension of grasped object
 cocktail_size = 0.08
 
+# solver options
 solver_type = 'ipopt'
 slvr_opt = {
-    "ipopt.tol": 0.00001, 
+    "ipopt.tol": 0.0001, 
     "ipopt.max_iter": 10000,
     "ilqr.verbose": True}
 
+# loaded initial guess options
 init_guess_filename = "init3.mat"
 init_load_abs_path = results_path + "/init_guess/" + init_guess_filename
 
+
 def solve_prb_standalone(task, slvr, q_init=None, prbl_name = "Problem",
                          on_failure = "\n Failed to solve problem!! \n'"):
+
+    # standard routine for solving the problem
 
     solve_failed = False
 
@@ -101,6 +119,11 @@ def solve_prb_standalone(task, slvr, q_init=None, prbl_name = "Problem",
 def solve_main_prb_soft_init(args, task, slvr_init, slvr, q_init_hard=None,\
                              prbl_name = "Problem",\
                              on_failure = "\n Failed to solve problem with soft initialization!! \n'"):
+
+    # Routine for solving the "hard" problem employing the solution 
+    # from another solver.
+    # If solution fails, the user can choose to try to solve the "hard"
+    # problem without any initialization from the other solution
 
     task.q.setInitialGuess(slvr_init.getSolutionDict()["q"])
    
@@ -147,6 +170,11 @@ def solve_main_prb_soft_init(args, task, slvr_init, slvr, q_init_hard=None,\
 def try_init_solve_or_go_on(args, init_task, init_slvr, task, slvr,\
                             q_init_hard=None, q_init_soft=None):
         
+        # Routine for solving the initialization problem.
+        # If solution fails, the user can choose to solve
+        # the main problem anyway, without employing the 
+        # solution the initialization problem.
+
         soft_sol_failed =  False
         sol_failed = False
 
@@ -188,56 +216,26 @@ def try_init_solve_or_go_on(args, init_task, init_slvr, task, slvr,\
             
         return soft_sol_failed, sol_failed
 
-def build_multiple_flipping_tasks(args, flipping_task, right_arm_picks, urdf_full_path, is_soft_pose_cnstr = False, epsi = 0.001):
+def build_multiple_flipping_tasks(args, flipping_task, y_sampling, right_arm_picks, urdf_full_path, is_soft_pose_cnstr = False, epsi = 0.001):
 
+    # Routine for automatically adding multiple flipping tasks,
+    # based on the provided y-axis sampling. 
 
-    next_node1 = flipping_task.add_in_place_flip_task(init_node = 0,\
-                                            object_pos_wrt_ws = np.array([0.0, 0.3, 0.0]), \
-                                            object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-                                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]),\
-                                            right_arm_picks = right_arm_picks)
+    # add tasks to the task holder object
+    next_node = 0 # used to place the next task on the right problem nodes
+    for i in range(len(y_sampling)):
 
-    next_node2 = flipping_task.add_in_place_flip_task(init_node = next_node1,\
-                                        object_pos_wrt_ws = np.array([0.0, 0.2, 0.0]), \
-                                        object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-                                        #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
-                                        right_arm_picks = right_arm_picks)
+        next_node = flipping_task.add_in_place_flip_task(init_node = next_node,\
+                                    object_pos_wrt_ws = np.array([0.0, y_sampling[i], 0.0]), \
+                                    object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+                                    #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]),\
+                                    right_arm_picks = right_arm_picks)
 
-    next_node3 = flipping_task.add_in_place_flip_task(init_node = next_node2,\
-                                        object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]), \
-                                        object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-                                        #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
-                                        right_arm_picks = right_arm_picks)
-    
-    next_node4 = flipping_task.add_in_place_flip_task(init_node = next_node3,\
-                                        object_pos_wrt_ws = np.array([0.0, - 0.2, 0.0]), \
-                                        object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-                                        #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
-                                        right_arm_picks = right_arm_picks)
+    print("Flipping task node list: ", flipping_task.nodes_list)
+    print("Total employed nodes: ", flipping_task.total_nnodes)
+    print("Number of added subtasks:", flipping_task.n_of_tasks)
 
-    next_node5 = flipping_task.add_in_place_flip_task(init_node = next_node4,\
-                                        object_pos_wrt_ws = np.array([0.0, - 0.3, 0.0]), \
-                                        object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-                                        #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
-                                        right_arm_picks = right_arm_picks)
-
-    # next_node6 = flipping_task.add_in_place_flip_task(init_node = next_node5,\
-    #                                     object_pos_wrt_ws = np.array([0.0, - 0.3, 0.0]), \
-    #                                     object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-    #                                     #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
-    #                                     right_arm_picks = right_arm_picks)
-
-    # next_node7 = flipping_task.add_in_place_flip_task(init_node = next_node6,\
-    #                                     object_pos_wrt_ws = np.array([0.0, - 0.45, 0.0]), \
-    #                                     object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-    #                                     #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
-    #                                     right_arm_picks = right_arm_picks)
-
-    # print(flipping_task.nodes_list)
-    # print(next_node1)
-    # print(flipping_task.total_nnodes)
-    # print(flipping_task.n_of_tasks)
-
+    # build the problem 
     flipping_task.init_prb(urdf_full_path, weight_glob_man = args.weight_global_manip,\
                             is_soft_pose_cnstr = is_soft_pose_cnstr, epsi = epsi)
 
@@ -277,14 +275,14 @@ def main(args):
 
         # "hard" flipping task
         flipping_task = FlippingTaskGen(cocktail_size = cocktail_size, filling_n_nodes = filling_n_nodes)
-        build_multiple_flipping_tasks(args, flipping_task,\
+        build_multiple_flipping_tasks(args, flipping_task, y_sampling,\
                                     right_arm_picks, urdf_full_path,\
                                     is_soft_pose_cnstr = False, \
                                     epsi = rot_error_epsi)
 
         # "soft" flipping task to be used as initialization to the hard
         flipping_task_init = FlippingTaskGen(cocktail_size = cocktail_size, filling_n_nodes = filling_n_nodes)
-        build_multiple_flipping_tasks(args, flipping_task_init,\
+        build_multiple_flipping_tasks(args, flipping_task_init, y_sampling,\
                                     right_arm_picks, urdf_full_path,\
                                     is_soft_pose_cnstr = True, \
                                     epsi = rot_error_epsi)
@@ -315,7 +313,7 @@ def main(args):
         # generate a single task depending on the arguments
 
         flipping_task = FlippingTaskGen(cocktail_size = cocktail_size, filling_n_nodes = filling_n_nodes)
-        build_multiple_flipping_tasks(args, flipping_task,\
+        build_multiple_flipping_tasks(args, flipping_task, y_sampling,\
                                     right_arm_picks, urdf_full_path,\
                                     is_soft_pose_cnstr = args.soft_pose_cnstrnt, \
                                     epsi = rot_error_epsi)
@@ -541,6 +539,7 @@ def main(args):
     
 if __name__ == '__main__':
 
+    # adding script arguments
     parser = argparse.ArgumentParser(
         description='just a simple test file for RePAIR co-design')
     parser.add_argument('--gen_urdf', '-g', type=str2bool,\
@@ -573,4 +572,5 @@ if __name__ == '__main__':
                         help = 'whether to load the initial guess from file', default = False)
 
     args = parser.parse_args()
+
     main(args)
