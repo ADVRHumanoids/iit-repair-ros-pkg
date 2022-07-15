@@ -49,7 +49,7 @@ results_path = codesign_path + "/test_results"
 file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 right_arm_picks = True
-filling_n_nodes = 20
+filling_n_nodes = 10
 rot_error_epsi = 0.001
 
 seed = 1
@@ -61,7 +61,7 @@ cocktail_size = 0.08
 
 solver_type = 'ipopt'
 slvr_opt = {
-    "ipopt.tol": 0.000001, 
+    "ipopt.tol": 0.00001, 
     "ipopt.max_iter": 10000,
     "ilqr.verbose": True}
 

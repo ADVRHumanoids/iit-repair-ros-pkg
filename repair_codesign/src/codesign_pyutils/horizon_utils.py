@@ -14,7 +14,7 @@ import time
 
 import warnings
 
-rot_error_approach = "arturo" # options: "siciliano", "arturo", "traversaro"
+rot_error_approach = "traversaro" # options: "siciliano", "arturo", "traversaro"
 epsi_default = 0.00000001
 
 ###############
