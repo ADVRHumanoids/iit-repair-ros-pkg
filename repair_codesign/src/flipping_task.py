@@ -50,9 +50,10 @@ file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 right_arm_picks = True
 filling_n_nodes = 10
+rot_error_epsi = 0.001
 
 seed = 1
-np.random.seed(10)
+np.random.seed(seed)
 
 refinement_scale = 10
 
@@ -64,7 +65,7 @@ slvr_opt = {
     "ipopt.max_iter": 10000,
     "ilqr.verbose": True}
 
-init_guess_filename = "init2.mat"
+init_guess_filename = "init3.mat"
 init_load_abs_path = results_path + "/init_guess/" + init_guess_filename
 
 def solve_prb_standalone(task, slvr, q_init=None, prbl_name = "Problem",
@@ -187,7 +188,8 @@ def try_init_solve_or_go_on(args, init_task, init_slvr, task, slvr,\
             
         return soft_sol_failed, sol_failed
 
-def build_multiple_flipping_tasks(args, flipping_task, right_arm_picks, urdf_full_path, is_soft_pose_cnstr = False):
+def build_multiple_flipping_tasks(args, flipping_task, right_arm_picks, urdf_full_path, is_soft_pose_cnstr = False, epsi = 0.001):
+
 
     next_node1 = flipping_task.add_in_place_flip_task(init_node = 0,\
                                             object_pos_wrt_ws = np.array([0.0, 0.3, 0.0]), \
@@ -219,12 +221,25 @@ def build_multiple_flipping_tasks(args, flipping_task, right_arm_picks, urdf_ful
                                         #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
                                         right_arm_picks = right_arm_picks)
 
-    print(flipping_task.nodes_list)
-    print(flipping_task.total_nnodes)
-    print(flipping_task.n_of_tasks)
+    # next_node6 = flipping_task.add_in_place_flip_task(init_node = next_node5,\
+    #                                     object_pos_wrt_ws = np.array([0.0, - 0.3, 0.0]), \
+    #                                     object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+    #                                     #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
+    #                                     right_arm_picks = right_arm_picks)
+
+    # next_node7 = flipping_task.add_in_place_flip_task(init_node = next_node6,\
+    #                                     object_pos_wrt_ws = np.array([0.0, - 0.45, 0.0]), \
+    #                                     object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+    #                                     #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]), \
+    #                                     right_arm_picks = right_arm_picks)
+
+    # print(flipping_task.nodes_list)
+    # print(next_node1)
+    # print(flipping_task.total_nnodes)
+    # print(flipping_task.n_of_tasks)
 
     flipping_task.init_prb(urdf_full_path, weight_glob_man = args.weight_global_manip,\
-                            is_soft_pose_cnstr = False, epsi = 0.0)
+                            is_soft_pose_cnstr = is_soft_pose_cnstr, epsi = epsi)
 
 
 def main(args):
@@ -263,14 +278,16 @@ def main(args):
         # "hard" flipping task
         flipping_task = FlippingTaskGen(cocktail_size = cocktail_size, filling_n_nodes = filling_n_nodes)
         build_multiple_flipping_tasks(args, flipping_task,\
-                                     right_arm_picks, urdf_full_path,\
-                                     is_soft_pose_cnstr = False)
+                                    right_arm_picks, urdf_full_path,\
+                                    is_soft_pose_cnstr = False, \
+                                    epsi = rot_error_epsi)
 
         # "soft" flipping task to be used as initialization to the hard
         flipping_task_init = FlippingTaskGen(cocktail_size = cocktail_size, filling_n_nodes = filling_n_nodes)
         build_multiple_flipping_tasks(args, flipping_task_init,\
-                                     right_arm_picks, urdf_full_path,\
-                                     is_soft_pose_cnstr = True)
+                                    right_arm_picks, urdf_full_path,\
+                                    is_soft_pose_cnstr = True, \
+                                    epsi = rot_error_epsi)
 
         transcription_method = 'multiple_shooting'
         transcription_opts_soft = dict(integrator='RK4')
@@ -299,16 +316,10 @@ def main(args):
 
         flipping_task = FlippingTaskGen(cocktail_size = cocktail_size, filling_n_nodes = filling_n_nodes)
         build_multiple_flipping_tasks(args, flipping_task,\
-                                     right_arm_picks, urdf_full_path,\
-                                     is_soft_pose_cnstr = False)
-                                    
-        
-        flipping_task.init_prb(urdf_full_path,\
-                               weight_pos = args.base_weight_pos,\
-                               weight_rot = args.base_weight_rot,\
-                               weight_glob_man = args.weight_global_manip,\
-                               is_soft_pose_cnstr = args.soft_pose_cnstrnt, epsi = 0.001)
-
+                                    right_arm_picks, urdf_full_path,\
+                                    is_soft_pose_cnstr = args.soft_pose_cnstrnt, \
+                                    epsi = rot_error_epsi)
+    
         transcription_method = 'multiple_shooting'
         transcription_opts = dict(integrator='RK4')
 
@@ -347,15 +358,15 @@ def main(args):
 
         soft_sol_failed = False
 
-    q_init_hard=None
-    q_init_soft=None
+    q_init_hard = None
+    q_init_soft = None
     
     if args.use_init_guess:
         
         if args.load_initial_guess:
             
             try:
-            
+                                
                 ms_ig_load = mat_storer.matStorer(init_load_abs_path)
 
                 q_init_hard = ms_ig_load.load()["q"]
@@ -551,9 +562,9 @@ if __name__ == '__main__':
     parser.add_argument('--base_weight_rot', '-wr', type = np.double,\
                         help = 'base weight for orientation tracking (if using soft constraints)', default = 0.001)
     parser.add_argument('--weight_global_manip', '-wman', type = np.double,\
-                        help = 'weight for global manipulability cost function', default = 0.1)
+                        help = 'weight for global manipulability cost function', default = 0.01)
     parser.add_argument('--soft_warmstart', '-sws', type=str2bool,\
-                        help = 'whether to use the solution to the soft problem as initialization for the hard one', default = True)
+                        help = 'whether to use the solution to the soft problem as initialization for the hard one', default = False)
     parser.add_argument('--replay_soft_and_hard', '-rsh', type=str2bool,\
                         help = 'whether to replay both soft and hard solution on RVIz (only valid if soft_warmstart == True)', default = False)
     parser.add_argument('--resample_sol', '-rs', type=str2bool,\
