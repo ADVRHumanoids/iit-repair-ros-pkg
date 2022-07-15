@@ -4,7 +4,7 @@ import casadi as cs
 
 from codesign_pyutils.math_utils import quat2rot, rot_error, rot_error2, rot_error3, get_cocktail_matching_rot
 
-from codesign_pyutils.miscell_utils import check_str_list, wait_for_confirmation
+from codesign_pyutils.miscell_utils import check_str_list, rot_error_axis_sel_not_supp
 
 from horizon import problem
 
@@ -14,7 +14,7 @@ import time
 
 import warnings
 
-rot_error_approach = "traversaro" # options: "siciliano", "arturo", "traversaro"
+rot_error_approach = "arturo" # options: "siciliano", "arturo", "traversaro"
 epsi_default = 0.00000001
 
 ###############
@@ -100,7 +100,7 @@ def add_bartender_cnstrnt(index, prb, nodes, posl, posr, rotl, rotr, is_pos = Tr
 
 #############
 
-def add_pose_cnstrnt(index, prb, nodes, pos = None, rot = None, pos_ref = None, rot_ref = None,\
+def add_pose_cnstrnt(unique_id, prb, nodes, pos = None, rot = None, pos_ref = None, rot_ref = None,\
                      pos_selection = ["x", "y", "z"], rot_selection = ["x", "y", "z"],\
                      weight_pos = 1.0, weight_rot = 1.0, is_soft = False, epsi = epsi_default):
 
@@ -128,25 +128,31 @@ def add_pose_cnstrnt(index, prb, nodes, pos = None, rot = None, pos_ref = None, 
         if is_pos:
 
             pos_selector = check_str_list(comp_list = ["x", "y", "z"], input = pos_selection)
-            pos_cnstrnt = prb.createConstraint("pos" + str(index),\
+            pos_cnstrnt = prb.createConstraint("pos_" + str(unique_id),\
                                                 pos[pos_selector] - pos_ref[pos_selector],\
                                                 nodes = nodes)
 
         if is_rot:
             
+            rot_selector = check_str_list(comp_list = ["x", "y", "z"], input = rot_selection)
+
             if rot_error_approach == "siciliano":
                 
-                rot_cnstrnt = prb.createConstraint("rot" + str(index),\
-                                    rot_error(rot_ref, rot, epsi), nodes = nodes)
+                rot_error_axis_sel_not_supp(rot_selector, rot_error_approach) # check if user tried to set axis --> in case, throw error
+
+                rot_cnstrnt = prb.createConstraint("rot_" + str(unique_id),\
+                                    rot_error(rot_ref, rot, epsi)[rot_selector], nodes = nodes)
 
             if rot_error_approach == "arturo":
                 
-                rot_cnstrnt = prb.createConstraint("rot" + str(index),\
-                                    rot_error2(rot_ref, rot, epsi), nodes = nodes)
+                rot_cnstrnt = prb.createConstraint("rot_" + str(unique_id),\
+                                    rot_error2(rot_ref, rot, epsi)[rot_selector], nodes = nodes)
             
             if rot_error_approach == "traversaro":
+                
+                rot_error_axis_sel_not_supp(rot_selector, rot_error_approach) # check if user tried to set axis --> in case, throw error
 
-                rot_cnstrnt = prb.createConstraint("rot" + str(index),\
+                rot_cnstrnt = prb.createConstraint("rot_" + str(unique_id),\
                                     rot_error3(rot_ref, rot, epsi), nodes = nodes)
 
             if rot_error_approach != "traversaro" and rot_error_approach != "arturo"\
@@ -167,33 +173,47 @@ def add_pose_cnstrnt(index, prb, nodes, pos = None, rot = None, pos_ref = None, 
             
                 if pos[pos_selector].shape[0] == 1: # do not use cs.sumsqr
  
-                    pos_cnstrnt = prb.createIntermediateCost("pos_soft" + str(index),\
+                    pos_cnstrnt = prb.createIntermediateCost("pos_soft_" + str(unique_id),\
                                                     weight_pos * cs.power(pos[pos_selector] - pos_ref[pos_selector], 2),\
                                                     nodes = nodes)
 
                 else:
 
-                    pos_cnstrnt = prb.createIntermediateCost("pos_soft" + str(index),\
+                    pos_cnstrnt = prb.createIntermediateCost("pos_soft_" + str(unique_id),\
                                                     weight_pos * cs.sumsqr(pos[pos_selector] - pos_ref[pos_selector]),\
                                                     nodes = nodes)
 
         if is_rot:
             
+            rot_selector = check_str_list(comp_list = ["x", "y", "z"], input = rot_selection)
+
             if rot_error_approach == "siciliano":
                 
-                rot_cnstrnt = prb.createIntermediateCost("rot_soft" + str(index),\
-                            weight_rot * cs.sumsqr(rot_error(rot_ref, rot, epsi)),\
+                rot_error_axis_sel_not_supp(rot_selector, rot_error_approach) # check if user tried to set axis --> in case, throw error
+
+                rot_cnstrnt = prb.createIntermediateCost("rot_soft_" + str(unique_id),\
+                            weight_rot * cs.sumsqr(rot_error(rot_ref, rot, epsi)[rot_selector]),\
                             nodes = nodes)
 
             if rot_error_approach == "arturo":
                 
-                rot_cnstrnt = prb.createIntermediateCost("rot_soft" + str(index),\
-                            weight_rot * cs.sumsqr(rot_error2(rot_ref, rot, epsi)),\
-                            nodes = nodes)
+                if len(rot_selector) == 1: # do not use sumsqr
+                    
+                    rot_cnstrnt = prb.createIntermediateCost("rot_soft_" + str(unique_id),\
+                                weight_rot * (rot_error2(rot_ref, rot, epsi)[rot_selector]),\
+                                nodes = nodes)
+
+                else:
+
+                    rot_cnstrnt = prb.createIntermediateCost("rot_soft_" + str(unique_id),\
+                                weight_rot * cs.sumsqr(rot_error2(rot_ref, rot, epsi)[rot_selector]),\
+                                nodes = nodes)
             
             if rot_error_approach == "traversaro":
+                
+                rot_error_axis_sel_not_supp(rot_selector, rot_error_approach) # check if user tried to set axis --> in case, throw error
 
-                rot_cnstrnt = prb.createIntermediateCost("rot_soft" + str(index),\
+                rot_cnstrnt = prb.createIntermediateCost("rot_soft_" + str(unique_id),\
                             weight_rot * (rot_error3(rot_ref, rot, epsi)),\
                             nodes = nodes)
 
@@ -522,14 +542,22 @@ class FlippingTaskGen:
             
             delta_offset = self.get_main_nodes_offset(len(self.nodes_list[i])) # = 1 if no intermediate node between base nodes was inserted
 
-            for j in range(self.task_base_n_nodes): # for each task, iterate through each base node (!= task total number of nodes)
+            for j in range(self.task_base_n_nodes): # for each task, iterate through each BASE node (!= task total number of nodes)
                 
                 # hand-crafted state machine (TB improved in the future)
 
                 constraint_unique_id_rght = j + 2 * self.task_base_n_nodes * i # index used to give different names to each constraint (rght arm)
                 constraint_unique_id_lft = j + self.task_base_n_nodes + 2 * self.task_base_n_nodes * i # index used to give different names to each constraint (lft arm)
                 
+                # The way pose constraint names are assigned:
+                #-----------------------------------------
+                # R arm: | 0  1  2  3  4  5  6  7  8 | 18 19 ...
+                # ---------------------------------
+                # L arm: | 9 10 11 12 13 14 15 16 17 | 27 28 ....
+                #----------------------------------------
+                
                 cnstrnt_node_index = self.nodes_list[i][j * delta_offset] # index of the constraint (traslated by the number of filling nodes)
+
 
                 if j == 0: # ARM 1: waiting pose | ARM 2: waiting pose
                                         
@@ -713,6 +741,29 @@ class FlippingTaskGen:
                                         pos_selection = ["x", "y", "z"],\
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
+                        
+                        for h in range(self.filling_n_nodes): # add constant orientation of ARM2 (to)
+                                                        
+                            add_pose_cnstrnt(str(i) + "_lft_y_alignment_" + str(h), self.prb, cnstrnt_node_index + 1 + h, \
+                                        rot = self.lft_tcp_rot_wrt_ws,\
+                                        rot_ref = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]]),    
+                                        rot_selection = ["x", "y", "z"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+
+                            add_pose_cnstrnt(str(i) + "_rght_y_alignment_" + str(h), self.prb, cnstrnt_node_index + 1 + h, \
+                                        rot = self.rght_tcp_rot_wrt_ws,\
+                                        rot_ref = np.array([[1, 0, 0], [0, 0, 1], [0, - 1, 0]]),    
+                                        rot_selection = ["x", "y", "z"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+
+                            add_pose_cnstrnt(str(i) + "_same_tcp_height_" + str(h), self.prb, cnstrnt_node_index + 1 + h, \
+                                        pos = self.lft_tcp_pos_wrt_ws,\
+                                        pos_ref = self.rght_tcp_pos_wrt_ws,    
+                                        pos_selection = ["z"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
 
                     else: # left arm picks
                         
@@ -889,6 +940,8 @@ class FlippingTaskGen:
                                         pos_selection = ["x", "y", "z"],\
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
+
+                
 
     def build_pick_and_place_task(self, is_soft_pose_cnstr = True, epsi = epsi_default):
 

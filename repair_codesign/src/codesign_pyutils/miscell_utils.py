@@ -106,7 +106,11 @@ class SolDumper():
       self.storers[i].store(self.sols[i])
     
 
+def rot_error_axis_sel_not_supp(axis_selector, rot_error_approach):
 
+  if len(axis_selector) != 3:
+  
+    raise Exception("\nSelecting the constrained axis when using \"" + rot_error_approach + "\" orientation error is not supported yet.\n")
 
     
 
