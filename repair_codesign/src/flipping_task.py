@@ -239,7 +239,6 @@ def build_multiple_flipping_tasks(args, flipping_task, y_sampling, right_arm_pic
     flipping_task.init_prb(urdf_full_path, weight_glob_man = args.weight_global_manip,\
                             is_soft_pose_cnstr = is_soft_pose_cnstr, epsi = epsi)
 
-
 def main(args):
 
     # preliminary ops

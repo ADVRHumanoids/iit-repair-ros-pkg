@@ -1,3 +1,4 @@
+from platform import node
 import numpy as np
 
 import casadi as cs
@@ -254,6 +255,7 @@ class FlippingTaskGen:
         self.total_nnodes = 0
         self.filling_n_nodes = filling_n_nodes # filling nodes in between two base task nodes
         self.nodes_list = [] # used to iteratre through flipping task and nodes of each defined task
+        self.bimanual_nodes = [] # nodes when there is bimanual manipulation of the object
         self.final_node = None
         self.n_of_tasks = 0
 
@@ -296,6 +298,20 @@ class FlippingTaskGen:
                                /(self.task_base_n_nodes - 1)) + 1
 
         return main_nodes_offset
+
+    def check_bimanual_nodes(self, node):
+
+        is_bimanual = False
+
+        for i in range(len(self.bimanual_nodes)):
+
+            if node == self.bimanual_nodes[i]:
+                
+                is_bimanual = True
+
+                break
+
+        return is_bimanual
 
     def compute_nodes(self, init_node, filling_n_nodes):
 
@@ -532,10 +548,29 @@ class FlippingTaskGen:
                                 self.coll_links_pos_lft[1] - self.coll_links_pos_rght[1])
         coll.setBounds(self.hor_offsets[0] - 0.001, cs.inf)
 
+        # self.add_tcp_avoidance_cnstrnt()
+
         # here the "custom" task is added to the problem
         self.build_task(is_soft_pose_cnstr = is_soft_pose_cnstr, epsi = epsi,\
                         in_place_flip = self.in_place_flip)
+    
+    def add_tcp_avoidance_cnstrnt(self):
 
+        # assign a tcp avoidance task over one axis only on nodes where bimanual manipulation
+        # is not used (to avoid unfeasibility)
+
+        for node in range(self.total_nnodes):
+            
+            is_bimanual = self.check_bimanual_nodes(node)
+
+            if not is_bimanual:
+
+                tcp_coll = self.prb.createConstraint("avoid_tcp_collision_on_y_" + str(node), \
+                                            self.lft_tcp_pos_wrt_ws[1] - self.rght_tcp_pos_wrt_ws[1],\
+                                            nodes = node)
+
+                tcp_coll.setBounds(self.cocktail_size - 0.001, cs.inf)
+            
     def build_in_place_flip_task(self, is_soft_pose_cnstr = True, epsi = epsi_default):
 
         for i in range(len(self.nodes_list)): # iterate through multiple flipping tasks
@@ -742,28 +777,28 @@ class FlippingTaskGen:
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         
-                        for h in range(self.filling_n_nodes): # add constant orientation of ARM2 (to)
+                        # for h in range(self.filling_n_nodes): # add constant orientation of ARM2 (to)
                                                         
-                            add_pose_cnstrnt(str(i) + "_lft_y_alignment_" + str(h), self.prb, cnstrnt_node_index + 1 + h, \
-                                        rot = self.lft_tcp_rot_wrt_ws,\
-                                        rot_ref = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]]),    
-                                        rot_selection = ["x", "y", "z"],\
-                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+                        #     add_pose_cnstrnt(str(i) + "_lft_y_alignment_" + str(h), self.prb, cnstrnt_node_index + 1 + h, \
+                        #                 rot = self.lft_tcp_rot_wrt_ws,\
+                        #                 rot_ref = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]]),    
+                        #                 rot_selection = ["z"],\
+                        #                 weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                        #                 is_soft = is_soft_pose_cnstr, epsi = epsi)
 
-                            add_pose_cnstrnt(str(i) + "_rght_y_alignment_" + str(h), self.prb, cnstrnt_node_index + 1 + h, \
-                                        rot = self.rght_tcp_rot_wrt_ws,\
-                                        rot_ref = np.array([[1, 0, 0], [0, 0, 1], [0, - 1, 0]]),    
-                                        rot_selection = ["x", "y", "z"],\
-                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+                        #     add_pose_cnstrnt(str(i) + "_rght_y_alignment_" + str(h), self.prb, cnstrnt_node_index + 1 + h, \
+                        #                 rot = self.rght_tcp_rot_wrt_ws,\
+                        #                 rot_ref = np.array([[1, 0, 0], [0, 0, 1], [0, - 1, 0]]),    
+                        #                 rot_selection = ["z"],\
+                        #                 weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                        #                 is_soft = is_soft_pose_cnstr, epsi = epsi)
 
-                            add_pose_cnstrnt(str(i) + "_same_tcp_height_" + str(h), self.prb, cnstrnt_node_index + 1 + h, \
-                                        pos = self.lft_tcp_pos_wrt_ws,\
-                                        pos_ref = self.rght_tcp_pos_wrt_ws,    
-                                        pos_selection = ["z"],\
-                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+                            # add_pose_cnstrnt(str(i) + "_same_tcp_height_" + str(h), self.prb, cnstrnt_node_index + 1 + h, \
+                            #             pos = self.lft_tcp_pos_wrt_ws,\
+                            #             pos_ref = self.rght_tcp_pos_wrt_ws,    
+                            #             pos_selection = ["x", "z"],\
+                            #             weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                            #             is_soft = is_soft_pose_cnstr, epsi = epsi)
 
                     else: # left arm picks
                         
@@ -787,6 +822,8 @@ class FlippingTaskGen:
                                          
                 if j == 5: # ARM 1: waits for contact | ARM 2: makes contact with bartender constraint
                     
+                    self.bimanual_nodes.append(cnstrnt_node_index) # assign bimmanual node index
+
                     if (self.rght_arm_picks[i]): # right arm picks
 
                         # right arm
@@ -940,8 +977,6 @@ class FlippingTaskGen:
                                         pos_selection = ["x", "y", "z"],\
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-
-                
 
     def build_pick_and_place_task(self, is_soft_pose_cnstr = True, epsi = epsi_default):
 
