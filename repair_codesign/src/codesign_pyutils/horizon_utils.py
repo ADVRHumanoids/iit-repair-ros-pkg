@@ -14,7 +14,7 @@ import time
 
 import warnings
 
-rot_error_approach = "siciliano" # options: "siciliano", "arturo", "traversaro"
+rot_error_approach = "arturo" # options: "siciliano", "arturo", "traversaro"
 
 from codesign_pyutils.defaults_vals import epsi_default
 
