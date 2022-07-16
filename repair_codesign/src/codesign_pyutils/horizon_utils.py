@@ -1,4 +1,3 @@
-from platform import node
 import numpy as np
 
 import casadi as cs
@@ -16,7 +15,7 @@ import time
 import warnings
 
 rot_error_approach = "arturo" # options: "siciliano", "arturo", "traversaro"
-epsi_default = 0.00000001
+epsi_default = 0.000001
 
 ###############
 # obsolete
@@ -230,6 +229,8 @@ class FlippingTaskGen:
 
     def __init__(self, cocktail_size = 0.05, filling_n_nodes = 0):
         
+        self.is_soft_pose_cnstrnt = False
+
         self.weight_pos = 0
         self.weight_rot = 0
         self.weight_glob_man = 0
@@ -268,18 +269,6 @@ class FlippingTaskGen:
         self.contact_heights = []
         self.hor_offsets = []
 
-        # object TCP picking orientation (position == position of the object)
-        self.lft_pick_q = []
-        self.rght_pick_q = []
-
-        self.object_pos_lft = [] # object pose on working surface
-        self.object_q_lft = []
-        self.object_pos_rght = []
-        self.object_q_rght = []
-
-        self.lft_inward_q = np.array([- np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0])
-        self.rght_inward_q = np.array([- np.sqrt(2.0)/2.0, np.sqrt(2.0)/2.0, 0.0, 0.0])
-
         self.in_place_flip = True
 
         self.was_init_called = False
@@ -287,8 +276,34 @@ class FlippingTaskGen:
         self.available_task_stack = ["in_place_flip", "pick_and_place"]
         self.employed_task = ""
 
+        # kinematic quantities
+
+        self.lft_inward_q = np.array([- np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0])
+        self.rght_inward_q = np.array([- np.sqrt(2.0)/2.0, np.sqrt(2.0)/2.0, 0.0, 0.0])
+
+        self.lft_pick_q = [] # where left arm will pick
+        self.rght_pick_q = [] # where right arm will pick
+
+        self.object_pos_lft = [] # object pose on working surface
+        self.object_q_lft = []
+        self.object_pos_rght = []
+        self.object_q_rght = []  
+
         self.coll_links_pos_lft = []
         self.coll_links_pos_rght = []
+
+        self.rarm_tcp_pos_wrt_ws = None
+        self.larm_tcp_pos_wrt_ws = None
+        self.rarm_tcp_rot_wrt_ws = None
+        self.larm_tcp_rot_wrt_ws = None
+
+        self.lft_off_tcp_pos_wrt_ws = None
+        self.lft_off_tcp_rot_wrt_ws = None
+        self.rght_off_tcp_pos_wrt_ws = None
+        self.rght_off_tcp_rot_wrt_ws = None
+
+        self.coll_links_pos_rght = None
+        self.coll_links_pos_lft = None
 
     def get_main_nodes_offset(self, total_task_nnodes):
     
@@ -438,10 +453,25 @@ class FlippingTaskGen:
 
         return next_task_node
 
+    def set_ig(self, q_ig = None, q_dot_ig = None):
+
+        if q_ig is not None:
+
+            self.q.setInitialGuess(q_ig)
+
+        if q_dot_ig is not None:
+
+            self.q_dot.setInitialGuess(q_dot_ig)
+
+
     def init_prb(self, urdf_full_path, weight_pos = 0.001, weight_rot = 0.001,\
-                 weight_glob_man = 0.0001, is_soft_pose_cnstr = True,\
-                 epsi = epsi_default, tf_single_task = 10):
-        
+                weight_glob_man = 0.0001, is_soft_pose_cnstr = False,\
+                tf_single_task = 10):
+
+        ## All the main initializations for the prb are performed here ##
+
+        self.is_soft_pose_cnstrnt = is_soft_pose_cnstr
+
         self.was_init_called  = True
 
         self.weight_pos = weight_pos / ( self.total_nnodes ) # scaling weights on the basis of the problem dimension
@@ -470,7 +500,7 @@ class FlippingTaskGen:
         self.q_dot = self.prb.createInputVariable('q_dot', self.nv)
         self.q_design = self.q[1, 2, 3, 2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)] # design vector
         self.q_design_dot = self.q[1, 2, 3, 2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)] # design vector
-
+            
         self.prb.setDynamics(self.q_dot)
         self.prb.setDt(self.dt)  
 
@@ -490,12 +520,12 @@ class FlippingTaskGen:
         fk_arm_r = cs.Function.deserialize(self.kindyn.fk("arm_1_tcp")) 
         rarm_tcp_pos = fk_arm_r(q = self.q)["ee_pos"] # w.r.t. world
         rarm_tcp_rot = fk_arm_r(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
-        rarm_tcp_pos_wrt_ws = rarm_tcp_pos - ws_link_pos # pos w.r.t. working surface in world frame
+        self.rarm_tcp_pos_wrt_ws = rarm_tcp_pos - ws_link_pos # pos w.r.t. working surface in world frame
 
         fk_arm_l = cs.Function.deserialize(self.kindyn.fk("arm_2_tcp"))  
         larm_tcp_pos = fk_arm_l(q = self.q)["ee_pos"] # w.r.t. world
         larm_tcp_rot = fk_arm_l(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
-        larm_tcp_pos_wrt_ws = larm_tcp_pos - ws_link_pos # pos w.r.t. working surface in world frame
+        self.larm_tcp_pos_wrt_ws = larm_tcp_pos - ws_link_pos # pos w.r.t. working surface in world frame
 
         rarm_cocktail_pos = rarm_tcp_pos + \
                             rarm_tcp_rot @ cs.vertcat(0, 0, self.cocktail_size / 2.0)
@@ -509,13 +539,31 @@ class FlippingTaskGen:
         larm_cocktail_rot_wrt_ws = ws_link_rot.T @ larm_cocktail_rot
         larm_cocktail_pos_wrt_ws = ws_link_rot.T @ (larm_cocktail_pos - ws_link_pos)
 
-        self.lft_tcp_pos_wrt_ws = larm_cocktail_pos_wrt_ws
-        self.lft_tcp_rot_wrt_ws = larm_cocktail_rot_wrt_ws
-        self.rght_tcp_pos_wrt_ws = rarm_cocktail_pos_wrt_ws
-        self.rght_tcp_rot_wrt_ws = rarm_cocktail_rot_wrt_ws
+        self.lft_off_tcp_pos_wrt_ws = larm_cocktail_pos_wrt_ws
+        self.lft_off_tcp_rot_wrt_ws = larm_cocktail_rot_wrt_ws
+        self.rght_off_tcp_pos_wrt_ws = rarm_cocktail_pos_wrt_ws
+        self.rght_off_tcp_rot_wrt_ws = rarm_cocktail_rot_wrt_ws
 
         self.coll_links_pos_rght = ws_link_rot.T @ (arm1_link6_pos - ws_link_pos)
         self.coll_links_pos_lft = ws_link_rot.T @ (arm2_link6_pos - ws_link_pos)
+
+    def setup_prb(self,\
+                epsi = epsi_default,\
+                q_ig = None, q_dot_ig = None):
+         
+        ## All the constraints and costs are set here ##
+
+        # setting initial guesses
+        if q_ig is not None:
+
+            self.q.setInitialGuess(q_ig)
+
+        if q_dot_ig is not None:
+            
+            self.q_dot.setInitialGuess(q_dot_ig)
+
+        # lower and upper bounds for design variables and joint variables
+        self.q.setBounds(self.lbs, self.ubs)
 
         # roll and shoulder vars equal
         self.prb.createConstraint("same_roll", \
@@ -528,20 +576,17 @@ class FlippingTaskGen:
             self.q_dot[1, 2, 3, 2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)],\
             nodes = range(0, (self.total_nnodes - 1)))
 
-        # lower and upper bounds for design variables and joint variables
-        self.q.setBounds(self.lbs, self.ubs)
-
         # TCPs above working surface
         keep_tcp1_above_ground = self.prb.createConstraint("keep_tcp1_above_ground",\
-                                                           rarm_tcp_pos_wrt_ws[2])
+                                                           self.rarm_tcp_pos_wrt_ws[2])
         keep_tcp1_above_ground.setBounds(0, cs.inf)
         keep_tcp2_above_ground = self.prb.createConstraint("keep_tcp2_above_ground",\
-                                                           larm_tcp_pos_wrt_ws[2])
+                                                           self.larm_tcp_pos_wrt_ws[2])
         keep_tcp2_above_ground.setBounds(0, cs.inf)
 
         # min inputs 
         self.prb.createIntermediateCost("max_global_manipulability",\
-                        weight_glob_man * cs.sumsqr(self.q_dot)) # minimizing the joint accelerations ("responsiveness" of the trajectory)
+                        self.weight_glob_man * cs.sumsqr(self.q_dot)) # minimizing the joint accelerations ("responsiveness" of the trajectory)
 
         # add p2p collision task on y axis
         coll = self.prb.createConstraint("avoid_collision_on_y", \
@@ -551,7 +596,7 @@ class FlippingTaskGen:
         # self.add_tcp_avoidance_cnstrnt()
 
         # here the "custom" task is added to the problem
-        self.build_task(is_soft_pose_cnstr = is_soft_pose_cnstr, epsi = epsi,\
+        self.build_task(is_soft_pose_cnstr = self.is_soft_pose_cnstrnt, epsi = epsi,\
                         in_place_flip = self.in_place_flip)
     
     def add_tcp_avoidance_cnstrnt(self):
@@ -566,7 +611,7 @@ class FlippingTaskGen:
             if not is_bimanual:
 
                 tcp_coll = self.prb.createConstraint("avoid_tcp_collision_on_y_" + str(node), \
-                                            self.lft_tcp_pos_wrt_ws[1] - self.rght_tcp_pos_wrt_ws[1],\
+                                            self.lft_off_tcp_pos_wrt_ws[1] - self.rght_off_tcp_pos_wrt_ws[1],\
                                             nodes = node)
 
                 tcp_coll.setBounds(self.cocktail_size - 0.001, cs.inf)
@@ -586,10 +631,10 @@ class FlippingTaskGen:
                 
                 # The way pose constraint names are assigned:
                 #-----------------------------------------
-                # R arm: | 0  1  2  3  4  5  6  7  8 | 18 19 ...
-                # ---------------------------------
+                # R arm: | 0  1  2  3  4  5  6  7  8 | 18 19 ....
+                # ----------------------------------------
                 # L arm: | 9 10 11 12 13 14 15 16 17 | 27 28 ....
-                #----------------------------------------
+                #-----------------------------------------
                 
                 cnstrnt_node_index = self.nodes_list[i][j * delta_offset] # index of the constraint (traslated by the number of filling nodes)
 
@@ -601,7 +646,7 @@ class FlippingTaskGen:
 
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                        self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                         self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_rght[i]),\
                                         pos_selection = ["x", "y", "z"],\
@@ -611,7 +656,7 @@ class FlippingTaskGen:
                         
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                         self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_lft[i]),\
                                         pos_selection = ["x", "y", "z"],\
@@ -623,7 +668,7 @@ class FlippingTaskGen:
                         
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                        self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                         self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_rght[i]),\
                                         pos_selection = ["x", "y", "z"],\
@@ -631,7 +676,7 @@ class FlippingTaskGen:
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,
                                         self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_lft[i]),\
                                         pos_selection = ["x", "y", "z"],\
@@ -644,14 +689,14 @@ class FlippingTaskGen:
 
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                        self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                         self.object_pos_rght[i], quat2rot(self.rght_pick_q[i]),\
                                         pos_selection = ["x", "y", "z"],\
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                         self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_lft[i]),\
                                         pos_selection = ["x", "y", "z"],\
@@ -662,7 +707,7 @@ class FlippingTaskGen:
                         
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index,\
-                                        self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                         self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_rght[i]),\
                                         pos_selection = ["x", "y", "z"],\
@@ -670,7 +715,7 @@ class FlippingTaskGen:
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,
                                         self.object_pos_lft[i], quat2rot(self.lft_pick_q[i]),
                                         pos_selection = ["x", "y", "z"],\
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
@@ -682,7 +727,7 @@ class FlippingTaskGen:
 
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                        self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                         self.object_pos_rght[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
                                         quat2rot(self.object_q_rght[i]),\
                                         pos_selection = ["x", "y", "z"],\
@@ -690,7 +735,7 @@ class FlippingTaskGen:
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                         self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_lft[i]),\
                                         pos_selection = ["x", "y", "z"],\
@@ -701,7 +746,7 @@ class FlippingTaskGen:
                         
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                        self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                         self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_rght[i]),\
                                         pos_selection = ["x", "y", "z"],\
@@ -709,7 +754,7 @@ class FlippingTaskGen:
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,
                                         self.object_pos_lft[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
                                         quat2rot(self.object_q_lft[i]),\
                                         pos_selection = ["x", "y", "z"],\
@@ -722,7 +767,7 @@ class FlippingTaskGen:
 
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                        self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                         self.object_pos_rght[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
                                         quat2rot(self.rght_inward_q),\
                                         pos_selection = ["x", "y", "z"],\
@@ -730,7 +775,7 @@ class FlippingTaskGen:
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,
                                         self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_lft[i]),\
                                         pos_selection = ["x", "y", "z"],\
@@ -740,7 +785,7 @@ class FlippingTaskGen:
                     else: # left arm picks
                         
                         # right arm
-                        add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index,  self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                        add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index,  self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                         self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_rght[i]),\
                                         pos_selection = ["x", "y", "z"],\
@@ -749,7 +794,7 @@ class FlippingTaskGen:
                         
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,
                                         self.object_pos_lft[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
                                         quat2rot(self.lft_inward_q),\
                                         pos_selection = ["x", "y", "z"],\
@@ -762,7 +807,7 @@ class FlippingTaskGen:
 
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                        self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                         self.object_pos_rght[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
                                         quat2rot(self.rght_inward_q),\
                                         pos_selection = ["x", "y", "z"],\
@@ -770,7 +815,7 @@ class FlippingTaskGen:
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                         self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.lft_inward_q),\
                                         pos_selection = ["x", "y", "z"],\
@@ -780,22 +825,22 @@ class FlippingTaskGen:
                         # for h in range(self.filling_n_nodes): # add constant orientation of ARM2 (to)
                                                         
                         #     add_pose_cnstrnt(str(i) + "_lft_y_alignment_" + str(h), self.prb, cnstrnt_node_index + 1 + h, \
-                        #                 rot = self.lft_tcp_rot_wrt_ws,\
+                        #                 rot = self.lft_off_tcp_rot_wrt_ws,\
                         #                 rot_ref = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]]),    
                         #                 rot_selection = ["z"],\
                         #                 weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                         #                 is_soft = is_soft_pose_cnstr, epsi = epsi)
 
                         #     add_pose_cnstrnt(str(i) + "_rght_y_alignment_" + str(h), self.prb, cnstrnt_node_index + 1 + h, \
-                        #                 rot = self.rght_tcp_rot_wrt_ws,\
+                        #                 rot = self.rght_off_tcp_rot_wrt_ws,\
                         #                 rot_ref = np.array([[1, 0, 0], [0, 0, 1], [0, - 1, 0]]),    
                         #                 rot_selection = ["z"],\
                         #                 weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                         #                 is_soft = is_soft_pose_cnstr, epsi = epsi)
 
                             # add_pose_cnstrnt(str(i) + "_same_tcp_height_" + str(h), self.prb, cnstrnt_node_index + 1 + h, \
-                            #             pos = self.lft_tcp_pos_wrt_ws,\
-                            #             pos_ref = self.rght_tcp_pos_wrt_ws,    
+                            #             pos = self.lft_off_tcp_pos_wrt_ws,\
+                            #             pos_ref = self.rght_off_tcp_pos_wrt_ws,    
                             #             pos_selection = ["x", "z"],\
                             #             weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                             #             is_soft = is_soft_pose_cnstr, epsi = epsi)
@@ -804,7 +849,7 @@ class FlippingTaskGen:
                         
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index,\
-                                        self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                         self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.rght_inward_q),\
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
@@ -813,7 +858,7 @@ class FlippingTaskGen:
                         
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                         self.object_pos_lft[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
                                         quat2rot(self.lft_inward_q),
                                         pos_selection = ["x", "y", "z"],\
@@ -828,7 +873,7 @@ class FlippingTaskGen:
 
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                        self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                         self.object_pos_rght[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
                                         quat2rot(self.rght_inward_q),\
                                         pos_selection = ["x", "y", "z"],\
@@ -837,8 +882,8 @@ class FlippingTaskGen:
                         
                         # relative constraint
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index,\
-                                        pos = self.lft_tcp_pos_wrt_ws, rot = self.lft_tcp_rot_wrt_ws,
-                                        pos_ref = self.rght_tcp_pos_wrt_ws, rot_ref = get_cocktail_matching_rot(self.rght_tcp_rot_wrt_ws),
+                                        pos = self.lft_off_tcp_pos_wrt_ws, rot = self.lft_off_tcp_rot_wrt_ws,
+                                        pos_ref = self.rght_off_tcp_pos_wrt_ws, rot_ref = get_cocktail_matching_rot(self.rght_off_tcp_rot_wrt_ws),
                                         pos_selection = ["x", "y", "z"],\
                                         weight_rot = self.weight_rot,\
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
@@ -847,14 +892,14 @@ class FlippingTaskGen:
                         
                         # # relative constraint
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index,\
-                                        pos = self.lft_tcp_pos_wrt_ws, rot = self.lft_tcp_rot_wrt_ws,\
-                                        pos_ref = self.rght_tcp_pos_wrt_ws, rot_ref = get_cocktail_matching_rot(self.rght_tcp_rot_wrt_ws),\
+                                        pos = self.lft_off_tcp_pos_wrt_ws, rot = self.lft_off_tcp_rot_wrt_ws,\
+                                        pos_ref = self.rght_off_tcp_pos_wrt_ws, rot_ref = get_cocktail_matching_rot(self.rght_off_tcp_rot_wrt_ws),\
                                         pos_selection = ["x", "y", "z"],\
                                         weight_rot = self.weight_rot,\
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                         self.object_pos_lft[i] + np.array([0.0, 0.0, self.contact_heights[i]]), quat2rot(self.lft_inward_q),    
                                         pos_selection = ["x", "y", "z"],\
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
@@ -866,7 +911,7 @@ class FlippingTaskGen:
 
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                        self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                         self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i],\
                                         self.contact_heights[i]]), quat2rot(self.rght_inward_q),\
                                         pos_selection = ["x", "y", "z"],\
@@ -874,7 +919,7 @@ class FlippingTaskGen:
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                         self.object_pos_lft[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
                                         quat2rot(self.object_q_lft[i]),\
                                         pos_selection = ["x", "y", "z"],\
@@ -885,7 +930,7 @@ class FlippingTaskGen:
                         
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index,\
-                                        self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                         self.object_pos_rght[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
                                         quat2rot(self.object_q_rght[i]),\
                                         pos_selection = ["x", "y", "z"],\
@@ -893,7 +938,7 @@ class FlippingTaskGen:
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                         self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.lft_inward_q),\
                                         pos_selection = ["x", "y", "z"],\
@@ -906,7 +951,7 @@ class FlippingTaskGen:
 
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                        self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                         self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_rght[i]),\
                                         pos_selection = ["x", "y", "z"],\
@@ -914,7 +959,7 @@ class FlippingTaskGen:
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                         self.object_pos_lft[i], quat2rot(self.object_q_lft[i]),\
                                         pos_selection = ["x", "y", "z"],\
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
@@ -924,14 +969,14 @@ class FlippingTaskGen:
                         
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                        self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                         self.object_pos_rght[i], quat2rot(self.object_q_rght[i]),\
                                         pos_selection = ["x", "y", "z"],\
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                         self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_lft[i]),\
                                         pos_selection = ["x", "y", "z"],\
@@ -944,7 +989,7 @@ class FlippingTaskGen:
 
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                        self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                         self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_rght[i]),\
                                         pos_selection = ["x", "y", "z"],\
@@ -952,7 +997,7 @@ class FlippingTaskGen:
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                         self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_lft[i]),\
                                         pos_selection = ["x", "y", "z"],\
@@ -963,7 +1008,7 @@ class FlippingTaskGen:
                         
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index,\
-                                        self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                         self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_rght[i]),\
                                         pos_selection = ["x", "y", "z"],\
@@ -971,7 +1016,7 @@ class FlippingTaskGen:
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                         self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_lft[i]),\
                                         pos_selection = ["x", "y", "z"],\
@@ -999,7 +1044,7 @@ class FlippingTaskGen:
                         
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                         self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                          self.object_pos_rght[i], quat2rot(self.object_q_rght[i]),\
                                          weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                           is_soft = is_soft_pose_cnstr, epsi = epsi)
@@ -1007,7 +1052,7 @@ class FlippingTaskGen:
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft,\
                                          self.prb, cnstrnt_node_index, \
-                                         self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                          self.object_pos_lft[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.object_q_lft[i]),\
                                          weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                           is_soft = is_soft_pose_cnstr, epsi = epsi)
@@ -1016,13 +1061,13 @@ class FlippingTaskGen:
                         
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                         self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                          self.object_pos_rght[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.object_q_rght[i]),\
                                          weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                           is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                         self.object_pos_lft[i], quat2rot(self.object_q_lft[i]),\
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                          is_soft = is_soft_pose_cnstr, epsi = epsi)
@@ -1033,13 +1078,13 @@ class FlippingTaskGen:
 
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                         self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                          self.object_pos_rght[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.object_q_rght[i]),\
                                          weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                           is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                         self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                          self.object_pos_lft[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.lft_inward_q),\
                                          weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                           is_soft = is_soft_pose_cnstr, epsi = epsi)
@@ -1048,13 +1093,13 @@ class FlippingTaskGen:
                         
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                         self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                          self.object_pos_rght[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.rght_inward_q),\
                                          weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                           is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                         self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                          self.object_pos_lft[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.object_q_lft[i]),\
                                          weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                           is_soft = is_soft_pose_cnstr, epsi = epsi)
@@ -1065,15 +1110,15 @@ class FlippingTaskGen:
                         
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                         self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                          self.object_pos_rght[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.rght_inward_q),\
                                          weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                           is_soft = is_soft_pose_cnstr, epsi = epsi)
                         
                         # relative constraint
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index,\
-                                         pos = self.lft_tcp_pos_wrt_ws, rot = self.lft_tcp_rot_wrt_ws,
-                                         pos_ref = self.rght_tcp_pos_wrt_ws, rot_ref = get_cocktail_matching_rot(self.rght_tcp_rot_wrt_ws),
+                                         pos = self.lft_off_tcp_pos_wrt_ws, rot = self.lft_off_tcp_rot_wrt_ws,
+                                         pos_ref = self.rght_off_tcp_pos_wrt_ws, rot_ref = get_cocktail_matching_rot(self.rght_off_tcp_rot_wrt_ws),
                                          weight_rot = self.weight_rot,\
                                          is_soft = is_soft_pose_cnstr, epsi = epsi)
 
@@ -1081,13 +1126,13 @@ class FlippingTaskGen:
                         
                         # relative constraint
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index,\
-                                         pos = self.lft_tcp_pos_wrt_ws, rot = self.lft_tcp_rot_wrt_ws,
-                                         pos_ref = self.rght_tcp_pos_wrt_ws, rot_ref = get_cocktail_matching_rot(self.rght_tcp_rot_wrt_ws),
+                                         pos = self.lft_off_tcp_pos_wrt_ws, rot = self.lft_off_tcp_rot_wrt_ws,
+                                         pos_ref = self.rght_off_tcp_pos_wrt_ws, rot_ref = get_cocktail_matching_rot(self.rght_off_tcp_rot_wrt_ws),
                                          weight_rot = self.weight_rot,\
                                          is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                         self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                          self.object_pos_lft[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.lft_inward_q),\
                                          weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                           is_soft = is_soft_pose_cnstr, epsi = epsi_default)
@@ -1098,13 +1143,13 @@ class FlippingTaskGen:
                         
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                         self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                          self.object_pos_rght[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.object_q_rght[i]),\
                                          weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                           is_soft = is_soft_pose_cnstr, epsi = epsi_default)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                         self.object_pos_lft[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.lft_inward_q),\
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                          is_soft = is_soft_pose_cnstr, epsi = epsi_default)
@@ -1113,13 +1158,13 @@ class FlippingTaskGen:
                         
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                         self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                          self.object_pos_rght[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.rght_inward_q),\
                                          weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                           is_soft = is_soft_pose_cnstr, epsi = epsi_default)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                         self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws, self.object_pos_lft[i], quat2rot(self.object_q_lft[i]),\
+                                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws, self.object_pos_lft[i], quat2rot(self.object_q_lft[i]),\
                                          weight_pos = self.weight_pos, weight_rot = self.weight_rot, is_pos = True,\
                                          is_rot = True, is_soft = is_soft_pose_cnstr, epsi = epsi_default)
 
@@ -1129,13 +1174,13 @@ class FlippingTaskGen:
                         
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                         self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                          self.object_pos_rght[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.object_q_rght[i]),\
                                          weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                           is_soft = is_soft_pose_cnstr, epsi = epsi_default)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                         self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                          self.object_pos_lft[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.object_q_lft[i]),\
                                          weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                           is_soft = is_soft_pose_cnstr, epsi = epsi_default)
@@ -1144,13 +1189,13 @@ class FlippingTaskGen:
                         
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                         self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                          self.object_pos_rght[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.object_q_rght[i]),\
                                          weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                           is_soft = is_soft_pose_cnstr, epsi = epsi_default)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                         self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                          self.object_pos_lft[i], quat2rot(self.object_q_lft[i]),\
                                          weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                           is_soft = is_soft_pose_cnstr, epsi = epsi_default)
@@ -1161,13 +1206,13 @@ class FlippingTaskGen:
                         
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                         self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                          self.object_pos_rght[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.object_q_rght[i]),\
                                          weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                           is_soft = is_soft_pose_cnstr, epsi = epsi_default)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws, self.object_pos_lft[i], quat2rot(self.object_q_lft[i]),\
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws, self.object_pos_lft[i], quat2rot(self.object_q_lft[i]),\
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                          is_soft = is_soft_pose_cnstr, epsi = epsi_default)
 
@@ -1175,13 +1220,13 @@ class FlippingTaskGen:
                         
                         # right arm
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                         self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                          self.object_pos_rght[i], quat2rot(self.object_q_rght[i]),\
                                          weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                           is_soft = is_soft_pose_cnstr, epsi = epsi_default)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                         self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
+                                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
                                          self.object_pos_lft[i] + np.array([0, 0, self.contact_heights[i]]), quat2rot(self.object_q_lft[i]),\
                                          weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                           is_soft = is_soft_pose_cnstr, epsi = epsi_default)
