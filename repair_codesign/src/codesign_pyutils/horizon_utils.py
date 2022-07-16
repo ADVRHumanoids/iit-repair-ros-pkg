@@ -6,20 +6,13 @@ from codesign_pyutils.math_utils import quat2rot, rot_error, rot_error2, rot_err
 
 from codesign_pyutils.miscell_utils import check_str_list, rot_error_axis_sel_not_supp
 
-from horizon import problem
-
-from casadi_kin_dyn import pycasadi_kin_dyn as cas_kin_dyn
-
-import time
-
-import warnings
-
 rot_error_approach = "arturo" # options: "siciliano", "arturo", "traversaro"
 
 from codesign_pyutils.defaults_vals import epsi_default
 
 ###############
 # obsolete
+
 # def add_bartender_cnstrnt(index, prb, nodes, posl, posr, rotl, rotr, is_pos = True,\
 #                           is_rot = True, weight_pos = 1.0, weight_rot = 1.0,\
 #                           is_soft = False, epsi = epsi_default):

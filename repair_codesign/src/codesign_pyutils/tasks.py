@@ -402,7 +402,6 @@ class DoubleArmCartTask:
             sol_replayer.replay(is_floating_base = False, play_once = True)
 
 
-
 class FlippingTaskGen:
 
     def __init__(self, cocktail_size = 0.05, filling_n_nodes = 0):

@@ -26,7 +26,7 @@ from codesign_pyutils.miscell_utils import str2bool,\
 from codesign_pyutils.dump_utils import SolDumper
 from codesign_pyutils.task_utils import do_one_solve_pass, \
                                         generate_ig              
-from codesign_pyutils.horizon_utils import FlippingTaskGen
+from codesign_pyutils.tasks import FlippingTaskGen
 
 from horizon.utils import mat_storer
 

@@ -44,7 +44,7 @@ results_path = codesign_path + "/test_results"
 file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 # task-specific options
-filling_n_nodes = 10
+filling_n_nodes = 0
 rot_error_epsi = 0.0000001
 
 # longitudinal extension of grasped object
