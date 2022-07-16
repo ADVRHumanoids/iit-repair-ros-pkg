@@ -352,18 +352,6 @@ class ReplaySol:
                 FK = cs.Function.deserialize(kindyn.fk(frame))
                 self.frame_fk[frame] = FK
 
-                # rotate frame
-                # w_all = self.frame_force_mapping[frame]
-                # for k in range(0, w_all.shape[1]):
-                #     w_R_f = FK(q=self.q_replay[:, k])['ee_rot']
-                #     w = w_all[:, k].reshape(-1, 1)
-                #     if w.shape[0] == 3:
-                #         self.frame_force_mapping[frame][:, k] = np.dot(w_R_f.T,  w).T
-                #     else:
-                #         A = np.zeros((6, 6))
-                #         A[0:3, 0:3] = A[3:6, 3:6] = w_R_f.T
-                #         self.frame_force_mapping[frame][:, k] = np.dot(A,  w).T
-
         try:
             rospy.init_node('joint_state_publisher')
         except rospy.exceptions.ROSException as e:

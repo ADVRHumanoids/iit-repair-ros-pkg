@@ -55,10 +55,14 @@ filling_n_nodes = 0
 rot_error_epsi = 0.0000001
 
 # generating samples along working surface y direction
-n_y_samples = 2
-y_sampl_ub = 0.2
+n_y_samples = 1
+y_sampl_ub = 0
 y_sampl_lb = - y_sampl_ub
-dy = (y_sampl_ub - y_sampl_lb) / (n_y_samples - 1)
+
+if n_y_samples == 1:
+    dy = 0.0
+else:
+    dy = (y_sampl_ub - y_sampl_lb) / (n_y_samples - 1)
 
 y_sampling = np.array( [0.0] * n_y_samples)
 for i in range(n_y_samples):
@@ -77,21 +81,22 @@ cocktail_size = 0.08
 # solver options
 solver_type = 'ipopt'
 slvr_opt = {
-    "ipopt.tol": 0.0001, 
+    "ipopt.tol": 0.000001, 
     "ipopt.max_iter": 10000,
+    "ipopt.constr_viol_tol": 0.0000001,
     "ilqr.verbose": True}
 
 # loaded initial guess options
-init_guess_filenames = ["init1.mat", "init2.mat"]
+init_guess_filenames = ["init4.mat"]
 init_load_abs_paths = []
 for i in range(len(init_guess_filenames)):
     init_load_abs_paths.append(results_path + "/init_guess/" + init_guess_filenames[i])
 
 # seed used for random number generation
-ig_seed = 1
+ig_seed = 22345345
 
 # single task execution time
-t_exec_task = 10
+t_exec_task = 3
 
 # transcription options (if used)
 transcription_method = 'multiple_shooting'
@@ -141,86 +146,86 @@ def main(args):
     flipping_task = None
     flipping_task_init = None
 
-    for i in range(n_glob_tests):
+    ## Main problem ## 
 
-        ## Main problem ## 
+    # initialize main problem task
+    flipping_task = FlippingTaskGen(cocktail_size = cocktail_size, filling_n_nodes = filling_n_nodes)
+    
+    # add tasks to the task holder object
+    next_node = 0 # used to place the next task on the right problem nodes
+    for i in range(len(y_sampling)):
 
-        # initialize main problem task
-        flipping_task = FlippingTaskGen(cocktail_size = cocktail_size, filling_n_nodes = filling_n_nodes)
+        next_node = flipping_task.add_in_place_flip_task(init_node = next_node,\
+                        object_pos_wrt_ws = np.array([0.0, y_sampling[i], 0.0]), \
+                        object_q_wrt_ws = np.array([0, 1, 0, 0]), \
+                        #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]),\
+                        right_arm_picks = right_arm_picks)
+
+    # initialize problem
+    flipping_task.init_prb(urdf_full_path, args.base_weight_pos, args.base_weight_rot,\
+                            args.weight_global_manip,\
+                            is_soft_pose_cnstr = args.soft_pose_cnstrnt,\
+                            tf_single_task = t_exec_task)
+
+    print("Flipping task node list: ", flipping_task.nodes_list)
+    print("Total employed nodes: ", flipping_task.total_nnodes)
+    print("Number of added subtasks:", flipping_task.n_of_tasks, "\n")
+
+    # set constraints and costs
+    flipping_task.setup_prb(rot_error_epsi)
+
+    if solver_type != "ilqr":
+
+        Transcriptor.make_method(transcription_method,\
+                                flipping_task.prb,\
+                                transcription_opts)
+    
+    ## Creating the solver
+    slvr = solver.Solver.make_solver(solver_type, flipping_task.prb, slvr_opt)
+
+    if solver_type == "ilqr":
+
+        slvr.set_iteration_callback()
+
+
+    if args.warmstart:
+
+        ## Initialization problem ##
         
+        # initialize the initialization problem task
+        flipping_task_init = FlippingTaskGen(cocktail_size = cocktail_size, filling_n_nodes = filling_n_nodes)
+    
         # add tasks to the task holder object
         next_node = 0 # used to place the next task on the right problem nodes
         for i in range(len(y_sampling)):
 
-            next_node = flipping_task.add_in_place_flip_task(init_node = next_node,\
+            next_node = flipping_task_init.add_in_place_flip_task(init_node = next_node,\
                             object_pos_wrt_ws = np.array([0.0, y_sampling[i], 0.0]), \
                             object_q_wrt_ws = np.array([0, 1, 0, 0]), \
                             #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]),\
                             right_arm_picks = right_arm_picks)
 
         # initialize problem
-        flipping_task.init_prb(urdf_full_path, args.base_weight_pos, args.base_weight_rot,\
-                                args.weight_global_manip,\
-                                is_soft_pose_cnstr = args.soft_pose_cnstrnt,\
-                                tf_single_task = t_exec_task)
+        flipping_task_init.init_prb(urdf_full_path, args.base_weight_pos, args.base_weight_rot,\
+                            args.weight_global_manip,\
+                            is_soft_pose_cnstr = args.soft_warmstart,\
+                            tf_single_task = t_exec_task)
 
         # set constraints and costs
-        flipping_task.setup_prb(rot_error_epsi)
+        flipping_task_init.setup_prb(rot_error_epsi)
 
         if solver_type != "ilqr":
 
             Transcriptor.make_method(transcription_method,\
-                                    flipping_task.prb,\
-                                    transcription_opts)
-        
+                                    flipping_task_init.prb,\
+                                    transcription_opts)  # setting the transcriptor for the initialization problem
+
         ## Creating the solver
-        slvr = solver.Solver.make_solver(solver_type, flipping_task.prb, slvr_opt)
+        init_slvr = solver.Solver.make_solver(solver_type, flipping_task_init.prb, slvr_opt)
 
         if solver_type == "ilqr":
 
-            slvr.set_iteration_callback()
-
-
-        if args.warmstart:
-
-            ## Initialization problem ##
-            
-            # initialize the initialization problem task
-            flipping_task_init = FlippingTaskGen(cocktail_size = cocktail_size, filling_n_nodes = filling_n_nodes)
-            flipping_task_init.init_prb(urdf_full_path, args.base_weight_pos, args.base_weight_rot,\
-                                    args.weight_global_manip,\
-                                    is_soft_pose_cnstr = args.soft_warmstart,\
-                                    tf_single_task = t_exec_task)
-
-            # add tasks to the task holder object
-            next_node = 0 # used to place the next task on the right problem nodes
-            for i in range(len(y_sampling)):
-
-                next_node = flipping_task_init.add_in_place_flip_task(init_node = next_node,\
-                                object_pos_wrt_ws = np.array([0.0, y_sampling[i], 0.0]), \
-                                object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-                                #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]),\
-                                right_arm_picks = right_arm_picks)
-
-            # assign same initial guess to the initialization problem
-            # this init. will be used by the main problem only if the init
-            # problem fails.
-            
-            # set constraints and costs
-            flipping_task_init.setup_prb(rot_error_epsi)
-
-            if solver_type != "ilqr":
-
-                Transcriptor.make_method(transcription_method,\
-                                        flipping_task_init.prb,\
-                                        transcription_opts)  # setting the transcriptor for the initialization problem
-
-            ## Creating the solver
-            init_slvr = solver.Solver.make_solver(solver_type, flipping_task_init.prb, slvr_opt)
-
-            if solver_type == "ilqr":
-
-                init_slvr.set_iteration_callback()
+            init_slvr.set_iteration_callback()
     
     # publishing picking poses frames
     pose_pub = FramePub("frame_pub")
@@ -283,14 +288,14 @@ def main(args):
         if not solve_failed_array[i]:
             
             solutions[i] = slvr.getSolutionDict() # extracting solution
-            print("Solution cost " + str(i) + ": ", solutions[i]["opt_cost"])
+            # print("Solution cost " + str(i) + ": ", solutions[i]["opt_cost"])
             
-            sol_costs[i] = solutions[i]["opt_cost"]
+            # sol_costs[i] = solutions[i]["opt_cost"]
 
             if args.warmstart and (init_solve_failed_array[i] != True):
 
                 init_solutions[i] = init_slvr.getSolutionDict() # extracting solution from initialization problem
-                print("Initialization problem solution cost" + str(i) + ": ", init_solutions[i]["opt_cost"])
+                # print("Initialization problem solution cost" + str(i) + ": ", init_solutions[i]["opt_cost"])
 
             if args.dump_sol:
 
@@ -421,8 +426,6 @@ if __name__ == '__main__':
                         help = 'whether to dump results to file', default = False)
     parser.add_argument('--use_init_guess', '-ig', type=str2bool,\
                         help = 'whether to use initial guesses between solution loops', default = True)
-    parser.add_argument('--soft_bartender_cnstrnt', '-sbc', type=str2bool,\
-                        help = 'whether to use soft bartender constraints', default = False)
     parser.add_argument('--soft_pose_cnstrnt', '-spc', type=str2bool,\
                         help = 'whether to use soft pose constraints or not', default = False)
     parser.add_argument('--base_weight_pos', '-wp', type = np.double,\

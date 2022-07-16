@@ -60,7 +60,7 @@ def rot_error(R_trgt, R_actual, epsi = 0.0):
 
 def rot_error2(R_trgt, R_actual, epsi = 0.0):
 
-    R_err = R_trgt @ R_actual.T # orientation or actual frame w.r.t. target frame
+    R_err = R_trgt.T @ R_actual # orientation or actual frame w.r.t. target frame
 
     S = (R_err - R_err.T) / 2 # constant angular velocity necessary to bring frame actual to frame trgt ( * dt)
 
@@ -86,7 +86,7 @@ def get_cocktail_matching_rot(R):
     cocktail_aux_rot = cs.DM([[-1.0, 0.0, 0.0],\
                               [0.0, 1.0, 0.0],\
                               [0.0, 0.0, - 1.0]]) 
-
+                              
     R_aux = R @ cocktail_aux_rot
 
     return R_aux

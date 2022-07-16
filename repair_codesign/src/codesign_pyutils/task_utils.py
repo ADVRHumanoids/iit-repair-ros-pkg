@@ -9,7 +9,7 @@ import numpy as np
 
 import time 
 
-from codesign_pyutils.horizon_utils import FlippingTaskGen
+from codesign_pyutils.tasks import FlippingTaskGen
 
 from codesign_pyutils.miscell_utils import wait_for_confirmation
 
@@ -17,7 +17,7 @@ import warnings
 
 import argparse
 
-def solve_prb_standalone(task: FlippingTaskGen,\
+def solve_prb_standalone(task,\
                         slvr: Solver,\
                         q_init=None, q_dot_init=None,\
                         prbl_name = "Problem",
@@ -227,14 +227,14 @@ def do_one_solve_pass(arguments: argparse.Namespace,\
 
         if not init_sol_failed: # initialization solution succedeed --> try to solve the main problem
 
-            solve_failed = solve_main_prb_soft_init(arguments, task,\
+            solve_failed = solve_main_prb_soft_init(task,\
                                                     slvr_init, slvr, \
                                                     q_ig_main, q_dot_ig_main)
 
     return init_sol_failed, solve_failed
 
 def generate_ig(arguments: argparse.Namespace,\
-                abs_paths, task: FlippingTaskGen,\
+                abs_paths, task,\
                 n_sol_tries, seed,\
                 verbose = False):
 
@@ -276,14 +276,14 @@ def generate_ig(arguments: argparse.Namespace,\
                                             (task.nq, 1)).flatten()))
                     q_dot_ig[i] = np.zeros((task.nv, task.total_nnodes - 1))
 
-                if (np.shape(q_ig)[1] != task.total_nnodes) or \
-                    (np.shape(q_ig)[0] != task.nq):
+                if (np.shape(q_ig[i])[1] != task.total_nnodes) or \
+                    (np.shape(q_ig[i])[0] != task.nq):
 
-                    raise Exception("\nThe loaded initial guess has shape: [",\
-                                    np.shape(q_ig)[0], ", ", np.shape(q_ig)[1],  "]",
-                                    "while the problem has shape:" ,\
-                                    task.nq, ", ", task.total_nnodes,\
-                                    ".\n")
+                    raise Exception("\nThe loaded initial guess has shape: [" + \
+                                    str(np.shape(q_ig[i])[0]) +  ", " + str(np.shape(q_ig[i])[1]) +  "]" + \
+                                    " while the problem has shape: [" + \
+                                    str(task.nq) +  ", " + str(task.total_nnodes) + \
+                                    "].\n")
 
             else:
 
