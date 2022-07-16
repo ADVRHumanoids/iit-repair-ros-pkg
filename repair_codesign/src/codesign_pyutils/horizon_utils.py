@@ -14,7 +14,7 @@ import time
 
 import warnings
 
-rot_error_approach = "arturo" # options: "siciliano", "arturo", "traversaro"
+rot_error_approach = "siciliano" # options: "siciliano", "arturo", "traversaro"
 
 from codesign_pyutils.defaults_vals import epsi_default
 
@@ -159,7 +159,7 @@ def add_pose_cnstrnt(unique_id, prb, nodes, pos = None, rot = None, pos_ref = No
                     rot_error_axis_sel_not_supp(rot_selector, rot_error_approach) # check if user tried to set axis --> in case, throw error
 
                     rot_cnstrnt = prb.createConstraint("rot_" + str(unique_id),\
-                                        rot_error3(rot_ref, rot, epsi), nodes = nodes)
+                                        rot_error3(rot_ref, rot, epsi)[rot_selector], nodes = nodes)
 
                 if rot_error_approach != "traversaro" and rot_error_approach != "arturo"\
                     and rot_error_approach != "siciliano":

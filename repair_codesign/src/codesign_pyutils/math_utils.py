@@ -21,7 +21,7 @@ def quat2rot(Q):
               
     return R
 
-def rot2quat(R, epsi = 0.0):
+def rot2quat(R, epsi = 0.0, lambd = 3.0):
 
     # convert matrix to quaternion representation
 
@@ -30,9 +30,15 @@ def rot2quat(R, epsi = 0.0):
     # Epsi = sin(theta/2) * r, where r is the axis of rotation
     
     eta = 1/2 * cs.sqrt(R[0, 0] + R[1, 1] + R[2, 2] + 1 + epsi)
-    epsi_1 = 1/2 * cs.sign(R[2, 1] - R[1, 2]) * cs.sqrt(R[0, 0] - R[1, 1] - R[2, 2] + 1 + epsi) 
-    epsi_2 = 1/2 * cs.sign(R[0, 2] - R[2, 0]) * cs.sqrt(R[1, 1] - R[2, 2] - R[0, 0] + 1 + epsi) 
-    epsi_3 = 1/2 * cs.sign(R[1, 0] - R[0, 1]) * cs.sqrt(R[2, 2] - R[0, 0] - R[1, 1] + 1 + epsi)
+
+    # smooth approximation of sign function
+    epsi_1 = 1/2 * 2/ cs.pi * cs.arctan(lambd * R[2, 1] - R[1, 2]) * cs.sqrt(R[0, 0] - R[1, 1] - R[2, 2] + 1 + epsi) 
+    epsi_2 = 1/2 * 2/ cs.pi * cs.arctan(lambd * R[0, 2] - R[2, 0]) * cs.sqrt(R[1, 1] - R[2, 2] - R[0, 0] + 1 + epsi) 
+    epsi_3 = 1/2 * 2/ cs.pi * cs.arctan(lambd * R[1, 0] - R[0, 1]) * cs.sqrt(R[2, 2] - R[0, 0] - R[1, 1] + 1 + epsi)
+
+    # epsi_1 = 1/2 * cs.sign(R[2, 1] - R[1, 2]) * cs.sqrt(R[0, 0] - R[1, 1] - R[2, 2] + 1 + epsi) 
+    # epsi_2 = 1/2 * cs.sign(R[0, 2] - R[2, 0]) * cs.sqrt(R[1, 1] - R[2, 2] - R[0, 0] + 1 + epsi) 
+    # epsi_3 = 1/2 * cs.sign(R[1, 0] - R[0, 1]) * cs.sqrt(R[2, 2] - R[0, 0] - R[1, 1] + 1 + epsi)
     
     Q = cs.vertcat(eta, epsi_1, epsi_2, epsi_3) # real part is conventionally assigned to the first component
 
@@ -66,13 +72,17 @@ def rot_error2(R_trgt, R_actual, epsi = 0.0):
 
     r = cs.vertcat(S[2, 1], S[0, 2], S[1, 0])
 
-    return r / cs.sqrt(epsi + 1 + cs.trace(R_err))
+    r_scaled = r / cs.sqrt(epsi + 1 + cs.trace(R_err))
+
+    return r_scaled
 
 def rot_error3(R_trgt, R_actual, epsi = 0.0):
 
-    M_err = cs.DM_eye(3) - R_actual @ R_trgt.T
+    M_err = cs.DM_eye(3) - R_trgt.T @ R_actual
 
     err = cs.trace(M_err)
+
+    # err = cs.vertcat(1 - M_err[0, 0], 1 - M_err[1, 1], 1 - M_err[2, 2])
 
     return err
 

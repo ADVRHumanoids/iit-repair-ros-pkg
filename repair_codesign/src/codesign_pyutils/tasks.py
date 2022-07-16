@@ -318,25 +318,25 @@ class DoubleArmCartTask:
                         pos = self.rght_off_tcp_pos_wrt_ws, rot = self.rght_off_tcp_rot_wrt_ws,\
                         pos_ref = self.p_ref_right_init, rot_ref = quat2rot(self.q_ref_right_init),\
                         pos_selection = ["x", "y", "z"],\
-                        rot_selection = ["x", "y"])
+                        rot_selection = ["x", "y", "z"])
 
         add_pose_cnstrnt("right_arm_trgt", self.prb, self.total_nnodes - 1,\
                         pos = self.rght_off_tcp_pos_wrt_ws, rot = self.rght_off_tcp_rot_wrt_ws,\
                         pos_ref = self.p_ref_right_trgt, rot_ref = quat2rot(self.q_ref_right_trgt),\
                         pos_selection = ["x", "y", "z"],\
-                        rot_selection = ["x", "y"])
+                        rot_selection = ["x", "y", "z"])
         
         add_pose_cnstrnt("left_arm_init", self.prb, 0,\
                         pos = self.lft_off_tcp_pos_wrt_ws, rot = self.lft_off_tcp_rot_wrt_ws,\
                         pos_ref = self.p_ref_left_init, rot_ref = quat2rot(self.q_ref_left_init), \
                         pos_selection = ["x", "y", "z"],\
-                        rot_selection = ["x", "y"])
+                        rot_selection = ["x", "y", "z"])
 
         add_pose_cnstrnt("left_arm_trgt", self.prb, self.total_nnodes - 1,\
                         pos = self.lft_off_tcp_pos_wrt_ws, rot = self.lft_off_tcp_rot_wrt_ws,\
                         pos_ref = self.p_ref_left_trgt, rot_ref = quat2rot(self.q_ref_left_trgt), \
                         pos_selection = ["x", "y", "z"],\
-                        rot_selection = ["x", "y"])
+                        rot_selection = ["x", "y", "z"])
         
         Transcriptor.make_method(self.transcription_method,\
                                 self.prb,\
