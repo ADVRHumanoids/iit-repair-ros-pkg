@@ -571,7 +571,7 @@ class FlippingTaskGen:
 
         self.in_place_flip = False
         
-        self.task_base_n_nodes = 5
+        self.task_base_n_nodes = 6
         self.phase_number = self.task_base_n_nodes - 1 # number of phases of the task
 
         final_node = self.compute_nodes(init_node, self.filling_n_nodes)
@@ -589,46 +589,6 @@ class FlippingTaskGen:
         self.rght_arm_picks.append(right_arm_picks)
 
         return final_node
-
-    def add_in_place_flip_task(self, init_node,\
-                               right_arm_picks = True,\
-                               object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]),\
-                               object_q_wrt_ws = np.array([0.0, 1.0, 0.0, 0.0]),\
-                               pick_q_wrt_ws = np.array([0.0, 1.0, 0.0, 0.0]),\
-                               contact_height = 0.4, hor_offset = 0.2):
-
-        if self.was_init_called :
-
-            raise Exception("You can only add tasks before calling init_prb(*)!!")
-
-        if self.employed_task != "in_place_flip" and self.employed_task != "":
-            
-            raise Exception("Adding multiple heterogeneous tasks is not supported yet.")
-
-        self.n_of_tasks = self.n_of_tasks + 1 # counter for the number of tasks
-
-        self.employed_task = "in_place_flip"
-
-        self.in_place_flip = True
-
-        self.task_base_n_nodes = 2
-        self.phase_number = self.task_base_n_nodes - 1 # number of phases of the task
-
-        self.object_pos_lft.append(object_pos_wrt_ws)
-        self.object_q_lft.append(object_q_wrt_ws)
-        self.object_pos_rght.append(object_pos_wrt_ws)
-        self.object_q_rght.append(object_q_wrt_ws)
-
-        self.lft_pick_q.append(pick_q_wrt_ws)
-        self.rght_pick_q.append(pick_q_wrt_ws)
-
-        self.contact_heights.append(contact_height)
-        self.hor_offsets.append(hor_offset)
-        self.rght_arm_picks.append(right_arm_picks)
-
-        next_task_node = self.compute_nodes(init_node, self.filling_n_nodes)
-
-        return next_task_node
 
     def set_ig(self, q_ig = None, q_dot_ig = None):
 
@@ -792,7 +752,47 @@ class FlippingTaskGen:
                                             nodes = node)
 
                 tcp_coll.setBounds(self.cocktail_size - 0.001, cs.inf)
+    
+    def add_in_place_flip_task(self, init_node,\
+                               right_arm_picks = True,\
+                               object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]),\
+                               object_q_wrt_ws = np.array([0.0, 1.0, 0.0, 0.0]),\
+                               pick_q_wrt_ws = np.array([0.0, 1.0, 0.0, 0.0]),\
+                               contact_height = 0.4, hor_offset = 0.2):
+
+        if self.was_init_called :
+
+            raise Exception("You can only add tasks before calling init_prb(*)!!")
+
+        if self.employed_task != "in_place_flip" and self.employed_task != "":
             
+            raise Exception("Adding multiple heterogeneous tasks is not supported yet.")
+
+        self.n_of_tasks = self.n_of_tasks + 1 # counter for the number of tasks
+
+        self.employed_task = "in_place_flip"
+
+        self.in_place_flip = True
+
+        self.task_base_n_nodes = 8
+        self.phase_number = self.task_base_n_nodes - 1 # number of phases of the task
+
+        self.object_pos_lft.append(object_pos_wrt_ws)
+        self.object_q_lft.append(object_q_wrt_ws)
+        self.object_pos_rght.append(object_pos_wrt_ws)
+        self.object_q_rght.append(object_q_wrt_ws)
+
+        self.lft_pick_q.append(pick_q_wrt_ws)
+        self.rght_pick_q.append(pick_q_wrt_ws)
+
+        self.contact_heights.append(contact_height)
+        self.hor_offsets.append(hor_offset)
+        self.rght_arm_picks.append(right_arm_picks)
+
+        next_task_node = self.compute_nodes(init_node, self.filling_n_nodes)
+
+        return next_task_node
+
     def build_in_place_flip_task(self, is_soft_pose_cnstr = True, epsi = epsi_default):
 
         for i in range(len(self.nodes_list)): # iterate through multiple flipping tasks
@@ -827,6 +827,7 @@ class FlippingTaskGen:
                                         self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_rght[i]),\
                                         pos_selection = ["x", "y", "z"],\
+                                        rot_selection = [], \
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         
@@ -837,6 +838,7 @@ class FlippingTaskGen:
                                         self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_lft[i]),\
                                         pos_selection = ["x", "y", "z"],\
+                                        rot_selection = [], \
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
 
@@ -849,6 +851,7 @@ class FlippingTaskGen:
                                         self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_rght[i]),\
                                         pos_selection = ["x", "y", "z"],\
+                                        rot_selection = [], \
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
@@ -857,6 +860,7 @@ class FlippingTaskGen:
                                         self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_lft[i]),\
                                         pos_selection = ["x", "y", "z"],\
+                                        rot_selection = [], \
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
 
@@ -868,7 +872,337 @@ class FlippingTaskGen:
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
                                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
                                         self.object_pos_rght[i], quat2rot(self.rght_pick_q[i]),\
+                                        pos_selection = ["x",  "y", "z"],\
+                                        rot_selection = ["x",  "y", "z"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+                        # left arm
+                        add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
+                                        quat2rot(self.object_q_lft[i]),\
+                                        pos_selection = ["z"],\
+                                        rot_selection = [],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+
+                    else: # left arm picks
+                        
+                        # right arm
+                        add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index,\
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
+                                        quat2rot(self.object_q_rght[i]),\
+                                        pos_selection = ["z"],\
+                                        rot_selection = [],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+                        # left arm
+                        add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,
+                                        self.object_pos_lft[i], quat2rot(self.lft_pick_q[i]),
                                         pos_selection = ["x", "y", "z"],\
+                                        rot_selection = ["x",  "y", "z"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+
+                if j == 2: # ARM 1: goes up from the picking pose | ARM 2: waits
+                    
+                    if (self.rght_arm_picks[i]): # right arm picks
+
+                        # right arm
+                        add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_rght[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
+                                        quat2rot(self.object_q_rght[i]),\
+                                        pos_selection = ["x", "y", "z"],\
+                                        rot_selection = ["x",  "y"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+                        # left arm
+                        add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
+                                        quat2rot(self.object_q_lft[i]),\
+                                        pos_selection = ["x"],\
+                                        rot_selection = ["x",  "y", "z"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+
+                    else: # left arm picks
+                        
+                        # right arm
+                        add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
+                                        quat2rot(self.object_q_rght[i]),\
+                                        pos_selection = ["x"],\
+                                        rot_selection = ["x",  "y", "z"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+                        # left arm
+                        add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,
+                                        self.object_pos_lft[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
+                                        quat2rot(self.object_q_lft[i]),\
+                                        pos_selection = ["x", "y", "z"],\
+                                        rot_selection = ["x",  "y"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+
+                if j == 3: # ARM 1: inward rotation from contact height | ARM 2: waits
+                    
+                    if (self.rght_arm_picks[i]): # right arm picks
+
+                        # right arm
+                        add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_rght[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
+                                        quat2rot(self.rght_inward_q),\
+                                        pos_selection = ["x", "y", "z"],\
+                                        rot_selection = ["x",  "y", "z"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+                        # left arm
+                        add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,
+                                        self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
+                                        quat2rot(self.object_q_lft[i]),\
+                                        pos_selection = ["y", "z"],\
+                                        rot_selection = ["x",  "y", "z"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+
+                    else: # left arm picks
+                        
+                        # right arm
+                        add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index,  self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
+                                        quat2rot(self.object_q_rght[i]),\
+                                        pos_selection = ["y", "z"],\
+                                        rot_selection = ["x",  "y", "z"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+                        
+                        # left arm
+                        add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,
+                                        self.object_pos_lft[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
+                                        quat2rot(self.lft_inward_q),\
+                                        pos_selection = ["x", "y", "z"],\
+                                        rot_selection = ["x",  "y", "z"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+
+                if j == 4: # ARM 1: waits for contact | ARM 2: rotates inward
+                    
+                    if (self.rght_arm_picks[i]): # right arm picks
+
+                        # right arm
+                        add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_rght[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
+                                        quat2rot(self.rght_inward_q),\
+                                        pos_selection = ["x", "y", "z"],\
+                                        rot_selection = ["x",  "y"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+                        # left arm
+                        add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
+                                        quat2rot(self.lft_inward_q),\
+                                        pos_selection = ["x", "z"],\
+                                        rot_selection = ["x",  "y", "z"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+                        
+                        # for h in range(self.filling_n_nodes): # add constant orientation of ARM2 (to)
+                                                        
+                        #     add_pose_cnstrnt(str(i) + "_lft_y_alignment_" + str(h), self.prb, cnstrnt_node_index + 1 + h, \
+                        #                 rot = self.lft_off_tcp_rot_wrt_ws,\
+                        #                 rot_ref = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]]),    
+                        #                 rot_selection = ["z"],\
+                        #                 weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                        #                 is_soft = is_soft_pose_cnstr, epsi = epsi)
+
+                        #     add_pose_cnstrnt(str(i) + "_rght_y_alignment_" + str(h), self.prb, cnstrnt_node_index + 1 + h, \
+                        #                 rot = self.rght_off_tcp_rot_wrt_ws,\
+                        #                 rot_ref = np.array([[1, 0, 0], [0, 0, 1], [0, - 1, 0]]),    
+                        #                 rot_selection = ["z"],\
+                        #                 weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                        #                 is_soft = is_soft_pose_cnstr, epsi = epsi)
+
+                        #     add_pose_cnstrnt(str(i) + "_same_tcp_height_" + str(h), self.prb, cnstrnt_node_index + 1 + h, \
+                        #                 pos = self.lft_off_tcp_pos_wrt_ws,\
+                        #                 pos_ref = self.rght_off_tcp_pos_wrt_ws,    
+                        #                 pos_selection = ["x", "z"],\
+                        #                 weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                        #                 is_soft = is_soft_pose_cnstr, epsi = epsi)
+
+                    else: # left arm picks
+                        
+                        # right arm
+                        add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index,\
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
+                                        quat2rot(self.rght_inward_q),\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        pos_selection = ["x", "z"],\
+                                        rot_selection = ["x",  "y", "z"],\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+                        
+                        # left arm
+                        add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_lft[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
+                                        quat2rot(self.lft_inward_q),
+                                        pos_selection = ["x", "y", "z"],\
+                                        rot_selection = ["x",  "y"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+                                         
+                if j == 5: # ARM 1: waits for contact | ARM 2: makes contact with bartender constraint
+                    
+                    self.bimanual_nodes.append(cnstrnt_node_index) # assign bimmanual node index
+
+                    if (self.rght_arm_picks[i]): # right arm picks
+
+                        # right arm
+                        add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_rght[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
+                                        quat2rot(self.rght_inward_q),\
+                                        pos_selection = ["x", "y", "z"],\
+                                        rot_selection = ["x",  "y"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+                        
+                        # relative constraint
+                        add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index,\
+                                        pos = self.lft_off_tcp_pos_wrt_ws, rot = self.lft_off_tcp_rot_wrt_ws,
+                                        pos_ref = self.rght_off_tcp_pos_wrt_ws, rot_ref = get_cocktail_matching_rot(self.rght_off_tcp_rot_wrt_ws),
+                                        pos_selection = ["x", "y", "z"],\
+                                        rot_selection = ["x",  "y", "z"],\
+                                        weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+
+                    else: # left arm picks
+                        
+                        # # relative constraint
+                        add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index,\
+                                        pos = self.lft_off_tcp_pos_wrt_ws, rot = self.lft_off_tcp_rot_wrt_ws,\
+                                        pos_ref = self.rght_off_tcp_pos_wrt_ws, rot_ref = get_cocktail_matching_rot(self.rght_off_tcp_rot_wrt_ws),\
+                                        pos_selection = ["x", "y", "z"],\
+                                        rot_selection = ["x",  "y", "z"],\
+                                        weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+                        # left arm
+                        add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_lft[i] + np.array([0.0, 0.0, self.contact_heights[i]]), quat2rot(self.lft_inward_q),    
+                                        pos_selection = ["x", "y", "z"],\
+                                        rot_selection = ["x",  "y"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+
+                if j == 6: # ARM 1: back to waiting pose but rotated inward| ARM 2: rotates back to waiting orientation
+
+                    if (self.rght_arm_picks[i]): # right arm picks
+
+                        # right arm
+                        add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i],\
+                                        self.contact_heights[i]]), quat2rot(self.rght_inward_q),\
+                                        pos_selection = ["x", "z"],\
+                                        rot_selection = ["x", "y"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+                        # left arm
+                        add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_lft[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
+                                        quat2rot(self.object_q_lft[i]),\
+                                        pos_selection = ["y", "z"],\
+                                        rot_selection = ["x", "y"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+
+                    else: # left arm picks
+                        
+                        # right arm
+                        add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index,\
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_rght[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
+                                        quat2rot(self.object_q_rght[i]),\
+                                        pos_selection = ["y", "z"],\
+                                        rot_selection = ["x", "y"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+                        # left arm
+                        add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
+                                        quat2rot(self.lft_inward_q),\
+                                        pos_selection = ["x", "z"],\
+                                        rot_selection = ["x", "y"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+
+                if j == 7: # ARM 1: back to waiting pose | ARM 2: down to picking  pose
+
+                    if (self.rght_arm_picks[i]): # right arm picks
+
+                        # right arm
+                        add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
+                                        quat2rot(self.object_q_rght[i]),\
+                                        pos_selection = ["y", "z"],\
+                                        rot_selection = ["x", "y"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+                        # left arm
+                        add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_lft[i], quat2rot(self.object_q_lft[i]),\
+                                        pos_selection = ["x", "y", "z"],\
+                                        rot_selection = ["x", "y", "z"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+
+                    else: # left arm picks
+                        
+                        # right arm
+                        add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_rght[i], quat2rot(self.object_q_rght[i]),\
+                                        pos_selection = ["x", "y", "z"],\
+                                        rot_selection = ["x", "y", "z"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+                        # left arm
+                        add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
+                                        quat2rot(self.object_q_lft[i]),\
+                                        pos_selection = ["y", "z"],\
+                                        rot_selection = ["x", "y"],\
+                                        weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+
+                if j == 8: # ARM 1: waits | ARM 2: back to waiting pose
+
+                    if (self.rght_arm_picks[i]): # right arm picks
+
+                        # right arm
+                        add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
+                                        quat2rot(self.object_q_rght[i]),\
+                                        pos_selection = ["x", "y", "z"],\
+                                        rot_selection = [], \
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
@@ -877,6 +1211,7 @@ class FlippingTaskGen:
                                         self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_lft[i]),\
                                         pos_selection = ["x", "y", "z"],\
+                                        rot_selection = [], \
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
 
@@ -888,317 +1223,18 @@ class FlippingTaskGen:
                                         self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
                                         quat2rot(self.object_q_rght[i]),\
                                         pos_selection = ["x", "y", "z"],\
+                                        rot_selection = [], \
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,
-                                        self.object_pos_lft[i], quat2rot(self.lft_pick_q[i]),
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
+                                        self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
+                                        quat2rot(self.object_q_lft[i]),\
                                         pos_selection = ["x", "y", "z"],\
+                                        rot_selection = [], \
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-
-                # if j == 2: # ARM 1: goes up from the picking pose | ARM 2: waits
-                    
-                #     if (self.rght_arm_picks[i]): # right arm picks
-
-                #         # right arm
-                #         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                #                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_rght[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
-                #                         quat2rot(self.object_q_rght[i]),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-                #         # left arm
-                #         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                #                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
-                #                         quat2rot(self.object_q_lft[i]),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-
-                #     else: # left arm picks
-                        
-                #         # right arm
-                #         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                #                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
-                #                         quat2rot(self.object_q_rght[i]),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-                #         # left arm
-                #         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                #                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,
-                #                         self.object_pos_lft[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
-                #                         quat2rot(self.object_q_lft[i]),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-
-                # if j == 3: # ARM 1: inward rotation from contact height | ARM 2: waits
-                    
-                #     if (self.rght_arm_picks[i]): # right arm picks
-
-                #         # right arm
-                #         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                #                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_rght[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
-                #                         quat2rot(self.rght_inward_q),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-                #         # left arm
-                #         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                #                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,
-                #                         self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
-                #                         quat2rot(self.object_q_lft[i]),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-
-                #     else: # left arm picks
-                        
-                #         # right arm
-                #         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index,  self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
-                #                         quat2rot(self.object_q_rght[i]),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-                        
-                #         # left arm
-                #         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                #                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,
-                #                         self.object_pos_lft[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
-                #                         quat2rot(self.lft_inward_q),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-
-                # if j == 4: # ARM 1: waits for contact | ARM 2: rotates inward
-                    
-                #     if (self.rght_arm_picks[i]): # right arm picks
-
-                #         # right arm
-                #         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                #                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_rght[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
-                #                         quat2rot(self.rght_inward_q),\
-                #                         pos_selection = ["x"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-                #         # left arm
-                #         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                #                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
-                #                         quat2rot(self.lft_inward_q),\
-                #                         pos_selection = ["x"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-                        
-                #         for h in range(self.filling_n_nodes): # add constant orientation of ARM2 (to)
-                                                        
-                #             add_pose_cnstrnt(str(i) + "_lft_y_alignment_" + str(h), self.prb, cnstrnt_node_index + 1 + h, \
-                #                         rot = self.lft_off_tcp_rot_wrt_ws,\
-                #                         rot_ref = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]]),    
-                #                         rot_selection = ["z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-
-                #             add_pose_cnstrnt(str(i) + "_rght_y_alignment_" + str(h), self.prb, cnstrnt_node_index + 1 + h, \
-                #                         rot = self.rght_off_tcp_rot_wrt_ws,\
-                #                         rot_ref = np.array([[1, 0, 0], [0, 0, 1], [0, - 1, 0]]),    
-                #                         rot_selection = ["z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-
-                #             add_pose_cnstrnt(str(i) + "_same_tcp_height_" + str(h), self.prb, cnstrnt_node_index + 1 + h, \
-                #                         pos = self.lft_off_tcp_pos_wrt_ws,\
-                #                         pos_ref = self.rght_off_tcp_pos_wrt_ws,    
-                #                         pos_selection = ["x", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-
-                #     else: # left arm picks
-                        
-                #         # right arm
-                #         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index,\
-                #                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
-                #                         quat2rot(self.rght_inward_q),\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-                        
-                #         # left arm
-                #         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                #                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_lft[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
-                #                         quat2rot(self.lft_inward_q),
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-                                         
-                # if j == 5: # ARM 1: waits for contact | ARM 2: makes contact with bartender constraint
-                    
-                #     self.bimanual_nodes.append(cnstrnt_node_index) # assign bimmanual node index
-
-                #     if (self.rght_arm_picks[i]): # right arm picks
-
-                #         # right arm
-                #         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                #                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_rght[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
-                #                         quat2rot(self.rght_inward_q),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-                        
-                #         # relative constraint
-                #         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index,\
-                #                         pos = self.lft_off_tcp_pos_wrt_ws, rot = self.lft_off_tcp_rot_wrt_ws,
-                #                         pos_ref = self.rght_off_tcp_pos_wrt_ws, rot_ref = get_cocktail_matching_rot(self.rght_off_tcp_rot_wrt_ws),
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-
-                #     else: # left arm picks
-                        
-                #         # # relative constraint
-                #         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index,\
-                #                         pos = self.lft_off_tcp_pos_wrt_ws, rot = self.lft_off_tcp_rot_wrt_ws,\
-                #                         pos_ref = self.rght_off_tcp_pos_wrt_ws, rot_ref = get_cocktail_matching_rot(self.rght_off_tcp_rot_wrt_ws),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-                #         # left arm
-                #         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                #                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_lft[i] + np.array([0.0, 0.0, self.contact_heights[i]]), quat2rot(self.lft_inward_q),    
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-
-                # if j == 6: # ARM 1: back to waiting pose but rotated inward| ARM 2: rotates back to waiting orientation
-
-                #     if (self.rght_arm_picks[i]): # right arm picks
-
-                #         # right arm
-                #         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                #                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i],\
-                #                         self.contact_heights[i]]), quat2rot(self.rght_inward_q),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-                #         # left arm
-                #         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                #                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_lft[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
-                #                         quat2rot(self.object_q_lft[i]),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-
-                #     else: # left arm picks
-                        
-                #         # right arm
-                #         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index,\
-                #                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_rght[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
-                #                         quat2rot(self.object_q_rght[i]),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-                #         # left arm
-                #         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                #                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
-                #                         quat2rot(self.lft_inward_q),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-
-                # if j == 7: # ARM 1: back to waiting pose | ARM 2: down to picking  pose
-
-                #     if (self.rght_arm_picks[i]): # right arm picks
-
-                #         # right arm
-                #         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                #                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
-                #                         quat2rot(self.object_q_rght[i]),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-                #         # left arm
-                #         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                #                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_lft[i], quat2rot(self.object_q_lft[i]),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-
-                #     else: # left arm picks
-                        
-                #         # right arm
-                #         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                #                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_rght[i], quat2rot(self.object_q_rght[i]),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-                #         # left arm
-                #         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                #                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
-                #                         quat2rot(self.object_q_lft[i]),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-
-                # if j == 8: # ARM 1: waits | ARM 2: back to waiting pose
-
-                #     if (self.rght_arm_picks[i]): # right arm picks
-
-                #         # right arm
-                #         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                #                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
-                #                         quat2rot(self.object_q_rght[i]),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-                #         # left arm
-                #         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                #                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
-                #                         quat2rot(self.object_q_lft[i]),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-
-                #     else: # left arm picks
-                        
-                #         # right arm
-                #         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index,\
-                #                         self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
-                #                         quat2rot(self.object_q_rght[i]),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
-                #         # left arm
-                #         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                #                         self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,\
-                #                         self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
-                #                         quat2rot(self.object_q_lft[i]),\
-                #                         pos_selection = ["x", "y", "z"],\
-                #                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
-                #                         is_soft = is_soft_pose_cnstr, epsi = epsi)
 
     def build_pick_and_place_task(self, is_soft_pose_cnstr = True, epsi = epsi_default):
 
