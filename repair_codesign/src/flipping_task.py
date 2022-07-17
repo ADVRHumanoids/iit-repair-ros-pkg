@@ -47,7 +47,7 @@ file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 # task-specific options
 right_arm_picks = True
-filling_n_nodes = 10
+filling_n_nodes = 0
 rot_error_epsi = 0.0000001
 
 # generating samples along working surface y direction
@@ -66,7 +66,7 @@ for i in range(n_y_samples):
     y_sampling[i] = y_sampl_lb + dy * i
 
 # number of solution tries
-n_glob_tests = 4
+n_glob_tests = 8
 
 # resampler option (if used)
 refinement_scale = 10
@@ -79,7 +79,7 @@ solver_type = 'ipopt'
 slvr_opt = {
     "ipopt.tol": 0.000001, 
     "ipopt.max_iter": 10000,
-    "ipopt.constr_viol_tol": 0.00001,
+    "ipopt.constr_viol_tol": 0.0001,
     "ilqr.verbose": True}
 
 # loaded initial guess options
@@ -92,7 +92,7 @@ for i in range(len(init_guess_filenames)):
 ig_seed = 22345345
 
 # single task execution time
-t_exec_task = 3
+t_exec_task = 6
 
 # transcription options (if used)
 transcription_method = 'multiple_shooting'
@@ -353,7 +353,7 @@ def main(args):
 
         
     # best_index = get_min_cost_index(sol_costs)
-    best_index = 1
+    best_index = 3
     if args.rviz_replay:
 
         q_replay = None
