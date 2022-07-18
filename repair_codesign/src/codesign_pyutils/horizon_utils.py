@@ -149,8 +149,6 @@ def add_pose_cnstrnt(unique_id, prb, nodes, pos = None, rot = None, pos_ref = No
                 
                 if rot_error_approach == "traversaro":
                     
-                    rot_error_axis_sel_not_supp(rot_selector, rot_error_approach) # check if user tried to set axis --> in case, throw error
-
                     rot_cnstrnt = prb.createConstraint("rot_" + str(unique_id),\
                                         rot_error3(rot_ref, rot, epsi)[rot_selector], nodes = nodes)
 

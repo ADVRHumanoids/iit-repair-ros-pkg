@@ -80,9 +80,9 @@ def rot_error3(R_trgt, R_actual, epsi = 0.0):
 
     M_err = cs.DM_eye(3) - R_trgt.T @ R_actual
 
-    err = cs.trace(M_err)
+    # err = cs.trace(M_err)
 
-    # err = cs.vertcat(1 - M_err[0, 0], 1 - M_err[1, 1], 1 - M_err[2, 2])
+    err = cs.vertcat(M_err[0, 0], M_err[1, 1], M_err[2, 2])
 
     return err
 
