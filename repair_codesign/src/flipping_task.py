@@ -66,7 +66,7 @@ for i in range(n_y_samples):
     y_sampling[i] = y_sampl_lb + dy * i
 
 # number of solution tries
-n_glob_tests = 50
+n_glob_tests = 4
 
 # resampler option (if used)
 refinement_scale = 10
@@ -295,7 +295,7 @@ def main(args):
 
         solve_failed_array[i] = solve_failed
 
-    n_opt_sol = len(np.where(solve_failed_array == False))
+    n_opt_sol = len(np.where(np.array(solve_failed_array) == False))
 
     other_stuff = {"dt": flipping_task.dt, "filling_nodes": flipping_task.filling_n_nodes,
                             "task_base_nnodes": flipping_task.task_base_n_nodes,
@@ -311,7 +311,7 @@ def main(args):
                                         "additional_info_main", True)
     if args.warmstart:
         
-        n_opt_init_sol = len(np.where(init_solve_failed_array == False))
+        n_opt_init_sol = len(np.where(np.array(init_solve_failed_array) == False))
 
         other_stuff_init = {"dt": flipping_task_init.dt, "filling_nodes": flipping_task_init.filling_n_nodes,
                                 "task_base_nnodes": flipping_task_init.task_base_n_nodes,
