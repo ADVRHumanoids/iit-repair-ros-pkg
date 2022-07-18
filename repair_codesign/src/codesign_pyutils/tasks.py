@@ -96,6 +96,8 @@ class DoubleArmCartTask:
         self.lft_pick_q = [] # where left arm will pick
         self.rght_pick_q = [] # where right arm will pick
 
+        self.ws_link_pos = None
+        self.ws_link_rot = None
         self.rarm_tcp_pos_wrt_ws = None
         self.larm_tcp_pos_wrt_ws = None
         self.rarm_tcp_rot_wrt_ws = None
@@ -215,8 +217,8 @@ class DoubleArmCartTask:
 
         # getting useful kinematic quantities
         fk_ws = cs.Function.deserialize(self.kindyn.fk("working_surface_link"))
-        ws_link_pos = fk_ws(q = np.zeros((self.nq, 1)).flatten())["ee_pos"] # w.r.t. world
-        ws_link_rot = fk_ws(q = np.zeros((self.nq, 1)).flatten())["ee_rot"] # w.r.t. world (3x3 rot matrix)
+        self.ws_link_pos = fk_ws(q = np.zeros((self.nq, 1)).flatten())["ee_pos"] # w.r.t. world
+        self.ws_link_rot = fk_ws(q = np.zeros((self.nq, 1)).flatten())["ee_rot"] # w.r.t. world (3x3 rot matrix)
 
         fk_ws_arm1_link6 = cs.Function.deserialize(self.kindyn.fk("arm_1_link_6"))
         arm1_link6_pos = fk_ws_arm1_link6(q = self.q)["ee_pos"] # w.r.t. world
@@ -229,32 +231,32 @@ class DoubleArmCartTask:
         fk_arm_r = cs.Function.deserialize(self.kindyn.fk("arm_1_tcp")) 
         rarm_tcp_pos = fk_arm_r(q = self.q)["ee_pos"] # w.r.t. world
         rarm_tcp_rot = fk_arm_r(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
-        self.rarm_tcp_pos_wrt_ws = rarm_tcp_pos - ws_link_pos # pos w.r.t. working surface in world frame
+        self.rarm_tcp_pos_wrt_ws = rarm_tcp_pos - self.ws_link_pos # pos w.r.t. working surface in world frame
 
         fk_arm_l = cs.Function.deserialize(self.kindyn.fk("arm_2_tcp"))  
         larm_tcp_pos = fk_arm_l(q = self.q)["ee_pos"] # w.r.t. world
         larm_tcp_rot = fk_arm_l(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
-        self.larm_tcp_pos_wrt_ws = larm_tcp_pos - ws_link_pos # pos w.r.t. working surface in world frame
+        self.larm_tcp_pos_wrt_ws = larm_tcp_pos - self.ws_link_pos # pos w.r.t. working surface in world frame
 
         rarm_cocktail_pos = rarm_tcp_pos + \
                             rarm_tcp_rot @ cs.vertcat(0, 0, self.cocktail_size / 2.0)
         rarm_cocktail_rot = rarm_tcp_rot
-        rarm_cocktail_rot_wrt_ws = ws_link_rot.T @ rarm_cocktail_rot
-        rarm_cocktail_pos_wrt_ws = ws_link_rot.T @ (rarm_cocktail_pos - ws_link_pos)
+        rarm_cocktail_rot_wrt_ws = self.ws_link_rot.T @ rarm_cocktail_rot
+        rarm_cocktail_pos_wrt_ws = self.ws_link_rot.T @ (rarm_cocktail_pos - self.ws_link_pos)
 
         larm_cocktail_pos = larm_tcp_pos + \
                             larm_tcp_rot @ cs.vertcat(0, 0, self.cocktail_size / 2.0)
         larm_cocktail_rot = larm_tcp_rot
-        larm_cocktail_rot_wrt_ws = ws_link_rot.T @ larm_cocktail_rot
-        larm_cocktail_pos_wrt_ws = ws_link_rot.T @ (larm_cocktail_pos - ws_link_pos)
+        larm_cocktail_rot_wrt_ws = self.ws_link_rot.T @ larm_cocktail_rot
+        larm_cocktail_pos_wrt_ws = self.ws_link_rot.T @ (larm_cocktail_pos - self.ws_link_pos)
 
         self.lft_off_tcp_pos_wrt_ws = larm_cocktail_pos_wrt_ws
         self.lft_off_tcp_rot_wrt_ws = larm_cocktail_rot_wrt_ws
         self.rght_off_tcp_pos_wrt_ws = rarm_cocktail_pos_wrt_ws
         self.rght_off_tcp_rot_wrt_ws = rarm_cocktail_rot_wrt_ws
 
-        self.coll_links_pos_rght = ws_link_rot.T @ (arm1_link6_pos - ws_link_pos)
-        self.coll_links_pos_lft = ws_link_rot.T @ (arm2_link6_pos - ws_link_pos)
+        self.coll_links_pos_rght = self.ws_link_rot.T @ (arm1_link6_pos - self.ws_link_pos)
+        self.coll_links_pos_lft = self.ws_link_rot.T @ (arm2_link6_pos - self.ws_link_pos)
 
     def setup_prb(self,\
                 epsi = epsi_default,\
@@ -284,6 +286,9 @@ class DoubleArmCartTask:
                                   self.q[2] - self.q[2 + (self.arm_dofs + 2)])
 
         # fixing co-design values
+        # self.prb.createConstraint("fixed_x", \
+        #                           self.q[0] - self.ws_link_pos[1])
+
         self.prb.createConstraint("roll", \
                                   self.q[3] - self.should_roll)
                                   
