@@ -42,6 +42,8 @@ urdf_full_path = urdfs_path + "/" + urdf_name + ".urdf"
 xacro_full_path = urdfs_path + "/" + urdf_name + ".urdf.xacro"
 codesign_path = rospackage.get_path("repair_codesign")
 results_path = codesign_path + "/test_results"
+opt_results_path = results_path + "/opt" 
+failed_results_path = results_path + "/failed"
 
 file_name = os.path.splitext(os.path.basename(__file__))[0]
 
@@ -66,7 +68,7 @@ for i in range(n_y_samples):
     y_sampling[i] = y_sampl_lb + dy * i
 
 # number of solution tries
-n_glob_tests = 4
+n_glob_tests = 100
 
 # resampler option (if used)
 refinement_scale = 10
@@ -242,7 +244,7 @@ def main(args):
     # inizialize a dumper object for post-processing
     if args.dump_sol: 
 
-        sol_dumper = SolDumper(results_path)
+        sol_dumper = SolDumper()
 
     # generating initial guesses, based on the script arguments
     q_ig_main, q_dot_ig_main =  generate_ig(args, init_load_abs_paths,\
@@ -341,7 +343,13 @@ def main(args):
                                 **(cnstr_opt[i]),
                                 **{"q_ig": q_ig_main[i], "q_dot_ig": q_dot_ig_main[i]}}
 
-                sol_dumper.add_storer(full_solution, results_path,\
+                if not solve_failed_array[i]:
+
+                    sol_dumper.add_storer(full_solution, opt_results_path,\
+                                    "flipping_repair" + str(i), True)
+                else:
+
+                    sol_dumper.add_storer(full_solution, failed_results_path,\
                                     "flipping_repair" + str(i), True)
 
                 if args.warmstart:
@@ -350,8 +358,15 @@ def main(args):
                         **(cnstr_opt_init[i]),\
                         **{"q_ig": q_ig_init[i], "q_dot_ig": q_dot_ig_init[i]}}
                     
-                    sol_dumper.add_storer(full_solution_init, results_path,\
-                                        "flipping_repair_init_prb" + str(i), True)
+                    if not solve_failed_array[i]:
+                        
+                        sol_dumper.add_storer(full_solution_init, opt_results_path,\
+                                            "flipping_repair_init_prb" + str(i), True)
+                    
+                    else:
+
+                        sol_dumper.add_storer(full_solution_init, failed_results_path,\
+                                            "flipping_repair_init_prb" + str(i), True)
 
             if i == (n_glob_tests - 1): # dump solution after last pass
 

@@ -5,7 +5,7 @@ from datetime import date
 
 class SolDumper():
 
-  def __init__(self, dump_path, backend_name = "matStorer"):
+  def __init__(self, backend_name = "matStorer"):
 
     self.sols = []
     self.storers = []
