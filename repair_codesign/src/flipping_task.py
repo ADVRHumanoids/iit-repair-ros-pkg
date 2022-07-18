@@ -51,8 +51,8 @@ filling_n_nodes = 0
 rot_error_epsi = 0.0000001
 
 # generating samples along working surface y direction
-n_y_samples = 1
-y_sampl_ub = 0
+n_y_samples = 50
+y_sampl_ub = 0.3
 y_sampl_lb = - y_sampl_ub
 
 if n_y_samples == 1:
@@ -66,7 +66,7 @@ for i in range(n_y_samples):
     y_sampling[i] = y_sampl_lb + dy * i
 
 # number of solution tries
-n_glob_tests = 3
+n_glob_tests = 2
 
 # resampler option (if used)
 refinement_scale = 10
@@ -77,9 +77,9 @@ cocktail_size = 0.08
 # solver options
 solver_type = 'ipopt'
 slvr_opt = {
-    "ipopt.tol": 0.000001, 
-    "ipopt.max_iter": 10000,
-    "ipopt.constr_viol_tol": 0.0001,
+    "ipopt.tol": 0.001, 
+    "ipopt.max_iter": 1000,
+    "ipopt.constr_viol_tol": 0.001,
     "ilqr.verbose": True}
 
 # loaded initial guess options
@@ -89,7 +89,7 @@ for i in range(len(init_guess_filenames)):
     init_load_abs_paths.append(results_path + "/init_guess/" + init_guess_filenames[i])
 
 # seed used for random number generation
-ig_seed = 22345345
+ig_seed = 1
 
 # single task execution time
 t_exec_task = 6
@@ -264,8 +264,6 @@ def main(args):
     init_solutions = [None] * n_glob_tests
     cnstr_opt = [None] * n_glob_tests
     cnstr_opt_init =[None] * n_glob_tests
-    other_stuff = [None] * n_glob_tests
-    other_stuff_init = [None] * n_glob_tests
 
     # solving multiple problems
     for i in range(n_glob_tests):
@@ -287,37 +285,50 @@ def main(args):
         print("Solution cost " + str(i) + ": ", solutions[i]["opt_cost"])
         sol_costs[i] = solutions[i]["opt_cost"]
         cnstr_opt[i] = slvr.getConstraintSolutionDict()
-        other_stuff[i] = {"dt": flipping_task.dt, "filling_nodes": flipping_task.filling_n_nodes,
-                            "task_base_nnodes": flipping_task.task_base_n_nodes,
-                            "right_arm_picks": flipping_task.rght_arm_picks, \
-                            "wman_base": args.weight_global_manip, \
-                            "wpo_bases": args.base_weight_pos, "wrot_base": args.base_weight_rot, \
-                            "wman_actual": flipping_task.weight_glob_man, \
-                            "wpos_actual": flipping_task.weight_pos, "wrot_actual": flipping_task.weight_rot, 
-                            "solve_failed": solve_failed}
 
         if args.warmstart and (not init_sol_failed):
 
             init_solutions[i] = init_slvr.getSolutionDict() # extracting solution from initialization problem
             # print("Initialization problem solution cost" + str(i) + ": ", init_solutions[i]["opt_cost"])
 
-            other_stuff_init[i] = {"dt": flipping_task_init.dt, "filling_nodes": flipping_task_init.filling_n_nodes,
+        init_solve_failed_array[i] = init_sol_failed
+
+        solve_failed_array[i] = solve_failed
+
+    n_opt_sol = len(np.where(solve_failed_array == False))
+
+    other_stuff = {"dt": flipping_task.dt, "filling_nodes": flipping_task.filling_n_nodes,
+                            "task_base_nnodes": flipping_task.task_base_n_nodes,
+                            "right_arm_picks": flipping_task.rght_arm_picks, \
+                            "wman_base": args.weight_global_manip, \
+                            "wpo_bases": args.base_weight_pos, "wrot_base": args.base_weight_rot, \
+                            "wman_actual": flipping_task.weight_glob_man, \
+                            "wpos_actual": flipping_task.weight_pos, "wrot_actual": flipping_task.weight_rot, 
+                            "solve_failed": solve_failed_array, 
+                            "n_opt_sol": n_opt_sol, "n_unfeas_sol": n_glob_tests - n_opt_sol}
+    
+    sol_dumper.add_storer(other_stuff, results_path,\
+                                        "additional_info_main", True)
+    if args.warmstart:
+        
+        n_opt_init_sol = len(np.where(init_solve_failed_array == False))
+
+        other_stuff_init = {"dt": flipping_task_init.dt, "filling_nodes": flipping_task_init.filling_n_nodes,
                                 "task_base_nnodes": flipping_task_init.task_base_n_nodes,
                                 "right_arm_picks": flipping_task_init.rght_arm_picks, \
                                 "wman_base": args.weight_global_manip, \
                                 "wpo_bases": args.base_weight_pos, "wrot_base": args.base_weight_rot, \
                                 "wman_actual": flipping_task_init.weight_glob_man, \
                                 "wpos_actual": flipping_task_init.weight_pos, "wrot_actual": flipping_task_init.weight_rot,\
-                                "init_solve_failed": init_sol_failed}
+                                "init_solve_failed": init_solve_failed_array, 
+                                "n_opt_sol": n_opt_init_sol, "n_unfeas_sol": n_glob_tests - n_opt_init_sol}
 
+        sol_dumper.add_storer(other_stuff_init, results_path,\
+                                        "additional_info_init", True)
 
-        init_solve_failed_array[i] = init_sol_failed
+    if args.dump_sol:
 
-        solve_failed_array[i] = solve_failed
-
-    for i in range(n_glob_tests):
-
-        if args.dump_sol:
+        for i in range(n_glob_tests):
 
             store_current_sol = wait_for_confirmation(do_something = "store the solution n." + str(i),\
                                 or_do_something_else = "avoid storing it",\
@@ -328,7 +339,6 @@ def main(args):
                 
                 full_solution = {**(solutions[i]),
                                 **(cnstr_opt[i]),
-                                **(other_stuff[i]),
                                 **{"q_ig": q_ig_main[i], "q_dot_ig": q_dot_ig_main[i]}}
 
                 sol_dumper.add_storer(full_solution, results_path,\
@@ -338,7 +348,6 @@ def main(args):
 
                     full_solution_init = {**(init_solutions[i]),\
                         **(cnstr_opt_init[i]),\
-                        **(other_stuff_init[i]),\
                         **{"q_ig": q_ig_init[i], "q_dot_ig": q_dot_ig_init[i]}}
                     
                     sol_dumper.add_storer(full_solution_init, results_path,\
@@ -350,71 +359,97 @@ def main(args):
 
                     print("\nSolutions dumped. \n")
 
-    best_index = get_min_cost_index(sol_costs, solve_failed_array)
-    if args.rviz_replay:
+    if args.replay_only_best:
 
-        q_replay = None
-        q_replay_init = None
+        best_index = get_min_cost_index(sol_costs, solve_failed_array)
+        if args.rviz_replay:
 
-        if args.resample_sol:
-            
-            dt_res = flipping_task.dt / refinement_scale
+            q_replay = None
+            q_replay_init = None
 
-            q_replay = resampler(solutions[best_index]["q"], solutions[best_index]["q_dot"],\
-                                    flipping_task.dt, dt_res,\
-                                    {'x': flipping_task.q, 'p': flipping_task.q_dot,\
-                                    'ode': flipping_task.q_dot, 'quad': 0})
-
-            sol_replayer = ReplaySol(dt_res,
-                                        joint_list = flipping_task.joint_names,
-                                        q_replay = q_replay) 
-
-        else:
-            
-            q_replay = solutions[best_index]["q"]
-
-            sol_replayer = ReplaySol(dt = flipping_task.dt,\
-                                        joint_list = flipping_task.joint_names,\
-                                        q_replay = q_replay, \
-                                        srt_msg = "\nReplaying best solution ( n." + str(best_index + 1) + " /" +\
-                                        str(n_glob_tests) + " )...") 
-
-        if args.replay_init_and_main and args.warmstart:
-            
             if args.resample_sol:
-
-                dt_res = flipping_task_init.dt / refinement_scale
-                q_replay_init = resampler(init_solutions[best_index]["q"], init_solutions[best_index]["q_dot"],\
-                                    flipping_task_init.dt, dt_res,\
-                                    {'x': flipping_task_init.q,\
-                                        'p': flipping_task_init.q_dot,\
-                                        'ode': flipping_task_init.q_dot,\
-                                        'quad': 0})
                 
-                sol_replayer_init = ReplaySol(dt_res,\
-                                        joint_list = flipping_task_init.joint_names,\
-                                        q_replay = q_replay_init, srt_msg = "\nReplaying initialization trajectory") 
+                dt_res = flipping_task.dt / refinement_scale
+
+                q_replay = resampler(solutions[best_index]["q"], solutions[best_index]["q_dot"],\
+                                        flipping_task.dt, dt_res,\
+                                        {'x': flipping_task.q, 'p': flipping_task.q_dot,\
+                                        'ode': flipping_task.q_dot, 'quad': 0})
+
+                sol_replayer = ReplaySol(dt_res,
+                                            joint_list = flipping_task.joint_names,
+                                            q_replay = q_replay, \
+                                            srt_msg = "\nReplaying best solution ( n." + str(best_index + 1) + " /" +\
+                                            str(n_glob_tests) + " )...")
 
             else:
+                
+                q_replay = solutions[best_index]["q"]
 
-                q_replay_init = init_solutions[best_index]["q"]
+                sol_replayer = ReplaySol(dt = flipping_task.dt,\
+                                            joint_list = flipping_task.joint_names,\
+                                            q_replay = q_replay, \
+                                            srt_msg = "\nReplaying best solution ( n." + str(best_index + 1) + " /" +\
+                                            str(n_glob_tests) + " )...") 
 
-                sol_replayer_init = ReplaySol(dt = flipping_task_init.dt,\
-                                        joint_list = flipping_task_init.joint_names,\
-                                        q_replay = q_replay_init, srt_msg = "\nReplaying initialization trajectory")
+            if args.replay_init_and_main and args.warmstart:
+                
+                if args.resample_sol:
+
+                    dt_res = flipping_task_init.dt / refinement_scale
+                    q_replay_init = resampler(init_solutions[best_index]["q"], init_solutions[best_index]["q_dot"],\
+                                        flipping_task_init.dt, dt_res,\
+                                        {'x': flipping_task_init.q,\
+                                            'p': flipping_task_init.q_dot,\
+                                            'ode': flipping_task_init.q_dot,\
+                                            'quad': 0})
+                    
+                    sol_replayer_init = ReplaySol(dt_res,\
+                                            joint_list = flipping_task_init.joint_names,\
+                                            q_replay = q_replay_init, srt_msg = "\nReplaying initialization trajectory") 
+
+                else:
+
+                    q_replay_init = init_solutions[best_index]["q"]
+
+                    sol_replayer_init = ReplaySol(dt = flipping_task_init.dt,\
+                                            joint_list = flipping_task_init.joint_names,\
+                                            q_replay = q_replay_init, srt_msg = "\nReplaying initialization trajectory")
+                
+
+                while True:
+                    
+                    sol_replayer_init.sleep(1)
+                    sol_replayer_init.replay(is_floating_base = False, play_once = True)
+                    sol_replayer_init.sleep(0.5)
+                    sol_replayer.replay(is_floating_base = False, play_once = True)
+                    
+            else:
+
+                sol_replayer.sleep(0.5)
+                sol_replayer.replay(is_floating_base = False, play_once = False)
+
+    else: # replaying init solutions(if used) not supported yet
+
+        best_index = get_min_cost_index(sol_costs, solve_failed_array)
+        sol_replayer = [None] * n_glob_tests
+        if args.rviz_replay:
             
-
+            for i in range(n_glob_tests):
+                
+                q_replay = solutions[i]["q"]
+                sol_replayer[i] = ReplaySol(dt = flipping_task.dt,\
+                                            joint_list = flipping_task.joint_names,\
+                                            q_replay = q_replay, \
+                                            srt_msg = "\nReplaying solution ( n." + str(i + 1) + " /" +\
+                                            str(n_glob_tests) + " ). Optimal is n." + str(best_index) + "...") 
             while True:
-                
-                sol_replayer_init.sleep(1)
-                sol_replayer_init.replay(is_floating_base = False, play_once = True)
-                sol_replayer_init.sleep(0.5)
-                sol_replayer.replay(is_floating_base = False, play_once = True)
-                
-        else:
 
-            sol_replayer.sleep(0.5)
-            sol_replayer.replay(is_floating_base = False, play_once = False)
+                for i in range(n_glob_tests):
+
+                    sol_replayer[i].sleep(1)
+                    sol_replayer[i].replay(is_floating_base = False, play_once = True)
+                    
 
     # closing all child processes and exiting
     rviz_window.terminate()
@@ -453,6 +488,8 @@ if __name__ == '__main__':
                         help = 'whether to resample the obtained solution before replaying it', default = False)
     parser.add_argument('--load_initial_guess', '-lig', type=str2bool,\
                         help = 'whether to load the initial guess from file', default = False)
+    parser.add_argument('--replay_only_best', '-rplb', type=str2bool,\
+                        help = 'whether to replay only the best solution or not', default = True)
 
     args = parser.parse_args()
 

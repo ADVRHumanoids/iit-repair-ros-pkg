@@ -3,6 +3,8 @@ import numpy as np
 
 import time 
 
+import warnings
+
 def str2bool(v):
   #susendberg's function
   return v.lower() in ("yes", "true", "t", "1")
@@ -62,7 +64,7 @@ def get_min_cost_index(costs, solve_failed_array):
     best_index = - 1
     n_glb_tests = len(costs)
 
-    if n_glb_tests == 1 and solve_failed_array[i]:
+    if not solve_failed_array[0]:
 
         best_index = 0
 
@@ -80,7 +82,9 @@ def get_min_cost_index(costs, solve_failed_array):
 
     if best_index < 0:
 
-        raise Exception("Not able to solve any of the problems!! I will not be able to select the best cost.")
+        warnings.warn("Not able to solve any of the problems!!")
+
+        best_index = np.argmin(costs)
 
     return best_index
 
