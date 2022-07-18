@@ -44,6 +44,9 @@ codesign_path = rospackage.get_path("repair_codesign")
 results_path = codesign_path + "/test_results"
 opt_results_path = results_path + "/opt" 
 failed_results_path = results_path + "/failed"
+init_folder_name = "init0"
+init_opt_results_path = results_path + "/initializations/" + init_folder_name + "/opt" 
+init_failed_results_path = results_path + "/initializations/" + init_folder_name + "/failed" 
 
 file_name = os.path.splitext(os.path.basename(__file__))[0]
 
@@ -68,7 +71,7 @@ for i in range(n_y_samples):
     y_sampling[i] = y_sampl_lb + dy * i
 
 # number of solution tries
-n_glob_tests = 100
+n_glob_tests = 5
 
 # resampler option (if used)
 refinement_scale = 10
@@ -84,11 +87,23 @@ slvr_opt = {
     "ipopt.constr_viol_tol": 0.001,
     "ilqr.verbose": True}
 
-# loaded initial guess options
-init_guess_filenames = ["init4.mat"]
-init_load_abs_paths = []
-for i in range(len(init_guess_filenames)):
-    init_load_abs_paths.append(results_path + "/init_guess/" + init_guess_filenames[i])
+# loaded initial guess stuff
+
+file_list_opt = os.listdir(init_opt_results_path)
+file_list_failed = os.listdir(init_failed_results_path)
+is_file_opt = [True] * len(file_list_opt) + [False] * len(file_list_failed)
+full_file_list = file_list_opt + file_list_failed
+full_file_paths = [""] * len(full_file_list)
+
+for i in range(len(full_file_list)):
+
+    if is_file_opt[i]:
+
+        full_file_paths[i] = init_opt_results_path + "/" + full_file_list[i]
+    
+    else:
+
+        full_file_paths[i] = init_failed_results_path + "/" + full_file_list[i]
 
 # seed used for random number generation
 ig_seed = 1
@@ -247,13 +262,13 @@ def main(args):
         sol_dumper = SolDumper()
 
     # generating initial guesses, based on the script arguments
-    q_ig_main, q_dot_ig_main =  generate_ig(args, init_load_abs_paths,\
+    q_ig_main, q_dot_ig_main =  generate_ig(args, full_file_paths,\
                                             flipping_task,\
                                             n_glob_tests, ig_seed,\
-                                            False)
+                                            True)
     if args.warmstart:
 
-        q_ig_init, q_dot_ig_init =  generate_ig(args, init_load_abs_paths,\
+        q_ig_init, q_dot_ig_init =  generate_ig(args, full_file_paths,\
                                             flipping_task_init,\
                                             n_glob_tests, ig_seed,\
                                             False)
@@ -341,7 +356,8 @@ def main(args):
                 
                 full_solution = {**(solutions[i]),
                                 **(cnstr_opt[i]),
-                                **{"q_ig": q_ig_main[i], "q_dot_ig": q_dot_ig_main[i]}}
+                                **{"q_ig": q_ig_main[i], "q_dot_ig": q_dot_ig_main[i]}, \
+                                **{"solution_index": i}}
 
                 if not solve_failed_array[i]:
 
@@ -356,7 +372,8 @@ def main(args):
 
                     full_solution_init = {**(init_solutions[i]),\
                         **(cnstr_opt_init[i]),\
-                        **{"q_ig": q_ig_init[i], "q_dot_ig": q_dot_ig_init[i]}}
+                        **{"q_ig": q_ig_init[i], "q_dot_ig": q_dot_ig_init[i]}, 
+                        **{"init_solution_index": i}}
                     
                     if not solve_failed_array[i]:
                         

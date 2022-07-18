@@ -223,6 +223,7 @@ def generate_ig(arguments: argparse.Namespace,\
     q_ig = [None] * n_sol_tries
     q_dot_ig = [None] * n_sol_tries
 
+    solution_index_name = "solution_index"
 
     if arguments.use_init_guess:
 
@@ -235,18 +236,20 @@ def generate_ig(arguments: argparse.Namespace,\
                 # check compatibility between load paths and number of solution attempts
                 if len(abs_paths) != n_sol_tries:
 
-                    raise Exception("You set " + str(n_sol_tries) + \
-                                    "solution attempts, but only provided " +\
+                    raise Exception("Solution load mismatch: You set " + str(n_sol_tries) + \
+                                    " solution attempts, but provided " +\
                                     str(len(abs_paths)) + " solutions to load." )
                                 
                 try:
-                                    
+              
                     ms_ig_load = mat_storer.matStorer(abs_paths[i])
-
+                    
                     ig_sol = ms_ig_load.load()
 
-                    q_ig[i] = ig_sol["q"]
-                    q_dot_ig[i] = ig_sol["q_dot"]
+                    solution_index = ig_sol[solution_index_name]
+
+                    q_ig[solution_index] = ig_sol["q"]
+                    q_dot_ig[solution_index] = ig_sol["q_dot"]
 
                 except:
                     
