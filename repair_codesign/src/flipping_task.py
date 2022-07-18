@@ -51,7 +51,7 @@ filling_n_nodes = 0
 rot_error_epsi = 0.0000001
 
 # generating samples along working surface y direction
-n_y_samples = 50
+n_y_samples = 5
 y_sampl_ub = 0.3
 y_sampl_lb = - y_sampl_ub
 
@@ -66,7 +66,7 @@ for i in range(n_y_samples):
     y_sampling[i] = y_sampl_lb + dy * i
 
 # number of solution tries
-n_glob_tests = 2
+n_glob_tests = 50
 
 # resampler option (if used)
 refinement_scale = 10
