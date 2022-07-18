@@ -24,36 +24,29 @@ def solve_prb_standalone(task,\
                         on_failure = "\n Failed to solve problem!! \n'"):
 
     # standard routine for solving the problem
-
-    solve_failed = False
-
-    try:
         
-        task.set_ig(q_init, q_dot_init)
+    task.set_ig(q_init, q_dot_init)
 
-        t = time.time()
+    t = time.time()
 
-        slvr.solve()  # solving
+    is_optimal = slvr.solve()  # solving
 
-        solution_time = time.time() - t
+    solution_time = time.time() - t
 
-        print(f'\n {prbl_name} solved in {solution_time} s \n')
-        
-        solve_failed = False
+    print(f'\n {prbl_name} converged to solution in {solution_time} s \n')
+    
+    if not is_optimal:
 
-    except:
-        
         print(on_failure)
 
-        solve_failed = True
-
+    solve_failed = not is_optimal
     
     return solve_failed
 
 def solve_main_prb_soft_init(task: FlippingTaskGen, slvr_init: Solver, slvr: Solver,\
                     q_ig_main=None, q_dot_ig_main=None,\
                     prbl_name = "Problem",\
-                    on_failure = "\n Failed to solve problem with soft initialization!! \n'"):
+                    on_failure = "\n Failed to converge using soft initialization!! \n'"):
 
     # Routine for solving the "hard" problem employing the solution 
     # from another solver.
@@ -64,19 +57,17 @@ def solve_main_prb_soft_init(task: FlippingTaskGen, slvr_init: Solver, slvr: Sol
 
     solve_failed = False
 
-    try: # try to solve the main problem with the results of the soft initialization
+    t = time.time()
+
+    is_optimal = slvr.solve()  # solving soft problem
+
+    solution_time = time.time() - t 
+
+    print(f'\n {prbl_name} converged to solution in {solution_time} s \n')
     
-        t = time.time()
+    solve_failed = not is_optimal
 
-        slvr.solve()  # solving soft problem
-
-        solution_time = time.time() - t 
-
-        print(f'\n {prbl_name} solved in {solution_time} s \n')
-
-        solve_failed = False
-    
-    except:
+    if solve_failed:
         
         print(on_failure)
 
@@ -90,9 +81,6 @@ def solve_main_prb_soft_init(task: FlippingTaskGen, slvr_init: Solver, slvr: Sol
             
             solve_failed = solve_prb_standalone(task, slvr, q_ig_main, q_dot_ig_main)
 
-        else:
-
-            solve_failed = True
 
     return solve_failed
 
@@ -114,23 +102,19 @@ def try_init_solve_or_go_on(arguments: argparse.Namespace,\
 
             init_task.set_ig(q_ig_init, q_dot_ig_init)
 
-        try: # try solving the soft initialization problem
-            
-            t = time.time()
+        t = time.time()
 
-            init_slvr.solve()  # solving soft problem
+        init_is_optimal = init_slvr.solve()  # solving soft problem
 
-            solution_time = time.time() - t 
+        solution_time = time.time() - t 
 
-            print(f'\n Soft initialization problem solved in {solution_time} s \n')
+        print(f'\n Soft initialization problem solved in {solution_time} s \n')
 
-            soft_sol_failed = False
+        soft_sol_failed = init_is_optimal
         
-        except: # failed to solve the soft problem 
+        if not init_is_optimal:# failed to solve the soft problem 
 
-            soft_sol_failed = True
-
-            print('\n Failed to solve the soft initialization problem!! \n')
+            print('\n Failed to converge (soft initialization problem) \n')
 
             proceed_to_hard_anyway = wait_for_confirmation(\
                                      do_something = "try to solve the main problem anyway",\
@@ -142,9 +126,7 @@ def try_init_solve_or_go_on(arguments: argparse.Namespace,\
                 
                 sol_failed = solve_prb_standalone(task, slvr, q_ig_main, q_dot_ig_main)
             
-            else:
 
-                sol_failed = True
             
         return soft_sol_failed, sol_failed
 

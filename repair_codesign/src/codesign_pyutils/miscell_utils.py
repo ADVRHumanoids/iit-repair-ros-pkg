@@ -55,22 +55,28 @@ def rot_error_axis_sel_not_supp(axis_selector, rot_error_approach):
   
     raise Exception("\nSelecting the constrained axis when using \"" + rot_error_approach + "\" orientation error is not supported yet.\n")
 
-def get_min_cost_index(costs):
+def get_min_cost_index(costs, solve_failed_array):
 
     # to not solved probelms negative numbers are assignes
 
     best_index = - 1
     n_glb_tests = len(costs)
 
-    if n_glb_tests == 1:
+    if n_glb_tests == 1 and solve_failed_array[i]:
 
         best_index = 0
 
-    for i in range(n_glb_tests):
+    for i in range(1, n_glb_tests):
 
-        if i != 0 and costs[i] >= 0 and (costs[i] - costs[i - 1]) < 0:
+        if (not solve_failed_array[i]) and (best_index != -1): # if solution is valid and there exist a previous valid solution
+
+          if (costs[i] - costs[best_index]) < 0:
             
             best_index = i
+        
+        if (not solve_failed_array[i]) and (best_index == -1): # no previous valid sol exists, but current solution is valid
+
+          best_index = i        
 
     if best_index < 0:
 
