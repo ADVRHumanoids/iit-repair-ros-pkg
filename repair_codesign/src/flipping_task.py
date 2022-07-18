@@ -289,12 +289,12 @@ def main(args):
             # sol_costs[i] = solutions[i]["opt_cost"]
             cnstr_opt[i] = slvr.getConstraintSolutionDict()
             other_stuff[i] = {"dt": flipping_task.dt, "filling_nodes": flipping_task.filling_n_nodes,
-                                    "task_base_nnodes": flipping_task.task_base_n_nodes,
-                                    "right_arm_picks": flipping_task.rght_arm_picks, \
-                                    "wman_base": args.weight_global_manip, \
-                                    "wpo_bases": args.base_weight_pos, "wrot_base": args.base_weight_rot, \
-                                    "wman_actual": flipping_task.weight_glob_man, \
-                                    "wpos_actual": flipping_task.weight_pos, "wrot_actual": flipping_task.weight_rot}
+                                "task_base_nnodes": flipping_task.task_base_n_nodes,
+                                "right_arm_picks": flipping_task.rght_arm_picks, \
+                                "wman_base": args.weight_global_manip, \
+                                "wpo_bases": args.base_weight_pos, "wrot_base": args.base_weight_rot, \
+                                "wman_actual": flipping_task.weight_glob_man, \
+                                "wpos_actual": flipping_task.weight_pos, "wrot_actual": flipping_task.weight_rot}
 
             if args.warmstart and (not init_sol_failed):
 

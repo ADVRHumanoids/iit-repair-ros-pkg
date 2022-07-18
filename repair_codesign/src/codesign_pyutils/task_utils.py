@@ -271,9 +271,8 @@ def generate_ig(arguments: argparse.Namespace,\
                     warnings.warn("Failed to load initial guess from file! I will use random intialization.")
 
                     q_ig[i] = np.tile(np.random.uniform(task.lbs, task.ubs,\
-                                            (task.nq, 1)).flatten(), (1, task.total_nnodes))
-                    print("AAAAAAAAAAAAAAAA", np.shape(np.random.uniform(task.lbs, task.ubs,\
-                                            (task.nq, 1)).flatten()))
+                                            (1, task.nq)).T, (1, task.total_nnodes))
+                    
                     q_dot_ig[i] = np.zeros((task.nv, task.total_nnodes - 1))
 
                 if (np.shape(q_ig[i])[1] != task.total_nnodes) or \
@@ -286,9 +285,10 @@ def generate_ig(arguments: argparse.Namespace,\
                                     "].\n")
 
             else:
-
+                
+                
                 q_ig[i] = np.tile(np.random.uniform(task.lbs, task.ubs,\
-                                            (task.nq, 1)), (1, task.total_nnodes))
+                                            (1, task.nq)).T, (1, task.total_nnodes))
 
                 q_dot_ig[i] = np.zeros((task.nv, task.total_nnodes - 1))
 
