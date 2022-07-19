@@ -15,8 +15,8 @@
 <xacro:property name="z_joint_lb" value="0.5" />
 <xacro:property name="shoulder_width_lb" value="0.2" /> <!-- wrt shoulder center -->
 <xacro:property name="shoulder_width_ub" value="0.5" />
-<xacro:property name="shoulder_roll_lb" value="-${PI}" />
-<xacro:property name="shoulder_roll_ub" value="${PI}" />
+<xacro:property name="shoulder_roll_lb" value="-${PI_2}" />
+<xacro:property name="shoulder_roll_ub" value="${PI_2}" />
 <xacro:property name="sliding_wrist_deltaz_lb" value="0" />
 <xacro:property name="sliding_wrist_deltaz_ub" value="0.05" />
 
