@@ -28,6 +28,9 @@ from codesign_pyutils.task_utils import do_one_solve_pass, \
                                         generate_ig              
 from codesign_pyutils.tasks import FlippingTaskGen
 
+def main(args):
+
+    return True
     
 if __name__ == '__main__':
 

@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 
 from horizon.utils.resampler_trajectory import resampler
@@ -69,7 +70,7 @@ for i in range(n_y_samples):
     y_sampling[i] = y_sampl_lb + dy * i
 
 # number of solution tries
-n_glob_tests = 5
+n_glob_tests = 100
 
 # resampler option (if used)
 refinement_scale = 10
@@ -80,7 +81,7 @@ cocktail_size = 0.08
 # solver options
 solver_type = 'ipopt'
 slvr_opt = {
-    "ipopt.tol": 0.0000001, 
+    "ipopt.tol": 0.001, 
     "ipopt.max_iter": 1000,
     "ipopt.constr_viol_tol": 0.001,
     "ilqr.verbose": True}
@@ -114,8 +115,6 @@ transcription_method = 'multiple_shooting'
 transcription_opts = dict(integrator='RK4')
 
 sliding_wrist_offset = 0.0
-
-solution_index_name = "solution_index"
 
 def main(args):
 

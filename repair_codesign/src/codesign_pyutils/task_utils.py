@@ -246,28 +246,23 @@ def generate_ig(arguments: argparse.Namespace,\
                     
                     ig_sol = ms_ig_load.load()
 
-                    solution_index = ig_sol[solution_index_name]
+                    solution_index = ig_sol[solution_index_name][0][0]
 
                     q_ig[solution_index] = ig_sol["q"]
                     q_dot_ig[solution_index] = ig_sol["q_dot"]
 
+                    if (np.shape(q_ig[solution_index])[1] != task.total_nnodes) or \
+                    (np.shape(q_ig[solution_index])[0] != task.nq):
+
+                        raise Exception("\nThe loaded initial guess has shape: [" + \
+                                        str(np.shape(q_ig[i])[0]) +  ", " + str(np.shape(q_ig[i])[1]) +  "]" + \
+                                        " while the problem has shape: [" + \
+                                        str(task.nq) +  ", " + str(task.total_nnodes) + \
+                                        "].\n")
+
                 except:
                     
-                    warnings.warn("Failed to load initial guess from file! I will use random intialization.")
-
-                    q_ig[i] = np.tile(np.random.uniform(task.lbs, task.ubs,\
-                                            (1, task.nq)).T, (1, task.total_nnodes))
-                    
-                    q_dot_ig[i] = np.zeros((task.nv, task.total_nnodes - 1))
-
-                if (np.shape(q_ig[i])[1] != task.total_nnodes) or \
-                    (np.shape(q_ig[i])[0] != task.nq):
-
-                    raise Exception("\nThe loaded initial guess has shape: [" + \
-                                    str(np.shape(q_ig[i])[0]) +  ", " + str(np.shape(q_ig[i])[1]) +  "]" + \
-                                    " while the problem has shape: [" + \
-                                    str(task.nq) +  ", " + str(task.total_nnodes) + \
-                                    "].\n")
+                    raise Exception("Failed to load initial guess from file! I will use random intialization.")
 
             else:
                 

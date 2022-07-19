@@ -35,13 +35,13 @@ class SolDumper():
       if add_unique_id:
 
         self.storers.append(mat_storer.matStorer(results_path + "/" + \
-                            file_name + "-" + str(self.sols_counter) + \
+                            file_name + \
                             "-" + self.unique_id + ".mat"))
 
       else:
 
         self.storers.append(mat_storer.matStorer(results_path + "/" + \
-                           file_name + "-" + str(self.sols_counter) +  \
+                           file_name + "-" +  \
                            ".mat"))
 
     else:
