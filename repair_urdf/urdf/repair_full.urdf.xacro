@@ -5,6 +5,8 @@
 
 <xacro:include filename="$(find repair_urdf)/urdf/repair_cage.urdf.xacro"/>
 
+<xacro:arg name="is_sliding_wrist" default="false" />
+
 <joint name="x_joint" type="prismatic">
     <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
     <parent link="working_surface_link"/>
@@ -30,37 +32,35 @@
 </link>
 
 <joint name="r_arm_mount_joint" type="prismatic">
-    <origin xyz="0.0 0.0 0.0" rpy="${-PI_2} 0 ${PI}"/>
+    <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
     <parent link="base_link"/>
     <child link="dummy_r"/>
-    <axis xyz="0 0 1"/>
+    <axis xyz="0 -1 0"/>
+    <limit lower="${shoulder_width_lb}" upper= "${shoulder_width_ub}" effort="1000.0" velocity="20.0"/>
+</joint>
+
+<joint name="l_arm_mount_joint" type="prismatic">
+    <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="dummy_l"/>
+    <axis xyz="0 1 0"/>
     <limit lower="${shoulder_width_lb}" upper= "${shoulder_width_ub}" effort="1000.0" velocity="20.0"/>
 </joint>
 
 <link name="dummy_r">
 </link>
 
+<link name="dummy_l">
+</link>
+
 <joint name="roll_r" type="revolute">
     <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
     <parent link="dummy_r"/>
     <child link="r_arm_mount_frame"/>
-    <axis xyz="-1 0 0"/>
+    <axis xyz="1 0 0"/>
     <limit lower="${shoulder_roll_lb}" upper="${shoulder_roll_ub}" effort="0.0" velocity="0.0"/>
 </joint>
 
-<link name="r_arm_mount_frame">
-</link>
-<xacro:repair_arm base_link="r_arm_mount_frame" id="1"/>
-
-<joint name="l_arm_mount_joint" type="prismatic">
-    <origin xyz="0.0 0.0 0.0" rpy="${-PI_2} 0 0"/>
-    <parent link="base_link"/>
-    <child link="dummy_l"/>
-    <axis xyz="0 0 1"/>
-    <limit lower="${shoulder_width_lb}" upper= "${shoulder_width_ub}" effort="1000.0" velocity="20.0"/>
-</joint>
-<link name="dummy_l">
-</link>
 <joint name="roll_l" type="revolute">
     <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
     <parent link="dummy_l"/>
@@ -68,8 +68,16 @@
     <axis xyz="-1 0 0"/>
     <limit lower="${shoulder_roll_lb}" upper="${shoulder_roll_ub}" effort="0.0" velocity="0.0"/>
 </joint>
+
+
+<link name="r_arm_mount_frame">
+</link>
+
 <link name="l_arm_mount_frame">
 </link>
-<xacro:repair_arm base_link="l_arm_mount_frame" id="2"/>
+
+<xacro:repair_arm base_link="r_arm_mount_frame" id="1" is_sliding_wrist="$(arg is_sliding_wrist)"/> 
+
+<xacro:repair_arm base_link="l_arm_mount_frame" id="2" is_sliding_wrist="$(arg is_sliding_wrist)"/>
 
 </robot>

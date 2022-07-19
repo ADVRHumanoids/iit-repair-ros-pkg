@@ -5,35 +5,35 @@
 
 <link name="world"/>
 
-<link name="base_link">
-</link>
-
 <joint name="base_joint" type="fixed">
     <origin xyz="0 0 0.5" rpy="0 0 0"/>
     <parent link="world"/>
     <child link="base_link"/>
 </joint>
 
-<link name="r_arm_mount_frame">
+<link name="base_link">
 </link>
 
-<joint name="r_arm_mount_joint" type="fixed">
-    <origin xyz="0 -0.2 0" rpy="${PI_2} ${PI} 0"/>
+<joint name="base_2rmountjoint" type="fixed">
+    <origin xyz="0 -0.2 0.0" rpy="0 0 0"/>
     <parent link="base_link"/>
     <child link="r_arm_mount_frame"/>
 </joint>
 
-<xacro:repair_arm base_link="r_arm_mount_frame" id="1"/>
-
-<link name="l_arm_mount_frame">
-</link>
-
-<joint name="l_arm_mount_joint" type="fixed">
-    <origin xyz="0 0.2 0" rpy="${-PI_2} 0 0"/>
+<joint name="base_2lmountjoint" type="fixed">
+    <origin xyz="0 0.2 0.0" rpy="0 0 0"/>
     <parent link="base_link"/>
     <child link="l_arm_mount_frame"/>
 </joint>
 
-<xacro:repair_arm base_link="l_arm_mount_frame" id="2"/>
+<link name="r_arm_mount_frame">
+</link>
+
+<link name="l_arm_mount_frame">
+</link>
+
+<xacro:repair_arm base_link="r_arm_mount_frame" id="1" is_sliding_wrist="0"/> 
+
+<xacro:repair_arm base_link="l_arm_mount_frame" id="2" is_sliding_wrist="0"/>
 
 </robot>

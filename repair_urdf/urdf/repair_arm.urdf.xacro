@@ -7,89 +7,95 @@
 <xacro:property name="sm_tau_max" value="200.0" />
 
 
-<xacro:macro name="repair_arm" params="id base_link" >
+<xacro:macro name="repair_arm" params="id base_link is_sliding_wrist" >
+<!-- id: 1 for right arm, everything else is considered left arm -->
+<!-- base_link: name of base link a the single arm -->
+<!-- is_sliding_wrist: whether to add a sliding joint along the axis of wrist's second d.o.f.
+    (true -> yes), everything else -> no -->
 
 <joint name="arm_${id}_joint_1" type="revolute">
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+
+    <xacro:if value="${id == 1}">
+
+        <origin xyz="0 0 0" rpy="${PI_2} 0 0"/>
+
+    </xacro:if>
+
+    <xacro:unless value="${id == 1}">
+
+        <origin xyz="0 0 0" rpy="${-PI_2} 0 0"/>
+
+    </xacro:unless>
+    
     <parent link="${base_link}"/>
     <child link="arm_${id}_link_1"/>
     <axis xyz="0 0 1"/>
     <limit lower="${-150.0 * DEG2RAD}" upper="${150.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
 </joint>
 
-<joint name="arm_${id}_joint_2" type="revolute">
-    <origin xyz="${7.0 * mmTom} 0 0" rpy="0 ${-PI_2} ${PI}"/>
-    <parent link="arm_${id}_link_1"/>
-    <child link="arm_${id}_link_2"/>
-    <axis xyz="0 0 1"/>
-    <limit lower="${-90.0 * DEG2RAD}" upper="${90.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
-</joint>
-
-<joint name="arm_${id}_joint_3" type="revolute">
-    <origin xyz="0 0 0" rpy="0 ${-PI_2} ${PI}"/>
-    <parent link="arm_${id}_link_2"/>
-    <child link="arm_${id}_link_3"/>
-    <axis xyz="0 0 1"/>
-    <limit lower="${-150.0 * DEG2RAD}" upper="${150.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
-</joint>
-
-<joint name="arm_${id}_joint_4" type="revolute">
-    <origin xyz="0 ${22.5000 * mmTom} ${360.150 * mmTom}" rpy="0 ${-PI_2} ${PI}"/>
-    <parent link="arm_${id}_link_3"/>
-    <child link="arm_${id}_link_4"/>
-    <axis xyz="0 0 1"/>
-    <limit lower="${-150.0 * DEG2RAD}" upper="${50.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
-</joint>
-
-<joint name="arm_${id}_joint_5" type="revolute">
-    <origin xyz="0 0 0" rpy="0 ${-PI_2} ${PI}"/>
-    <parent link="arm_${id}_link_4"/>
-    <child link="arm_${id}_link_5"/>
-    <axis xyz="0 0 1"/>
-    <limit lower="${-150.0 * DEG2RAD}" upper="${150.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
-</joint>
-
-<joint name="arm_${id}_joint_6" type="revolute">
-    <origin xyz="0 0 ${321.000 * mmTom}" rpy="0 ${-PI_2} ${PI}"/>
-    <parent link="arm_${id}_link_5"/>
-    <child link="arm_${id}_link_6"/>
-    <axis xyz="0 0 1"/>
-    <limit lower="${-150.0 * DEG2RAD}" upper="${150.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
-</joint>
-
-<joint name="arm_${id}_joint_7" type="revolute">
-    <origin xyz="${180.000 * mmTom} 0 0" rpy="0 ${-PI_2} ${PI}"/>
-    <parent link="arm_${id}_link_6"/>
-    <child link="arm_${id}_link_7"/>
-    <axis xyz="0 0 1"/>
-    <limit lower="${-150.0 * DEG2RAD}" upper="${150.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
-</joint>
-
-<joint name="arm_${id}_tcp_joint" type="fixed">
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-    <parent link="arm_${id}_link_7"/>
-    <child link="arm_${id}_tcp"/>
-</joint>
-
-<link name="arm_${id}_link_1">
+<link name="arm_${id}_link_1"> 
     <inertial>
         <mass value="0.1"/>
         <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
         <origin xyz="0 0 0"/>
     </inertial>
-    <collision name="arm_${id}_link_1_collision">
-        <geometry>
-            <mesh filename="package://repair_urdf/meshes/link_1.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-        </geometry>
-        <material name="dark"/>
-    </collision>
-    <visual name="arm_${id}_link_1_visual">
-        <geometry>
-            <mesh filename="package://repair_urdf/meshes/link_1.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-        </geometry>
-        <material name="dark"/>
-    </visual>
+
+    <xacro:if value="${id == 1}">
+
+        <collision name="arm_${id}_link_1_collision">
+            <geometry>
+                <mesh filename="package://repair_urdf/meshes/link_1.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </geometry>
+            <material name="dark"/>
+        </collision>
+        <visual name="arm_${id}_link_1_visual">
+            <geometry>
+                <mesh filename="package://repair_urdf/meshes/link_1.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </geometry>
+            <material name="dark"/>
+        </visual>
+
+    </xacro:if>
+
+    <xacro:unless value="${id == 1}">
+
+        <collision name="arm_${id}_link_1_collision">
+            <geometry>
+                <mesh filename="package://repair_urdf/meshes/link_1_mirror.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </geometry>
+            <material name="dark"/>
+        </collision>
+        <visual name="arm_${id}_link_1_visual">
+            <geometry>
+                <mesh filename="package://repair_urdf/meshes/link_1_mirror.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </geometry>
+            <material name="dark"/>
+        </visual>
+
+    </xacro:unless>
+
 </link>
+
+<joint name="arm_${id}_joint_2" type="revolute">
+
+    <xacro:if value="${id == 1}">
+        
+        <origin xyz="${38.5 * mmTom} ${-23.0 *mmTom} 0" rpy="0 ${-PI_2} ${-PI}"/>
+
+    </xacro:if>
+    
+    <xacro:unless value="${id == 1}">
+        
+        <origin xyz="${38.5 * mmTom} ${23.0 *mmTom} 0" rpy="0 ${-PI_2} ${-PI}"/>
+
+    </xacro:unless>
+    
+    <parent link="arm_${id}_link_1"/>
+    <child link="arm_${id}_link_2"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-80.0 * DEG2RAD}" upper="${125.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
+
+</joint>
 
 <link name="arm_${id}_link_2">
     <inertial>
@@ -111,6 +117,27 @@
     </visual>
 </link>
 
+<joint name="arm_${id}_joint_3" type="revolute">
+
+    <xacro:if value="${id == 1}">
+
+        <origin xyz="${5 * mmTom} 0 0" rpy="0 ${PI_2} 0"/>
+
+    </xacro:if>
+
+        <origin xyz="${5 * mmTom} 0 0" rpy="0 ${-PI_2} ${-PI}"/>
+
+    <xacro:if value="${id == 1}">
+
+    </xacro:if>
+
+    <parent link="arm_${id}_link_2"/>
+    <child link="arm_${id}_link_3"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-150.0 * DEG2RAD}" upper="${150.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
+
+</joint>
+
 <link name="arm_${id}_link_3">
     <inertial>
         <mass value="0.1"/>
@@ -130,6 +157,16 @@
         <material name="dark"/>
     </visual>
 </link>
+
+<joint name="arm_${id}_joint_4" type="revolute">
+
+    <origin xyz="0 ${22.5000 * mmTom} ${360.150 * mmTom}" rpy="0 ${-PI_2} ${-PI}"/>
+    <parent link="arm_${id}_link_3"/>
+    <child link="arm_${id}_link_4"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-150.0 * DEG2RAD}" upper="${120.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
+
+</joint>
 
 <link name="arm_${id}_link_4">
     <inertial>
@@ -151,6 +188,14 @@
     </visual>
 </link>
 
+<joint name="arm_${id}_joint_5" type="revolute">
+    <origin xyz="${5 * mmTom} 0 0" rpy="${-PI_2} 0 ${-PI_2}"/>
+    <parent link="arm_${id}_link_4"/>
+    <child link="arm_${id}_link_5"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-150.0 * DEG2RAD}" upper="${150.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
+</joint>
+
 <link name="arm_${id}_link_5">
     <inertial>
         <mass value="0.1"/>
@@ -170,6 +215,48 @@
         <material name="dark"/>
     </visual>
 </link>
+
+<xacro:if value="${is_sliding_wrist != True}">
+
+    <joint name="arm_${id}_joint_6" type="revolute">
+    
+        <origin xyz="0 0 ${321.000 * mmTom}" rpy="0 ${-PI_2} 0"/>
+        <parent link="arm_${id}_link_5"/>
+        <child link="arm_${id}_link_6"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="${-150.0 * DEG2RAD}" upper="${150.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
+    
+    </joint>
+
+</xacro:if>
+
+<xacro:unless value="${is_sliding_wrist != True}">
+
+    <joint name="arm_${id}_joint_6" type="revolute">
+    
+        <origin xyz="0 0 ${321.000 * mmTom}" rpy="0 ${-PI_2} 0"/>
+        <parent link="arm_${id}_link_5"/>
+        <child link="dummy_sliding_wrist${id}_link"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="${-150.0 * DEG2RAD}" upper="${150.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
+    
+    </joint>
+
+    <link name="dummy_sliding_wrist${id}_link">
+    </link>
+
+
+    <joint name="dummy_sliding_wrist${id}_joint" type="prismatic">
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+        <parent link="dummy_sliding_wrist${id}_link"/>
+        <child link="arm_${id}_link_6"/>
+        <axis xyz="0 0 -1"/>
+        <limit lower="${sliding_wrist_deltaz_lb}" upper= "${sliding_wrist_deltaz_ub}" effort="1000.0" velocity="20.0"/>
+    </joint>
+
+</xacro:unless>
+
+
 
 <link name="arm_${id}_link_6">
     <inertial>
@@ -191,6 +278,26 @@
     </visual>
 </link>
 
+<joint name="arm_${id}_joint_7" type="revolute">
+
+    <xacro:if value="${id == 1}">
+
+        <origin xyz="${180.000 * mmTom} 0 0" rpy="${PI_2} 0 ${PI_2}"/>
+
+    </xacro:if>
+
+    <xacro:unless value="${id == 1}">
+
+        <origin xyz="${180.000 * mmTom} 0 0" rpy="${-PI_2} 0 ${-PI_2}"/>
+
+    </xacro:unless>
+
+    <parent link="arm_${id}_link_6"/>
+    <child link="arm_${id}_link_7"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-150.0 * DEG2RAD}" upper="${150.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
+</joint>
+
 <link name="arm_${id}_link_7">
     <inertial>
         <mass value="0.1"/>
@@ -210,6 +317,12 @@
         <material name="dark"/>
     </visual>
 </link>
+
+<joint name="arm_${id}_tcp_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="arm_${id}_link_7"/>
+    <child link="arm_${id}_tcp"/>
+</joint>
 
 <link name="arm_${id}_tcp"/>
 

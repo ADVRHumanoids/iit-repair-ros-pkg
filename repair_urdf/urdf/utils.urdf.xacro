@@ -17,6 +17,9 @@
 <xacro:property name="shoulder_width_ub" value="0.5" />
 <xacro:property name="shoulder_roll_lb" value="-${PI}" />
 <xacro:property name="shoulder_roll_ub" value="${PI}" />
+<xacro:property name="sliding_wrist_deltaz_lb" value="0" />
+<xacro:property name="sliding_wrist_deltaz_ub" value="0.05" />
+
 <!-- color -->
 <material name="darkblue">
     <color rgba="0.0 0.3 0.9 1"/>
