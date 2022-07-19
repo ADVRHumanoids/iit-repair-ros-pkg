@@ -30,7 +30,12 @@ class DoubleArmCartTask:
         rviz_process,\
         should_w = 0.26, should_roll = 2.0, mount_h = 0.5, \
         cocktail_size = 0.05, filling_n_nodes = 0,\
-        collision_margin = 0.1):
+        collision_margin = 0.1, 
+        is_sliding_wrist = False,\
+        sliding_wrist_offset = 0.0):
+
+        self.is_sliding_wrist = is_sliding_wrist
+        self.sliding_wrist_offset =  sliding_wrist_offset
 
         self.collision_margin = collision_margin
 
@@ -199,9 +204,24 @@ class DoubleArmCartTask:
 
         self.q = self.prb.createStateVariable('q', self.nq)
         self.q_dot = self.prb.createInputVariable('q_dot', self.nv)
-        self.q_design = self.q[1, 2, 3, 2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)] # design vector
-        self.q_design_dot = self.q[1, 2, 3, 2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)] # design vector
+
+        # THIS DEFINITIONS CAN CHANGE IF THE URDF CHANGES --> MIND THE URDF!!!
+        if not self.is_sliding_wrist:
+
+            self.q_design = self.q[1,\
+                                2, 3,\
+                                2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)] # co-design vector
+            self.q_design_dot = self.q_dot[1,\
+                                    2, 3,\
+                                    2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)] # derivative of co-design vector
         
+        else: # also add the dummy wrist joint to the co-design variables
+
+            self.q_design = self.q[1,\
+                                2, 3, 3 + self.arm_dofs, \
+                                2 + (self.arm_dofs + 3), 3 + (self.arm_dofs + 3), 3 + (self.arm_dofs + 3) + self.arm_dofs] # design vector
+            self.q_design_dot = self.q_dot[1, 2, 3, 2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)] # design vector
+
         self.p_ref_left_init = self.prb.createParameter('p_ref_left_init', 3)
         self.p_ref_right_init  = self.prb.createParameter('p_ref_right_init ', 3)
         self.q_ref_left_init  = self.prb.createParameter('q_ref_left_init ', 4)
@@ -299,7 +319,7 @@ class DoubleArmCartTask:
 
         # design vars equal on all nodes 
         self.prb.createConstraint("single_var_cntrnt",\
-            self.q_dot[1, 2, 3, 2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)],\
+            self.q_design_dot,\
             nodes = range(0, (self.total_nnodes - 1)))
 
         # TCPs above working surface
@@ -409,8 +429,13 @@ class DoubleArmCartTask:
 
 class FlippingTaskGen:
 
-    def __init__(self, cocktail_size = 0.05, filling_n_nodes = 0):
+    def __init__(self, cocktail_size = 0.05, filling_n_nodes = 0, \
+                is_sliding_wrist = False,\
+                sliding_wrist_offset = 0.0):
         
+        self.is_sliding_wrist = is_sliding_wrist
+        self.sliding_wrist_offset =  sliding_wrist_offset
+
         self.is_soft_pose_cnstrnt = False
 
         self.weight_pos = 0
@@ -552,49 +577,6 @@ class FlippingTaskGen:
         
         return next_task_node
 
-    def add_pick_and_place_task(self, init_node,\
-                                right_arm_picks = True,\
-                                object_pos_lft_wrt_ws = np.array([0, 0.18, 0.04]),\
-                                object_q_lft_wrt_ws = np.array([0.0, 1.0, 0.0, 0.0]),\
-                                object_pos_rght_wrt_ws = np.array([0, - 0.18, 0.04]),\
-                                object_q_rght_wrt_ws = np.array([0.0, 1.0, 0.0, 0.0]),\
-                                lft_pick_q_wrt_ws = np.array([0.0, 1.0, 0.0, 0.0]),\
-                                rght_pick_q_wrt_ws = np.array([0.0, 1.0, 0.0, 0.0]),\
-                                contact_height = 0.4):
-
-        if self.was_init_called :
-
-            raise Exception("You can only add tasks before calling init_prb(*)!!")
-
-        if self.employed_task != "pick_and_place" and self.employed_task != "":
-            
-            raise Exception("Adding multiple heterogeneous tasks is not supported yet.")
-
-        self.employed_task = "pick_and_place"
-
-        self.n_of_tasks = self.self.n_of_tasks + 1 # counter for the number of tasks
-
-        self.in_place_flip = False
-        
-        self.task_base_n_nodes = 6
-        self.phase_number = self.task_base_n_nodes - 1 # number of phases of the task
-
-        final_node = self.compute_nodes(init_node, self.filling_n_nodes)
-
-        self.object_pos_lft.append(object_pos_lft_wrt_ws)
-        self.object_q_lft.append(object_q_lft_wrt_ws)
-        self.object_pos_rght.append(object_pos_rght_wrt_ws)
-        self.object_q_rght.append(object_q_rght_wrt_ws)  
-        
-        self.lft_pick_q.append(lft_pick_q_wrt_ws)
-        self.rght_pick_q.append(rght_pick_q_wrt_ws)
-
-        self.contact_heights.append(contact_height)
-        
-        self.rght_arm_picks.append(right_arm_picks)
-
-        return final_node
-
     def set_ig(self, q_ig = None, q_dot_ig = None):
 
         if q_ig is not None:
@@ -632,6 +614,9 @@ class FlippingTaskGen:
         if 'universe' in self.joint_names: self.joint_names.remove('universe')
         if 'floating_base_joint' in self.joint_names: self.joint_names.remove('floating_base_joint')
         
+        print(self.joint_names)
+        print("\n")
+ 
         self.nq = self.kindyn.nq()
         self.nv = self.kindyn.nv()
 
@@ -640,9 +625,24 @@ class FlippingTaskGen:
 
         self.q = self.prb.createStateVariable('q', self.nq)
         self.q_dot = self.prb.createInputVariable('q_dot', self.nv)
-        self.q_design = self.q[1, 2, 3, 2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)] # design vector
-        self.q_design_dot = self.q[1, 2, 3, 2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)] # design vector
-            
+
+        # THIS DEFINITIONS CAN CHANGE IF THE URDF CHANGES --> MIND THE URDF!!!
+        if not self.is_sliding_wrist:
+
+            self.q_design = self.q[1,\
+                                2, 3,\
+                                2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)] # co-design vector
+            self.q_design_dot = self.q_dot[1,\
+                                    2, 3,\
+                                    2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)] # derivative of co-design vector
+        
+        else: # also add the dummy wrist joint to the co-design variables
+
+            self.q_design = self.q[1,\
+                                2, 3, 3 + self.arm_dofs, \
+                                2 + (self.arm_dofs + 3), 3 + (self.arm_dofs + 3), 3 + (self.arm_dofs + 3) + self.arm_dofs] # design vector
+            self.q_design_dot = self.q_dot[1, 2, 3, 2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)] # design vector
+
         self.prb.setDynamics(self.q_dot)
         self.prb.setDt(self.dt)  
 
@@ -765,6 +765,49 @@ class FlippingTaskGen:
 
                 tcp_coll.setBounds(self.cocktail_size - 0.001, cs.inf)
     
+    def add_pick_and_place_task(self, init_node,\
+                                right_arm_picks = True,\
+                                object_pos_lft_wrt_ws = np.array([0, 0.18, 0.04]),\
+                                object_q_lft_wrt_ws = np.array([0.0, 1.0, 0.0, 0.0]),\
+                                object_pos_rght_wrt_ws = np.array([0, - 0.18, 0.04]),\
+                                object_q_rght_wrt_ws = np.array([0.0, 1.0, 0.0, 0.0]),\
+                                lft_pick_q_wrt_ws = np.array([0.0, 1.0, 0.0, 0.0]),\
+                                rght_pick_q_wrt_ws = np.array([0.0, 1.0, 0.0, 0.0]),\
+                                contact_height = 0.4):
+
+        if self.was_init_called :
+
+            raise Exception("You can only add tasks before calling init_prb(*)!!")
+
+        if self.employed_task != "pick_and_place" and self.employed_task != "":
+            
+            raise Exception("Adding multiple heterogeneous tasks is not supported yet.")
+
+        self.employed_task = "pick_and_place"
+
+        self.n_of_tasks = self.self.n_of_tasks + 1 # counter for the number of tasks
+
+        self.in_place_flip = False
+        
+        self.task_base_n_nodes = 6
+        self.phase_number = self.task_base_n_nodes - 1 # number of phases of the task
+
+        final_node = self.compute_nodes(init_node, self.filling_n_nodes)
+
+        self.object_pos_lft.append(object_pos_lft_wrt_ws)
+        self.object_q_lft.append(object_q_lft_wrt_ws)
+        self.object_pos_rght.append(object_pos_rght_wrt_ws)
+        self.object_q_rght.append(object_q_rght_wrt_ws)  
+        
+        self.lft_pick_q.append(lft_pick_q_wrt_ws)
+        self.rght_pick_q.append(rght_pick_q_wrt_ws)
+
+        self.contact_heights.append(contact_height)
+        
+        self.rght_arm_picks.append(right_arm_picks)
+
+        return final_node
+
     def add_in_place_flip_task(self, init_node,\
                                right_arm_picks = True,\
                                object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]),\

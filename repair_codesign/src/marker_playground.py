@@ -60,6 +60,8 @@ t_exec_task = 5
 transcription_method = 'multiple_shooting'
 transcription_opts = dict(integrator='RK4')
 
+sliding_wrist_offset = 0.0
+
 def main(args):
 
     # preliminary ops
@@ -67,10 +69,14 @@ def main(args):
 
         try:
 
-            xacro_gen = subprocess.check_call(["xacro", "-o",\
-                                               urdf_full_path,\
-                                               xacro_full_path])
-            
+            sliding_wrist_command = "is_sliding_wrist:=" + str((args.is_sliding_wrist)).lower()
+            # print(sliding_wrist_command)
+            xacro_gen = subprocess.check_call(["xacro",\
+                                            xacro_full_path, \
+                                            sliding_wrist_command, \
+                                            "-o", 
+                                            urdf_full_path])
+
         except:
 
             print('Failed to generate URDF.')
@@ -95,7 +101,9 @@ def main(args):
     q_ig_main = [None] * 1
     q_dot_ig_main = [None] * 1
 
-    cart_task = DoubleArmCartTask(rviz_window, filling_n_nodes = filling_n_nodes)
+    cart_task = DoubleArmCartTask(rviz_window, filling_n_nodes = filling_n_nodes, \
+                                is_sliding_wrist = args.is_sliding_wrist,\
+                                sliding_wrist_offset = sliding_wrist_offset)
 
     cart_task.init_prb(urdf_full_path, args.base_weight_pos, args.base_weight_rot,\
                     args.weight_global_manip, args.soft_pose_cnstrnt, 4.0)
@@ -146,6 +154,8 @@ if __name__ == '__main__':
                         help = 'weight for global manipulability cost function', default = 0.01)
     parser.add_argument('--load_initial_guess', '-lig', type=str2bool,\
                         help = 'whether to load the initial guess from file', default = False)
+    parser.add_argument('--is_sliding_wrist', '-isw', type=str2bool,\
+                        help = 'whether to add a sliding co-design d.o.f. on the second joint or the wrist', default = False)
 
     args = parser.parse_args()
 

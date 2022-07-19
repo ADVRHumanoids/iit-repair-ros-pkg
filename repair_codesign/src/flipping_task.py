@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from horizon import problem
 from horizon.utils.resampler_trajectory import resampler
 from horizon.ros.replay_trajectory import *
 from horizon.transcriptions.transcriptor import Transcriptor
@@ -13,7 +12,6 @@ import numpy as np
 
 from datetime import datetime
 from datetime import date
-import time
 
 import subprocess
 
@@ -56,8 +54,8 @@ filling_n_nodes = 0
 rot_error_epsi = 0.0000001
 
 # generating samples along working surface y direction
-n_y_samples = 5
-y_sampl_ub = 0.3
+n_y_samples = 1
+y_sampl_ub = 0.0
 y_sampl_lb = - y_sampl_ub
 
 if n_y_samples == 1:
@@ -115,17 +113,25 @@ t_exec_task = 6
 transcription_method = 'multiple_shooting'
 transcription_opts = dict(integrator='RK4')
 
+sliding_wrist_offset = 0.0
+
 def main(args):
+
+    sliding_wrist_command = "is_sliding_wrist:=" + str((args.is_sliding_wrist)).lower()
 
     # preliminary ops
     if args.gen_urdf:
 
         try:
 
-            xacro_gen = subprocess.check_call(["xacro", "-o",\
-                                               urdf_full_path,\
-                                               xacro_full_path])
             
+            # print(sliding_wrist_command)
+            xacro_gen = subprocess.check_call(["xacro",\
+                                            xacro_full_path, \
+                                            sliding_wrist_command, \
+                                            "-o", 
+                                            urdf_full_path])
+
         except:
 
             print('Failed to generate URDF.')
@@ -136,7 +142,8 @@ def main(args):
 
             rviz_window = subprocess.Popen(["roslaunch",\
                                             "repair_urdf",\
-                                            "repair_full_markers.launch"])
+                                            "repair_full_markers.launch", \
+                                            sliding_wrist_command])
 
         except:
 
@@ -162,7 +169,9 @@ def main(args):
     ## Main problem ## 
 
     # initialize main problem task
-    flipping_task = FlippingTaskGen(cocktail_size = cocktail_size, filling_n_nodes = filling_n_nodes)
+    flipping_task = FlippingTaskGen(cocktail_size = cocktail_size, filling_n_nodes = filling_n_nodes, \
+                                    is_sliding_wrist = args.is_sliding_wrist,\
+                                    sliding_wrist_offset = sliding_wrist_offset)
     
     # add tasks to the task holder object
     next_node = 0 # used to place the next task on the right problem nodes
@@ -324,8 +333,10 @@ def main(args):
                             "solve_failed": solve_failed_array, 
                             "n_opt_sol": n_opt_sol, "n_unfeas_sol": n_glob_tests - n_opt_sol}
     
-    sol_dumper.add_storer(other_stuff, results_path,\
-                                        "additional_info_main", True)
+    if args.dump_sol: 
+
+        sol_dumper.add_storer(other_stuff, results_path,\
+                                            "additional_info_main", True)
     if args.warmstart:
         
         n_opt_init_sol = len(np.where(np.array(init_solve_failed_array) == False))
@@ -522,6 +533,8 @@ if __name__ == '__main__':
                         help = 'whether to load the initial guess from file', default = False)
     parser.add_argument('--replay_only_best', '-rplb', type=str2bool,\
                         help = 'whether to replay only the best solution or not', default = True)
+    parser.add_argument('--is_sliding_wrist', '-isw', type=str2bool,\
+                        help = 'whether to add a sliding co-design d.o.f. on the second joint or the wrist', default = False)
 
     args = parser.parse_args()
 
