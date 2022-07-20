@@ -10,9 +10,6 @@ from os.path import exists
 
 import numpy as np
 
-from datetime import datetime
-from datetime import date
-
 import subprocess
 
 import rospkg
@@ -25,12 +22,6 @@ from codesign_pyutils.dump_utils import SolDumper
 from codesign_pyutils.task_utils import do_one_solve_pass, \
                                         generate_ig              
 from codesign_pyutils.tasks import FlippingTaskGen
-
-## getting some useful information to be used for data storage
-today = date.today()
-today_is = today.strftime("%d-%m-%Y")
-now = datetime.now()
-current_time = now.strftime("_%H_%M_%S")
 
 # useful paths
 rospackage = rospkg.RosPack() # Only for taking the path to the leg package
@@ -69,7 +60,7 @@ for i in range(n_y_samples):
     y_sampling[i] = y_sampl_lb + dy * i
 
 # number of solution tries
-n_glob_tests = 5
+n_glob_tests = 10
 
 # resampler option (if used)
 refinement_scale = 10
@@ -119,7 +110,7 @@ solution_index_name = "solution_index"
 
 def main(args):
 
-    sliding_wrist_command = "is_sliding_wrist:=" + str((args.is_sliding_wrist)).lower()
+    sliding_wrist_command = "is_sliding_wrist:=" + "true"
 
     # preliminary ops
     if args.gen_urdf:
@@ -172,7 +163,6 @@ def main(args):
 
     # initialize main problem task
     flipping_task = FlippingTaskGen(cocktail_size = cocktail_size, filling_n_nodes = filling_n_nodes, \
-                                    is_sliding_wrist = args.is_sliding_wrist,\
                                     sliding_wrist_offset = sliding_wrist_offset)
     
     # add tasks to the task holder object
@@ -537,8 +527,8 @@ if __name__ == '__main__':
                         help = 'whether to load the initial guess from file', default = False)
     parser.add_argument('--replay_only_best', '-rplb', type=str2bool,\
                         help = 'whether to replay only the best solution or not', default = True)
-    parser.add_argument('--is_sliding_wrist', '-isw', type=str2bool,\
-                        help = 'whether to add a sliding co-design d.o.f. on the second joint or the wrist', default = False)
+    # parser.add_argument('--is_sliding_wrist', '-isw', type=str2bool,\
+    #                     help = 'whether to add a sliding co-design d.o.f. on the second joint or the wrist', default = False)
 
     args = parser.parse_args()
 

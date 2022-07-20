@@ -456,7 +456,21 @@ class FlippingTaskGen:
         self.q_design_dot = None
 
         self.cocktail_size = cocktail_size
+
+        # THIS DEFINITIONS CAN CHANGE IF THE URDF CHANGES --> MIND THE URDF!!!
         self.arm_dofs = 7
+        self.d_var_map = {}
+        self.d_var_map["mount_h"] = 1
+        self.d_var_map["should_wl"] = 2
+        self.d_var_map["should_roll_l"] = 3
+        self.d_var_map["wrist_off_l"] = 3 + self.arm_dofs
+        self.d_var_map["should_wr"] = \
+            self.d_var_map["should_wl"] + (self.arm_dofs + 3)
+        self.d_var_map["should_roll_r"] = \
+            self.d_var_map["should_roll_l"] + (self.arm_dofs + 3)
+        self.d_var_map["wrist_off_r"] = \
+            self.d_var_map["wrist_off_l"] + (self.arm_dofs + 3)
+        #
 
         self.task_base_n_nodes = 0
         self.phase_number = 0 # number of phases of the task
@@ -616,7 +630,7 @@ class FlippingTaskGen:
         
         print(self.joint_names)
         print("\n")
- 
+
         self.nq = self.kindyn.nq()
         self.nv = self.kindyn.nv()
 
@@ -627,21 +641,14 @@ class FlippingTaskGen:
         self.q_dot = self.prb.createInputVariable('q_dot', self.nv)
 
         # THIS DEFINITIONS CAN CHANGE IF THE URDF CHANGES --> MIND THE URDF!!!
-        if not self.is_sliding_wrist:
+    
+        self.q_design = self.q[self.d_var_map["mount_h"],\
+                            self.d_var_map["should_wl"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
+                            self.d_var_map["should_wr"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]] # design vector
 
-            self.q_design = self.q[1,\
-                                2, 3,\
-                                2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)] # co-design vector
-            self.q_design_dot = self.q_dot[1,\
-                                    2, 3,\
-                                    2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)] # derivative of co-design vector
-        
-        else: # also add the dummy wrist joint to the co-design variables
-
-            self.q_design = self.q[1,\
-                                2, 3, 3 + self.arm_dofs, \
-                                2 + (self.arm_dofs + 3), 3 + (self.arm_dofs + 3), 3 + (self.arm_dofs + 3) + self.arm_dofs] # design vector
-            self.q_design_dot = self.q_dot[1, 2, 3, 2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)] # design vector
+        self.q_design_dot = self.q_dot[self.d_var_map["mount_h"],\
+                            self.d_var_map["should_wl"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
+                            self.d_var_map["should_wr"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]]
 
         self.prb.setDynamics(self.q_dot)
         self.prb.setDt(self.dt)  
@@ -709,14 +716,28 @@ class FlippingTaskGen:
 
         # roll and shoulder vars equal
         self.prb.createConstraint("same_roll", \
-                                  self.q[3] - self.q[3 + (self.arm_dofs + 2)])
+                                self.q[self.d_var_map["should_roll_l"]] - \
+                                self.q[self.d_var_map["should_roll_r"]])
+
         self.prb.createConstraint("same_shoulder_w",\
-                                  self.q[2] - self.q[2 + (self.arm_dofs + 2)])
+                                self.q[self.d_var_map["should_wl"]] - \
+                                self.q[self.d_var_map["should_wr"]])
+
+        self.prb.createConstraint("same_wrist_offset",\
+                                self.q[self.d_var_map["wrist_off_l"]] - \
+                                self.q[self.d_var_map["wrist_off_r"]])
 
         # design vars equal on all nodes 
         self.prb.createConstraint("single_var_cntrnt",\
-            self.q_dot[1, 2, 3, 2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)],\
-            nodes = range(0, (self.total_nnodes - 1)))
+                            self.q_design_dot,\
+                            nodes = range(0, (self.total_nnodes - 1)))
+
+        if not self.is_sliding_wrist: # setting value for wrist offsets
+
+            self.prb.createConstraint("wrist_offset_value",\
+                    self.q[self.d_var_map["wrist_off_l"]],\
+                    nodes = range(0, (self.total_nnodes - 1)))
+              
 
         # TCPs inside working volume (assumed to be a box)
         ws_ub = np.array([1.2, 0.8, 1.0])
@@ -733,14 +754,14 @@ class FlippingTaskGen:
         self.prb.createIntermediateCost("max_global_manipulability",\
                         self.weight_glob_man * cs.sumsqr(self.q_dot)) # minimizing the joint accelerations ("responsiveness" of the trajectory)
 
-        # add p2p collision task on y axis
+        # add extremely stupid collision task on y axis
         # coll = self.prb.createConstraint("avoid_collision_on_y", \
         #                         self.coll_links_pos_lft[1] - self.coll_links_pos_rght[1])
         # coll.setBounds(self.hor_offsets[0] - 0.001, cs.inf)
 
         # tcp_coll = self.prb.createConstraint("avoid_tcp_collision_on_y", \
         #                         self.lft_off_tcp_pos_wrt_ws[1] - self.rght_off_tcp_pos_wrt_ws[1])
-        # tcp_coll.setBounds(self.cocktail_size - 0.02, cs.inf)
+        # tcp_coll.setBounds(self.cocktail_size - 0.004, cs.inf)
 
         # self.add_tcp_avoidance_cnstrnt()
 
