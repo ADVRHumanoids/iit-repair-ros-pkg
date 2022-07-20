@@ -42,6 +42,7 @@ def extract_q_design(input_data):
 
     design_data = np.zeros((nq, n_samples))
 
+    design_indeces = 
     return design_data
 
 def main(args):

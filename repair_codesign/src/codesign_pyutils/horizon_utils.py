@@ -8,7 +8,7 @@ from codesign_pyutils.miscell_utils import check_str_list, rot_error_axis_sel_no
 
 rot_error_approach = "arturo" # options: "siciliano", "arturo", "traversaro"
 
-from codesign_pyutils.defaults_vals import epsi_default
+from codesign_pyutils.misc_definitions import epsi_default
 
 ###############
 # obsolete

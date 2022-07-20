@@ -3,11 +3,13 @@ from codesign_pyutils.math_utils import quat2rot, rot_error, rot_error2, rot_err
 
 from codesign_pyutils.miscell_utils import check_str_list, rot_error_axis_sel_not_supp
 
-from codesign_pyutils.defaults_vals import epsi_default
+from codesign_pyutils.misc_definitions import epsi_default
 
 from codesign_pyutils.horizon_utils import add_pose_cnstrnt
 
 from codesign_pyutils.ros_utils import MarkerGen, ReplaySol
+
+from codesign_pyutils.misc_definitions import get_design_map 
 
 from horizon import problem
 
@@ -70,7 +72,8 @@ class DoubleArmCartTask:
         self.q_design_dot = None
 
         self.cocktail_size = cocktail_size
-        self.arm_dofs = 7
+        
+        self.d_var_map = get_design_map() # retrieving design map (dangerous method)
 
         self.task_base_n_nodes = 2
         self.phase_number = 1 # number of phases of the task
@@ -206,21 +209,14 @@ class DoubleArmCartTask:
         self.q_dot = self.prb.createInputVariable('q_dot', self.nv)
 
         # THIS DEFINITIONS CAN CHANGE IF THE URDF CHANGES --> MIND THE URDF!!!
-        if not self.is_sliding_wrist:
+    
+        self.q_design = self.q[self.d_var_map["mount_h"],\
+                            self.d_var_map["should_wl"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
+                            self.d_var_map["should_wr"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]] # design vector
 
-            self.q_design = self.q[1,\
-                                2, 3,\
-                                2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)] # co-design vector
-            self.q_design_dot = self.q_dot[1,\
-                                    2, 3,\
-                                    2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)] # derivative of co-design vector
-        
-        else: # also add the dummy wrist joint to the co-design variables
-
-            self.q_design = self.q[1,\
-                                2, 3, 3 + self.arm_dofs, \
-                                2 + (self.arm_dofs + 3), 3 + (self.arm_dofs + 3), 3 + (self.arm_dofs + 3) + self.arm_dofs] # design vector
-            self.q_design_dot = self.q_dot[1, 2, 3, 2 + (self.arm_dofs + 2), 3 + (self.arm_dofs + 2)] # design vector
+        self.q_design_dot = self.q_dot[self.d_var_map["mount_h"],\
+                            self.d_var_map["should_wl"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
+                            self.d_var_map["should_wr"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]]
 
         self.p_ref_left_init = self.prb.createParameter('p_ref_left_init', 3)
         self.p_ref_right_init  = self.prb.createParameter('p_ref_right_init ', 3)
@@ -300,27 +296,38 @@ class DoubleArmCartTask:
 
         # roll and shoulder vars equal
         self.prb.createConstraint("same_roll", \
-                                  self.q[3] - self.q[3 + (self.arm_dofs + 2)])
+                                self.q[self.d_var_map["should_roll_l"]] - \
+                                self.q[self.d_var_map["should_roll_r"]])
 
         self.prb.createConstraint("same_shoulder_w",\
-                                  self.q[2] - self.q[2 + (self.arm_dofs + 2)])
+                                self.q[self.d_var_map["should_wl"]] - \
+                                self.q[self.d_var_map["should_wr"]])
 
-        # fixing co-design values
-        # self.prb.createConstraint("fixed_x", \
-        #                           self.q[0] - self.ws_link_pos[1])
-
-        self.prb.createConstraint("roll", \
-                                  self.q[3] - self.should_roll)
-                                  
-        self.prb.createConstraint("should_w", \
-                                  self.q[2] - self.should_w)
-        self.prb.createConstraint("mount_h", \
-                                  self.q[1] - self.mount_h)
+        self.prb.createConstraint("same_wrist_offset",\
+                                self.q[self.d_var_map["wrist_off_l"]] - \
+                                self.q[self.d_var_map["wrist_off_r"]])
 
         # design vars equal on all nodes 
         self.prb.createConstraint("single_var_cntrnt",\
-            self.q_design_dot,\
-            nodes = range(0, (self.total_nnodes - 1)))
+                            self.q_design_dot,\
+                            nodes = range(0, (self.total_nnodes - 1)))
+
+        if not self.is_sliding_wrist: # setting value for wrist offsets
+
+            self.prb.createConstraint("wrist_offset_value",\
+                    self.q[self.d_var_map["wrist_off_l"]] - self.sliding_wrist_offset,\
+                    nodes = range(0, (self.total_nnodes - 1)))
+
+        # TCPs inside working volume (assumed to be a box)
+        ws_ub = np.array([1.2, 0.8, 1.0])
+        ws_lb = np.array([-1.2, -0.8, 0.0])
+
+        keep_tcp_in_ws_rght = self.prb.createConstraint("keep_tcp_in_ws_rght",\
+                                                           self.rght_off_tcp_pos_wrt_ws)
+        keep_tcp_in_ws_rght.setBounds(ws_lb, ws_ub)
+        keep_tcp_in_ws_lft = self.prb.createConstraint("keep_tcp_in_ws_lft",\
+                                                           self.lft_off_tcp_pos_wrt_ws)
+        keep_tcp_in_ws_lft.setBounds(ws_lb, ws_ub)
 
         # TCPs above working surface
         keep_tcp1_above_ground = self.prb.createConstraint("keep_tcp1_above_ground",\
@@ -457,20 +464,7 @@ class FlippingTaskGen:
 
         self.cocktail_size = cocktail_size
 
-        # THIS DEFINITIONS CAN CHANGE IF THE URDF CHANGES --> MIND THE URDF!!!
-        self.arm_dofs = 7
-        self.d_var_map = {}
-        self.d_var_map["mount_h"] = 1
-        self.d_var_map["should_wl"] = 2
-        self.d_var_map["should_roll_l"] = 3
-        self.d_var_map["wrist_off_l"] = 3 + self.arm_dofs
-        self.d_var_map["should_wr"] = \
-            self.d_var_map["should_wl"] + (self.arm_dofs + 3)
-        self.d_var_map["should_roll_r"] = \
-            self.d_var_map["should_roll_l"] + (self.arm_dofs + 3)
-        self.d_var_map["wrist_off_r"] = \
-            self.d_var_map["wrist_off_l"] + (self.arm_dofs + 3)
-        #
+        self.d_var_map = get_design_map() # retrieving design map (dangerous method)
 
         self.task_base_n_nodes = 0
         self.phase_number = 0 # number of phases of the task
