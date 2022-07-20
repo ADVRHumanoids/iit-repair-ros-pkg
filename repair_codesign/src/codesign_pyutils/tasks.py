@@ -735,7 +735,7 @@ class FlippingTaskGen:
         if not self.is_sliding_wrist: # setting value for wrist offsets
 
             self.prb.createConstraint("wrist_offset_value",\
-                    self.q[self.d_var_map["wrist_off_l"]],\
+                    self.q[self.d_var_map["wrist_off_l"]] - self.sliding_wrist_offset,\
                     nodes = range(0, (self.total_nnodes - 1)))
               
 
