@@ -37,7 +37,7 @@ refinement_scale = 10
 
 def main(args):
 
-    sliding_wrist_command = "is_sliding_wrist:=" + "false"
+    sliding_wrist_command = "is_sliding_wrist:=" + "true"
 
     try:
 

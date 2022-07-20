@@ -23,7 +23,7 @@
     <parent link="dummy_link"/>
     <child link="base_link"/>
     <axis xyz="0 0 1"/>
-    <limit lower="${z_joint_lb}" upper= "${cage_height - z_joint_limit_margin}" effort="1000.0" velocity="20.0"/>
+    <limit lower="${z_joint_lb}" upper= "2" effort="1000.0" velocity="20.0"/>
 </joint>
 
 <!-- RePAIR assembly (two arms) -->
