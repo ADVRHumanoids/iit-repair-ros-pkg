@@ -938,12 +938,12 @@ class FlippingTaskGen:
 
                     if (self.rght_arm_picks[i]): # right arm picks
                         
-                        # right arm
+                        # right arm (rotation transposed so that orientation err is comp. wrt ws frame)
                         add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index, \
-                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws,\
-                                        self.object_pos_rght[i], quat2rot(self.rght_pick_q[i]),\
+                                        self.rght_off_tcp_pos_wrt_ws, self.rght_off_tcp_rot_wrt_ws.T,\
+                                        self.object_pos_rght[i], quat2rot(self.rght_pick_q[i]).T,\
                                         pos_selection = ["x",  "y", "z"],\
-                                        rot_selection = ["x",  "y", "z"],\
+                                        rot_selection = ["x",  "y"],\
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
@@ -969,8 +969,8 @@ class FlippingTaskGen:
                                         is_soft = is_soft_pose_cnstr, epsi = epsi)
                         # left arm
                         add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index, \
-                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws,
-                                        self.object_pos_lft[i], quat2rot(self.lft_pick_q[i]),
+                                        self.lft_off_tcp_pos_wrt_ws, self.lft_off_tcp_rot_wrt_ws.T,
+                                        self.object_pos_lft[i], quat2rot(self.lft_pick_q[i]).T,
                                         pos_selection = ["x",  "y", "z"],\
                                         rot_selection = ["x",  "y", "z"],\
                                         weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
@@ -1024,27 +1024,14 @@ class FlippingTaskGen:
                     
                     self.bimanual_nodes.append(cnstrnt_node_index) # assign bimmanual node index
 
-                    if (self.rght_arm_picks[i]): # right arm picks
-                        
-                        # relative constraint
-                        add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index,\
-                                        pos = self.lft_off_tcp_pos_wrt_ws, rot = self.lft_off_tcp_rot_wrt_ws,
-                                        pos_ref = self.rght_off_tcp_pos_wrt_ws, rot_ref = get_cocktail_matching_rot(self.rght_off_tcp_rot_wrt_ws),
-                                        pos_selection = ["x", "y", "z"],\
-                                        rot_selection = ["x",  "y"],\
-                                        weight_rot = self.weight_rot,\
-                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
-
-                    else: # left arm picks
-                        
-                        # # relative constraint
-                        add_pose_cnstrnt(constraint_unique_id_rght, self.prb, cnstrnt_node_index,\
-                                        pos = self.lft_off_tcp_pos_wrt_ws, rot = self.lft_off_tcp_rot_wrt_ws,\
-                                        pos_ref = self.rght_off_tcp_pos_wrt_ws, rot_ref = get_cocktail_matching_rot(self.rght_off_tcp_rot_wrt_ws),\
-                                        pos_selection = ["x", "y", "z"],\
-                                        rot_selection = ["x",  "y", "z"],\
-                                        weight_rot = self.weight_rot,\
-                                        is_soft = is_soft_pose_cnstr, epsi = epsi)
+                    # relative constraint
+                    add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index,\
+                                    pos = self.lft_off_tcp_pos_wrt_ws, rot = self.lft_off_tcp_rot_wrt_ws,
+                                    pos_ref = self.rght_off_tcp_pos_wrt_ws, rot_ref = get_cocktail_matching_rot(self.rght_off_tcp_rot_wrt_ws),
+                                    pos_selection = ["x", "y", "z"],\
+                                    rot_selection = ["x",  "z"],\
+                                    weight_rot = self.weight_rot,\
+                                    is_soft = is_soft_pose_cnstr, epsi = epsi)
 
                 if j == 4: # ARM 1: back to waiting pose | ARM 2: down to picking  pose
 

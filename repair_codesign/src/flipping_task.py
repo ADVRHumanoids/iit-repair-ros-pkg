@@ -41,7 +41,7 @@ file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 # task-specific options
 right_arm_picks = True
-filling_n_nodes = 0
+filling_n_nodes = 10
 rot_error_epsi = 0.0000001
 
 # generating samples along working surface y direction
@@ -167,7 +167,9 @@ def main(args):
     # initialize main problem task
     flipping_task = FlippingTaskGen(cocktail_size = cocktail_size, filling_n_nodes = filling_n_nodes, \
                                     sliding_wrist_offset = sliding_wrist_offset)
-    
+    pick_angle_wrt_ws = np.pi/4
+    picking_q = [np.sin(pick_angle_wrt_ws/2), 1 * np.cos(pick_angle_wrt_ws/2), 0, 0]
+
     # add tasks to the task holder object
     next_node = 0 # used to place the next task on the right problem nodes
     for i in range(len(y_sampling)):
@@ -175,7 +177,7 @@ def main(args):
         next_node = flipping_task.add_in_place_flip_task(init_node = next_node,\
                         object_pos_wrt_ws = np.array([0.0, y_sampling[i], 0.0]), \
                         object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-                        #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]),\
+                        pick_q_wrt_ws = picking_q,\
                         right_arm_picks = right_arm_picks)
 
     # initialize problem

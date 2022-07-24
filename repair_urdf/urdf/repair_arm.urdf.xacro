@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<robot xmlns:xacro="http://ros.org/wiki/xacro">
+<robot name = "repair_arm" xmlns:xacro="http://ros.org/wiki/xacro">
 
 <xacro:include filename="$(find repair_urdf)/urdf/utils.urdf.xacro" />
 <xacro:property name="big_tau_max" value="200.0" />
