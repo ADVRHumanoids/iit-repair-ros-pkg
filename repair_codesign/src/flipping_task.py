@@ -60,7 +60,7 @@ for i in range(n_y_samples):
     y_sampling[i] = y_sampl_lb + dy * i
 
 # number of solution tries
-n_glob_tests = 10
+n_glob_tests = 4
 
 # resampler option (if used)
 refinement_scale = 10
@@ -111,6 +111,7 @@ solution_index_name = "solution_index"
 def main(args):
 
     sliding_wrist_command = "is_sliding_wrist:=" + "true"
+    show_softhand_command = "show_softhand:=" + "true"
 
     # preliminary ops
     if args.gen_urdf:
@@ -122,6 +123,7 @@ def main(args):
             xacro_gen = subprocess.check_call(["xacro",\
                                             xacro_full_path, \
                                             sliding_wrist_command, \
+                                            show_softhand_command, \
                                             "-o", 
                                             urdf_full_path])
 
@@ -136,7 +138,8 @@ def main(args):
             rviz_window = subprocess.Popen(["roslaunch",\
                                             "repair_urdf",\
                                             "repair_full_markers.launch", \
-                                            sliding_wrist_command])
+                                            sliding_wrist_command,\
+                                            show_softhand_command])
 
         except:
 

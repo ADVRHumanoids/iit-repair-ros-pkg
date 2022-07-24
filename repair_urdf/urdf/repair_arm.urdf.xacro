@@ -7,11 +7,12 @@
 <xacro:property name="sm_tau_max" value="200.0" />
 
 
-<xacro:macro name="repair_arm" params="id base_link is_sliding_wrist" >
+<xacro:macro name="repair_arm" params="id base_link is_sliding_wrist show_softhand" >
 <!-- id: 1 for right arm, everything else is considered left arm -->
 <!-- base_link: name of base link a the single arm -->
 <!-- is_sliding_wrist: whether to add a sliding joint along the axis of wrist's second d.o.f.
     (true -> yes), everything else -> no -->
+    <!-- show_softhand: whether to use softhand or not at the TCP -->
 
 <joint name="arm_${id}_joint_1" type="revolute">
 
@@ -311,10 +312,39 @@
         <material name="dark"/>
     </collision>
     <visual name="arm_${id}_link_7_visual">
-        <geometry>
-            <mesh filename="package://repair_urdf/meshes/link_7.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-        </geometry>
-        <material name="dark"/>
+
+        <xacro:if value="${show_softhand == True}">
+
+            <xacro:if value="${id == 1}">
+
+                <origin xyz="0 0 ${10.0 * mmTom}" rpy="0 ${-(PI_2 + PI_4)} ${-(PI_2)}"/>
+                <geometry>
+                    <mesh filename="package://repair_urdf/meshes/link_7_sh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                </geometry>
+                <material name="dark"/>
+
+            </xacro:if>
+
+            <xacro:unless value="${id == 1}">
+
+                <origin xyz="0 0 ${10.0 * mmTom}" rpy="0 ${-(PI_2 + PI_4)} ${-(PI_2 + PI)}"/>
+                <geometry>
+                    <mesh filename="package://repair_urdf/meshes/link_7_sh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                </geometry>
+                <material name="dark"/>
+
+            </xacro:unless>
+
+        </xacro:if>
+
+        <xacro:unless value="${show_softhand == True}">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://repair_urdf/meshes/link_7.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </geometry>
+            <material name="dark"/>
+        </xacro:unless>
+
     </visual>
 </link>
 

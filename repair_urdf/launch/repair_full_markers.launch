@@ -2,9 +2,13 @@
     <arg name="gui" default="true" />
     <arg name="rate" default="250.0"/>
     <arg name="is_sliding_wrist" default="false"/>
+    <arg name="show_softhand" default="false"/>
 
     <!-- send the mirror robot XML to param server -->
-    <param name="robot_description" command="xacro '$(find repair_urdf)/urdf/repair_full.urdf.xacro' is_sliding_wrist:=$(arg is_sliding_wrist)" />
+    <param name="robot_description" command="xacro '$(find repair_urdf)/urdf/repair_full.urdf.xacro' 
+        is_sliding_wrist:=$(arg is_sliding_wrist)
+        show_softhand:=$(arg show_softhand)" />
+        
     <param name="use_gui" value="$(arg gui)"/>
 
     <!-- start robot state publisher -->

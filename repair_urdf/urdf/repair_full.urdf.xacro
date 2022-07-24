@@ -6,6 +6,7 @@
 <xacro:include filename="$(find repair_urdf)/urdf/repair_cage.urdf.xacro"/>
 
 <xacro:arg name="is_sliding_wrist" default="false" />
+<xacro:arg name="show_softhand" default="false" />
 
 <joint name="x_joint" type="prismatic">
     <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
@@ -76,8 +77,10 @@
 <link name="l_arm_mount_frame">
 </link>
 
-<xacro:repair_arm base_link="r_arm_mount_frame" id="1" is_sliding_wrist="$(arg is_sliding_wrist)"/> 
+<xacro:repair_arm base_link="r_arm_mount_frame" id="1" is_sliding_wrist="$(arg is_sliding_wrist)"
+show_softhand="$(arg show_softhand)"/> 
 
-<xacro:repair_arm base_link="l_arm_mount_frame" id="2" is_sliding_wrist="$(arg is_sliding_wrist)"/>
+<xacro:repair_arm base_link="l_arm_mount_frame" id="2" is_sliding_wrist="$(arg is_sliding_wrist)"
+show_softhand="$(arg show_softhand)"/>
 
 </robot>
