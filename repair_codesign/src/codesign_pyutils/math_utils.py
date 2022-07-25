@@ -91,18 +91,14 @@ def get_cocktail_matching_rot(R):
     # given the rotation matrix of the TCP of one arm, 
     # computes the necessary rotation matrix to be used
     # for the other arm so that the resulting TCP poses fit
-    # the handover task
+    # the handover task 
 
-    # specular handover pose
-    # cocktail_aux_rot = cs.DM([[-1.0, 0.0, 0.0],\
-    #                           [0.0, 1.0, 0.0],\
-    #                           [0.0, 0.0, - 1.0]]) 
+    # croocked handover pose (softhand)
     
-    # croocked handover pose
-    cocktail_aux_rot = cs.DM([[0.0, 0.0, -1.0],\
-                              [0.0, 1.0, 0.0],\
-                              [1.0, 0.0, 0.0]])
-
+    cocktail_aux_rot = cs.DM([[0.0, -1.0, 0.0],\
+                              [-1.0, 0.0, 0.0],\
+                              [0.0, 0.0, -1.0]]) 
+    
     R_aux = R @ cocktail_aux_rot
 
     return R_aux
