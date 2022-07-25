@@ -181,10 +181,13 @@ include_directories(
 #   PATTERN ".svn" EXCLUDE
 # )
 
-## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
+# install(DIRECTORY
+#   src
+#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+# )
+
+# install(DIRECTORY
+#   test_results
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
 

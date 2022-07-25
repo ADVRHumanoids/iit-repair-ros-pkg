@@ -41,7 +41,7 @@ file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 # task-specific options
 right_arm_picks = True
-filling_n_nodes = 10
+filling_n_nodes = 0
 rot_error_epsi = 0.0000001
 
 # generating samples along working surface y direction
