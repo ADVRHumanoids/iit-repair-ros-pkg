@@ -502,6 +502,13 @@ class TaskGen:
         self.lft_tcp_rot_wrt_ws = None
         self.rght_tcp_pos_wrt_ws = None
         self.rght_tcp_rot_wrt_ws = None
+        self.rght_tcp_pos_wrt_lft_tcp = None
+        self.rght_tcp_rot_wrt_lft_tcp = None
+
+        self.handover_rot_loc = cs.DM([[0.0, -1.0, 0.0],\
+                              [-1.0, 0.0, 0.0],\
+                              [0.0, 0.0, -1.0]])
+
 
     def get_main_nodes_offset(self, total_task_nnodes):
     
@@ -578,7 +585,6 @@ class TaskGen:
 
             self.q_dot.setInitialGuess(q_dot_ig)
 
-
     def init_prb(self, urdf_full_path, weight_pos = 0.001, weight_rot = 0.001,\
                 weight_glob_man = 0.0001, is_soft_pose_cnstr = False,\
                 tf_single_task = 10):
@@ -650,6 +656,9 @@ class TaskGen:
 
         self.lft_tcp_rot_wrt_ws = ws_link_rot.T @ larm_tcp_rot
         self.lft_tcp_pos_wrt_ws = ws_link_rot.T @ (larm_tcp_pos - ws_link_pos)
+
+        self.rght_tcp_pos_wrt_lft_tcp = self.lft_tcp_rot_wrt_ws.T @ (self.rght_tcp_pos_wrt_ws - self.lft_tcp_pos_wrt_ws)
+        self.rght_tcp_rot_wrt_lft_tcp = self.lft_tcp_rot_wrt_ws.T @ self.rght_tcp_rot_wrt_ws
 
     def setup_prb(self,\
                 epsi = epsi_default,\
@@ -987,8 +996,8 @@ class TaskGen:
 
                     # relative constraint
                     add_pose_cnstrnt(constraint_unique_id_lft, self.prb, cnstrnt_node_index,\
-                                    pos = self.lft_tcp_pos_wrt_ws, rot = self.lft_tcp_rot_wrt_ws,
-                                    pos_ref = self.rght_tcp_pos_wrt_ws, rot_ref = get_cocktail_matching_rot(self.rght_tcp_rot_wrt_ws),
+                                    pos = self.rght_tcp_pos_wrt_lft_tcp, rot = self.rght_tcp_rot_wrt_lft_tcp,
+                                    pos_ref = np.array([0.0] * 3), rot_ref = self.handover_rot_loc,
                                     pos_selection = ["x", "y", "z"],\
                                     rot_selection = ["x", "y",  "z"],\
                                     weight_rot = self.weight_rot,\

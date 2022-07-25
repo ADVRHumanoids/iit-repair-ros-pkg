@@ -60,7 +60,7 @@ for i in range(n_y_samples):
     y_sampling[i] = y_sampl_lb + dy * i
 
 # number of solution tries
-n_glob_tests = 40
+n_glob_tests = 4
 
 # resampler option (if used)
 refinement_scale = 10
