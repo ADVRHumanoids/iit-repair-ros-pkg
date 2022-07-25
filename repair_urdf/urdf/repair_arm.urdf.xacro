@@ -300,61 +300,72 @@
 </joint>
 
 <link name="arm_${id}_link_7">
+
     <inertial>
         <mass value="0.1"/>
         <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
         <origin xyz="0 0 0"/>
     </inertial>
+
     <collision name="arm_${id}_link_7_collision">
         <geometry>
             <mesh filename="package://repair_urdf/meshes/link_7.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
         </geometry>
         <material name="dark"/>
     </collision>
-    <visual name="arm_${id}_link_7_visual">
 
-        <xacro:if value="${show_softhand == True}">
+    <xacro:unless value="${show_softhand == True}">
 
-            <xacro:if value="${id == 1}">
+        <visual name="arm_${id}_link_7_visual">
 
-                <origin xyz="0 0 ${10.0 * mmTom}" rpy="0 ${-(PI_2 + PI_4)} ${-(PI_2)}"/>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
                 <geometry>
-                    <mesh filename="package://repair_urdf/meshes/link_7_sh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                    <mesh filename="package://repair_urdf/meshes/link_7.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
                 </geometry>
                 <material name="dark"/>
+            
+        </visual>
+        
+    </xacro:unless>
 
-            </xacro:if>
 
-            <xacro:unless value="${id == 1}">
-
-                <origin xyz="0 0 ${10.0 * mmTom}" rpy="0 ${-(PI_2 + PI_4)} ${-(PI_2 + PI)}"/>
-                <geometry>
-                    <mesh filename="package://repair_urdf/meshes/link_7_sh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-                </geometry>
-                <material name="dark"/>
-
-            </xacro:unless>
-
-        </xacro:if>
-
-        <xacro:unless value="${show_softhand == True}">
-            <origin xyz="0 0 0" rpy="0 0 0"/>
-            <geometry>
-                <mesh filename="package://repair_urdf/meshes/link_7.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-            </geometry>
-            <material name="dark"/>
-        </xacro:unless>
-
-    </visual>
 </link>
 
-<joint name="arm_${id}_tcp_joint" type="fixed">
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-    <parent link="arm_${id}_link_7"/>
-    <child link="arm_${id}_tcp"/>
-</joint>
+<xacro:if value="${show_softhand == True}">
+    
+    <joint name="arm_${id}_tcp_joint" type="fixed">
+        <origin xyz="0 0 ${10.0 * mmTom}" rpy="0 ${-(PI_2 + PI_4)} ${-(PI_2)}"/>
+        <parent link="arm_${id}_link_7"/>
+        <child link="arm_${id}_tcp"/>
+    </joint>
 
-<link name="arm_${id}_tcp"/>
+    <link name="arm_${id}_tcp">
+
+        <visual name="arm_${id}_tcp_visual">
+
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://repair_urdf/meshes/link_7_sh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </geometry>
+            <material name="dark"/>
+
+        </visual>
+
+    </link>
+
+</xacro:if>
+
+<xacro:unless value="${show_softhand == True}">
+    
+    <joint name="arm_${id}_tcp_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <parent link="arm_${id}_link_7"/>
+        <child link="arm_${id}_tcp"/>
+    </joint>
+
+    <link name="arm_${id}_tcp"/>
+
+</xacro:unless>
 
 </xacro:macro>
 
