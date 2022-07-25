@@ -334,19 +334,26 @@
 <xacro:if value="${show_softhand == True}">
     
     <joint name="arm_${id}_tcp_joint" type="fixed">
-        <origin xyz="0 0 ${10.0 * mmTom}" rpy="0 ${-(PI_2 + PI_4)} ${-(PI_2)}"/>
+
+        <origin xyz="0 ${- object_size *  sin(softhand_mount_angle)} ${10.0 * mmTom + object_size *  cos(softhand_mount_angle)}" 
+                rpy="0 ${-(PI_2 + softhand_mount_angle)} ${-(PI_2)}"/>
+
         <parent link="arm_${id}_link_7"/>
+
         <child link="arm_${id}_tcp"/>
+
     </joint>
 
     <link name="arm_${id}_tcp">
 
         <visual name="arm_${id}_tcp_visual">
 
-            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <origin xyz="0 0 ${object_size}" rpy="0 0 0"/>
+
             <geometry>
                 <mesh filename="package://repair_urdf/meshes/link_7_sh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
             </geometry>
+
             <material name="dark"/>
 
         </visual>
@@ -358,9 +365,13 @@
 <xacro:unless value="${show_softhand == True}">
     
     <joint name="arm_${id}_tcp_joint" type="fixed">
+
         <origin xyz="0 0 0" rpy="0 0 0"/>
+
         <parent link="arm_${id}_link_7"/>
+
         <child link="arm_${id}_tcp"/>
+
     </joint>
 
     <link name="arm_${id}_tcp"/>
