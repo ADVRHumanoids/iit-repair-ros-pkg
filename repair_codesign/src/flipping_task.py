@@ -21,7 +21,7 @@ from codesign_pyutils.miscell_utils import str2bool,\
 from codesign_pyutils.dump_utils import SolDumper
 from codesign_pyutils.task_utils import do_one_solve_pass, \
                                         generate_ig              
-from codesign_pyutils.tasks import FlippingTaskGen
+from codesign_pyutils.tasks import TaskGen
 
 # useful paths
 rospackage = rospkg.RosPack() # Only for taking the path to the leg package
@@ -46,7 +46,7 @@ rot_error_epsi = 0.0000001
 
 # generating samples along working surface y direction
 n_y_samples = 5
-y_sampl_ub = 0.3
+y_sampl_ub = 0.4
 y_sampl_lb = - y_sampl_ub
 
 if n_y_samples == 1:
@@ -60,13 +60,10 @@ for i in range(n_y_samples):
     y_sampling[i] = y_sampl_lb + dy * i
 
 # number of solution tries
-n_glob_tests = 4
+n_glob_tests = 40
 
 # resampler option (if used)
 refinement_scale = 10
-
-# longitudinal extension of grasped object
-cocktail_size = 0.08
 
 # solver options
 solver_type = 'ipopt'
@@ -165,10 +162,9 @@ def main(args):
     ## Main problem ## 
 
     # initialize main problem task
-    flipping_task = FlippingTaskGen(cocktail_size = cocktail_size, filling_n_nodes = filling_n_nodes, \
+    flipping_task = TaskGen(filling_n_nodes = filling_n_nodes, \
                                     sliding_wrist_offset = sliding_wrist_offset)
-    pick_angle_wrt_ws = np.pi/4
-    picking_q = [np.sin(pick_angle_wrt_ws/2), 1 * np.cos(pick_angle_wrt_ws/2), 0, 0]
+    object_q = np.array([1, 0, 0, 0])
 
     # add tasks to the task holder object
     next_node = 0 # used to place the next task on the right problem nodes
@@ -176,8 +172,8 @@ def main(args):
 
         next_node = flipping_task.add_in_place_flip_task(init_node = next_node,\
                         object_pos_wrt_ws = np.array([0.0, y_sampling[i], 0.0]), \
-                        object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-                        pick_q_wrt_ws = picking_q,\
+                        object_q_wrt_ws = object_q, \
+                        pick_q_wrt_ws = object_q,\
                         right_arm_picks = right_arm_picks)
 
     # initialize problem
@@ -212,7 +208,7 @@ def main(args):
         ## Initialization problem ##
         
         # initialize the initialization problem task
-        flipping_task_init = FlippingTaskGen(cocktail_size = cocktail_size, filling_n_nodes = filling_n_nodes)
+        flipping_task_init = TaskGen(filling_n_nodes = filling_n_nodes)
     
         # add tasks to the task holder object
         next_node = 0 # used to place the next task on the right problem nodes
@@ -220,8 +216,8 @@ def main(args):
 
             next_node = flipping_task_init.add_in_place_flip_task(init_node = next_node,\
                             object_pos_wrt_ws = np.array([0.0, y_sampling[i], 0.0]), \
-                            object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-                            #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]),\
+                            object_q_wrt_ws = object_q, \
+                            pick_q_wrt_ws = object_q,\
                             right_arm_picks = right_arm_picks)
 
         # initialize problem

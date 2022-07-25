@@ -9,7 +9,7 @@ import numpy as np
 
 import time 
 
-from codesign_pyutils.tasks import FlippingTaskGen
+from codesign_pyutils.tasks import TaskGen
 
 from codesign_pyutils.miscell_utils import wait_for_confirmation
 
@@ -43,7 +43,7 @@ def solve_prb_standalone(task,\
     
     return solve_failed
 
-def solve_main_prb_soft_init(task: FlippingTaskGen, slvr_init: Solver, slvr: Solver,\
+def solve_main_prb_soft_init(task: TaskGen, slvr_init: Solver, slvr: Solver,\
                     q_ig_main=None, q_dot_ig_main=None,\
                     prbl_name = "Problem",\
                     on_failure = "\n Failed to converge using soft initialization!! \n'"):
@@ -85,8 +85,8 @@ def solve_main_prb_soft_init(task: FlippingTaskGen, slvr_init: Solver, slvr: Sol
     return solve_failed
 
 def try_init_solve_or_go_on(arguments: argparse.Namespace,\
-                            init_task: FlippingTaskGen, init_slvr: Solver,\
-                            task: FlippingTaskGen, slvr: Solver,\
+                            init_task: TaskGen, init_slvr: Solver,\
+                            task: TaskGen, slvr: Solver,\
                             q_ig_main=None, q_dot_ig_main=None, \
                             q_ig_init=None, q_dot_ig_init=None):
         
@@ -131,7 +131,7 @@ def try_init_solve_or_go_on(arguments: argparse.Namespace,\
         return soft_sol_failed, sol_failed
 
 # def build_multiple_flipping_tasks(arguments: argparse.Namespace,\
-#                     task: FlippingTaskGen, n_filling_nodes, y_sampling, right_arm_picks,\
+#                     task: TaskGen, n_filling_nodes, y_sampling, right_arm_picks,\
 #                     urdf_full_path,\
 #                     ig_abs_path, \
                     
@@ -143,7 +143,7 @@ def try_init_solve_or_go_on(arguments: argparse.Namespace,\
 #     # based on the provided y-axis sampling. 
 
 #     # initialize main problem task
-#     task = FlippingTaskGen(cocktail_size = object_length, filling_n_nodes = n_filling_nodes)
+#     task = TaskGen(cocktail_size = object_length, filling_n_nodes = n_filling_nodes)
 
 #     # add tasks to the task holder object
 #     next_node = 0 # used to place the next task on the right problem nodes
@@ -187,7 +187,7 @@ def try_init_solve_or_go_on(arguments: argparse.Namespace,\
 #     return task
 
 def do_one_solve_pass(arguments: argparse.Namespace,\
-                    task: FlippingTaskGen, slvr: Solver,\
+                    task: TaskGen, slvr: Solver,\
                     q_ig_main=None, q_dot_ig_main=None,\
                     task_init=None, slvr_init=None,\
                     q_ig_init=None, q_dot_ig_init=None):
