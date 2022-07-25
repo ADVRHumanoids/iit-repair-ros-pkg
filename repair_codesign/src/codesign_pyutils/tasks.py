@@ -715,8 +715,7 @@ class TaskGen:
         keep_tcp_in_ws_lft.setBounds(ws_lb, ws_ub)
 
         # min inputs 
-        self.prb.createIntermediateCost("max_global_manipulability",\
-                        self.weight_glob_man * cs.sumsqr(self.q_dot)) # minimizing the joint accelerations ("responsiveness" of the trajectory)
+        self.add_manip_cost()
 
         # add extremely stupid collision task on y axis
         # coll = self.prb.createConstraint("avoid_collision_on_y", \
@@ -750,6 +749,27 @@ class TaskGen:
 
     #             tcp_coll.setBounds(self.cocktail_size - 0.001, cs.inf)
     
+    def add_manip_cost(self):
+                
+        n_of_tasks = len(self.nodes_list)
+
+        if n_of_tasks != 1: # the cost has to be removed from the final node of each task
+
+            for i in range(n_of_tasks): # iterate through each task
+                
+                start_node = self.nodes_list[i][0] # first node of task i
+                last_node = self.nodes_list[i][-1] # last node of task i
+                
+                # min inputs 
+                self.prb.createIntermediateCost("max_global_manipulability" + str(i),\
+                                self.weight_glob_man * cs.sumsqr(self.q_dot), nodes = range(start_node, last_node))
+
+        else: # only one task --> the cost can be added to all nodes without problems
+
+            # min inputs 
+            self.prb.createIntermediateCost("max_global_manipulability",\
+                            self.weight_glob_man * cs.sumsqr(self.q_dot))
+
     def add_pick_and_place_task(self, init_node,\
                                 right_arm_picks = True,\
                                 object_pos_lft_wrt_ws = np.array([0, 0.18, 0.04]),\
