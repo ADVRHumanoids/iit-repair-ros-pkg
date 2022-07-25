@@ -14,7 +14,7 @@ from codesign_pyutils.ros_utils import ReplaySol
 from codesign_pyutils.miscell_utils import str2bool,\
                                         get_min_cost_index
             
-from codesign_pyutils.tasks import FlippingTaskGen
+from codesign_pyutils.tasks import TaskGen
 from codesign_pyutils.load_utils import LoadSols
 from codesign_pyutils.misc_definitions import get_design_map
 
@@ -38,9 +38,7 @@ replay_base_path = results_path  + "/" + replay_folder_name
 # resample solutions before replaying
 refinement_scale = 10
 
-def remove_lr(var_name):
 
-    var_name.replace() 
 def extract_q_design(input_data):
 
     design_var_map = get_design_map()
@@ -56,9 +54,19 @@ def extract_q_design(input_data):
 
     for i in range(n_samples):
 
-        design_data[:, i] = input_data[i][design_indeces, 0]
+        design_data[:, i] = input_data[i][design_indeces, 0] # design variables are constant over the nodes (index 0 is sufficient)
 
     return design_data
+
+def compute_man_measure(opt_costs, n_int):
+
+    man_measure = np.zeros((len(opt_costs), 1))
+
+    for i in range(len(opt_costs)): 
+
+        man_measure[i] = np.sqrt(opt_costs[i] / n_int) # --> discretized root mean squared joint velocities over the opt interval 
+
+    return man_measure
 
 def main(args):
 
@@ -78,7 +86,7 @@ def main(args):
         print('Failed to generate URDF.')
 
     # only used to parse urdf
-    dummy_task = FlippingTaskGen()
+    dummy_task = TaskGen()
 
     dummy_task.add_in_place_flip_task(0)
 
@@ -111,15 +119,16 @@ def main(args):
     design_var_names = list(design_var_map.keys())
     
     opt_index = np.where(opt_costs == min(opt_costs))
-
+    n_int = len(opt_full_q_dot[0][0, :]) # getting number of intervals 
+    man_measure = compute_man_measure(opt_costs, n_int) # scaling opt costs to make them more interpretable
 
     # scatter plots
     for i in range(n_d_variables):
     
         plt.figure()
-        plt.scatter(opt_costs, opt_q_design[i, :], label=r"", marker="o", s=50 )
+        plt.scatter(man_measure, opt_q_design[i, :], label=r"", marker="o", s=50 )
         plt.legend(loc="upper left")
-        plt.xlabel(r"opt_cost")
+        plt.xlabel(r"rad/s")
         plt.ylabel(design_var_names[i])
         plt.title(design_var_names[i], fontdict=None, loc='center')
         plt.grid()
@@ -132,7 +141,7 @@ def main(args):
         plt.scatter(opt_q_design[i, opt_index], 0, label=r"", marker="x", s=200, color="orange", linewidth=3)
         plt.legend(loc="upper left")
         plt.xlabel(r"")
-        plt.ylabel(design_var_names[i])
+        plt.ylabel(r"N. sol")
         plt.title(design_var_names[i], fontdict=None, loc='center')
         plt.grid()
 
