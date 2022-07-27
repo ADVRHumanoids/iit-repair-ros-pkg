@@ -439,6 +439,7 @@ class TaskGen:
         self.weight_pos = 0 # actual weight assigned to the positional error cost (if using soft constraints)
         self.weight_rot = 0 # actual weight assigned to the orientation error cost (if using soft constraints)
         self.weight_glob_man = 0 # actual weight assigned to the global manipulability cost
+        self.weight_classical_man = 0 # actual weight assigned to the classical manipulability cost
 
         self.urdf = None # opened urdf file
         self.joint_names = None # joint names
@@ -506,6 +507,9 @@ class TaskGen:
         self.rght_tcp_pos_wrt_lft_tcp = None
         self.rght_tcp_rot_wrt_lft_tcp = None
 
+        self.rarm_tcp_jacobian = None
+        self.larm_tcp_jacobian = None
+
         self.handover_rot_loc = cs.DM([[0.0, -1.0, 0.0],\
                               [-1.0, 0.0, 0.0],\
                               [0.0, 0.0, -1.0]]) # constant matrix to define the relative orientation between hand frames when 
@@ -566,9 +570,11 @@ class TaskGen:
 
             self.q_dot.setInitialGuess(q_dot_ig)
 
-    def add_manip_cost(self):
+    def add_manip_cost(self, is_classical_man = False):
                 
         n_of_tasks = len(self.nodes_list)
+        
+        epsi = 1 # used to make classical man cost robust wrt singularity
 
         if n_of_tasks != 1: # the cost has to be removed from the final node of each task
             # so that the transition nodes between
@@ -578,18 +584,42 @@ class TaskGen:
                 start_node = self.nodes_list[i][0] # first node of task i
                 last_node = self.nodes_list[i][-1] # last node of task i
                 
-                # min inputs 
-                self.prb.createIntermediateCost("max_global_manipulability" + str(i),\
-                                self.weight_glob_man * cs.sumsqr(self.q_dot), nodes = range(start_node, last_node))
+                if not is_classical_man:
+
+                    # min inputs 
+                    self.prb.createIntermediateCost("max_global_manipulability" + str(i),\
+                                    self.weight_glob_man * cs.sumsqr(self.q_dot), nodes = range(start_node, last_node))
+                else: # use classical manipulability measure
+                    
+                    Jl = self.larm_tcp_jacobian
+                    Jr = self.rarm_tcp_jacobian
+
+                    # min inputs 
+                    self.prb.createIntermediateCost("max_classical_manipulability" + str(i),\
+                                    self.weight_classical_man / ( cs.det(Jl @ Jl.T)**2 + cs.det(Jr @ Jr.T)**2 + epsi),\
+                                    nodes = range(start_node, last_node))
+
 
         else: # only one task --> the cost can be added to all nodes without problems
+            
+            if not is_classical_man:
 
-            # min inputs 
-            self.prb.createIntermediateCost("max_global_manipulability",\
-                            self.weight_glob_man * cs.sumsqr(self.q_dot))
+                # min inputs 
+                self.prb.createIntermediateCost("max_global_manipulability",\
+                                self.weight_glob_man * cs.sumsqr(self.q_dot))
+            
+            else: # use classical manipulability measure
+                
+                Jl = self.larm_tcp_jacobian
+                Jr = self.rarm_tcp_jacobian
+
+                # min inputs 
+                self.prb.createIntermediateCost("max_classical_manipulability" + str(0),\
+                                    self.weight_classical_man / ( cs.det(Jl @ Jl.T)**2 + cs.det(Jr @ Jr.T)**2 + epsi))
 
     def init_prb(self, urdf_full_path, weight_pos = 0.001, weight_rot = 0.001,\
-                weight_glob_man = 0.0001, is_soft_pose_cnstr = False,\
+                weight_glob_man = 0.0001, weight_class_man = 0.0001,\
+                is_soft_pose_cnstr = False,\
                 tf_single_task = 10):
 
         ## All the main initializations for the prb are performed here ##
@@ -601,6 +631,7 @@ class TaskGen:
         self.weight_pos = weight_pos / ( self.total_nnodes ) # scaling weights on the basis of the problem dimension
         self.weight_rot = weight_rot / ( self.total_nnodes )
         self.weight_glob_man = weight_glob_man / ( self.total_nnodes )
+        self.weight_classical_man = weight_class_man / ( self.total_nnodes )
 
         n_int = self.total_nnodes - 1 # adding addditional filling nodes between nodes of two successive tasks
         self.prb = problem.Problem(n_int) 
@@ -648,11 +679,19 @@ class TaskGen:
         rarm_tcp_pos = fk_arm_r(q = self.q)["ee_pos"] # w.r.t. world
         rarm_tcp_rot = fk_arm_r(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
         self.rarm_tcp_pos_rel_ws = rarm_tcp_pos - ws_link_pos # pos vector relative to working surface in world frame (w.r.t. world)
+        
+        jac_arm_r = cs.Function.deserialize(self.kindyn.jacobian("arm_1_tcp",\
+                        cas_kin_dyn.CasadiKinDyn.LOCAL_WORLD_ALIGNED))
+        self.rarm_tcp_jacobian = jac_arm_r(q = self.q)["J"]
 
         fk_arm_l = cs.Function.deserialize(self.kindyn.fk("arm_2_tcp"))  
         larm_tcp_pos = fk_arm_l(q = self.q)["ee_pos"] # w.r.t. world
         larm_tcp_rot = fk_arm_l(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
         self.larm_tcp_pos_rel_ws = larm_tcp_pos - ws_link_pos # pos vector relative to working surface in world frame (w.r.t. world)
+
+        jac_arm_l = cs.Function.deserialize(self.kindyn.jacobian("arm_2_tcp",\
+                        cas_kin_dyn.CasadiKinDyn.LOCAL_WORLD_ALIGNED))
+        self.larm_tcp_jacobian = jac_arm_l(q = self.q)["J"]
 
         self.rght_tcp_rot_wrt_ws = ws_link_rot.T @ rarm_tcp_rot
         self.rght_tcp_pos_wrt_ws = ws_link_rot.T @ (rarm_tcp_pos - ws_link_pos)
@@ -665,7 +704,8 @@ class TaskGen:
 
     def setup_prb(self,\
                 epsi = epsi_default,\
-                q_ig = None, q_dot_ig = None):
+                q_ig = None, q_dot_ig = None, 
+                is_classical_man = False):
          
         ## All the constraints and costs are set here ##
 
@@ -718,7 +758,7 @@ class TaskGen:
         keep_tcp_in_ws_lft.setBounds(ws_lb, ws_ub)
 
         # min inputs 
-        self.add_manip_cost()
+        self.add_manip_cost(is_classical_man = is_classical_man)
 
         # add extremely stupid collision task on y axis
         # coll = self.prb.createConstraint("avoid_collision_on_y", \
@@ -732,9 +772,9 @@ class TaskGen:
         # self.add_tcp_avoidance_cnstrnt()
 
         # here the "custom" task is added to the problem
-        self.build_task(is_soft_pose_cnstr = self.is_soft_pose_cnstrnt, epsi = epsi)
+        self.build_tasks(is_soft_pose_cnstr = self.is_soft_pose_cnstrnt, epsi = epsi)
     
-    def build_task(self, is_soft_pose_cnstr = False, epsi = epsi_default):
+    def build_tasks(self, is_soft_pose_cnstr = False, epsi = epsi_default):
         
         base_nnodes = 0
         base_nnodes_previous = 0 # auxiliary variable
@@ -766,18 +806,16 @@ class TaskGen:
                 # index used to give different names to each constraint (lft arm)
 
                 # The way pose constraint names are assigned (example with task made of 9 base nodes):
-                # -----------------------------------------
-                # R arm: | 0  1  2  3  4  5  6  7  8 | 18 19 ....
-                # ----------------------------------------
-                # L arm: | 9 10 11 12 13 14 15 16 17 | 27 28 ....
-                # -----------------------------------------
+                # -----------------------------------------------
+                # R arm: | 0  1  2  3  4  5  6  7  8 | 18 19 --->
+                # -----------------------------------------------
+                # L arm: | 9 10 11 12 13 14 15 16 17 | 27 28 --->
+                # -----------------------------------------------
+                # node:  | 0  1  2  3  4  5  6  7  8 | 9  10 --->
+                # -----------------------------------------------
                 
                 cnstrnt_node_index = self.nodes_list[i][j * delta_offset] 
                 # index of the constraint (traslated by the number of filling nodes)
-                
-                
-                # print(cnstrnt_node_index)
-                # print(base_nnodes)
 
                 if self.task_names[0] in self.task_dict: # if the task was added
 
@@ -798,8 +836,6 @@ class TaskGen:
                                                     epsi = epsi)
 
             base_nnodes_previous = base_nnodes
-
-            # print(base_nnodes_previous)
 
     def add_pick_and_place_task(self, init_node,\
                                 right_arm_picks = True,\
@@ -882,7 +918,45 @@ class TaskGen:
 
         return next_task_node
 
-    def add_in_place_flip_task2(self, init_node,\
+    def add_bimanual_task(self, init_node,\
+                                right_arm_picks = True,\
+                                object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]),\
+                                object_q_wrt_ws = np.array([0.0, 1.0, 0.0, 0.0]),\
+                                pick_q_wrt_ws = np.array([0.0, 1.0, 0.0, 0.0]),\
+                                contact_height = 0.4, hor_offset = 0.2):
+
+        if self.was_init_called : # we do not support adding more tasks after having built the problem!
+
+            raise Exception("You can only add tasks before calling init_prb(*)!!")
+
+        if not self.was_task_already_added[0]:
+
+            self.was_task_already_added[0] =  True # setting flag so that next
+
+            self.n_of_base_tasks = self.n_of_base_tasks + 1 # incrementing base tasks counter 
+
+            # assigning unique code to task when the method is called the first time
+            self.task_dict[self.task_names[0]] = self.n_of_base_tasks -1
+
+        self.n_of_tasks = self.n_of_tasks + 1 # incrementing counter for the number of tasks
+
+        self.object_pos_lft.append(object_pos_wrt_ws)
+        self.object_q_lft.append(object_q_wrt_ws)
+        self.object_pos_rght.append(object_pos_wrt_ws)
+        self.object_q_rght.append(object_q_wrt_ws)
+
+        self.lft_pick_q.append(pick_q_wrt_ws)
+        self.rght_pick_q.append(pick_q_wrt_ws)
+
+        self.contact_heights.append(contact_height)
+        self.hor_offsets.append(hor_offset)
+        self.rght_arm_picks.append(right_arm_picks)
+
+        next_task_node = self.compute_nodes(init_node, self.filling_n_nodes, self.task_names[0])
+
+        return next_task_node
+
+    def bimanual_pick(self, init_node,\
                                right_arm_picks = True,\
                                object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]),\
                                object_q_wrt_ws = np.array([0.0, 1.0, 0.0, 0.0]),\

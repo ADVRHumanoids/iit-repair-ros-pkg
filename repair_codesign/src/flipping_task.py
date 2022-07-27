@@ -41,12 +41,12 @@ file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 # task-specific options
 right_arm_picks = True
-filling_n_nodes = 0
+filling_n_nodes = 10
 rot_error_epsi = 0.0000001
 
 # generating samples along working surface y direction
-n_y_samples = 2
-y_sampl_ub = 0.4
+n_y_samples = 1
+y_sampl_ub = 0.0
 y_sampl_lb = - y_sampl_ub
 
 if n_y_samples == 1:
@@ -178,7 +178,7 @@ def main(args):
 
     # initialize problem
     flipping_task.init_prb(urdf_full_path, args.base_weight_pos, args.base_weight_rot,\
-                            args.weight_global_manip,\
+                            args.weight_global_manip, args.weight_class_manip,\
                             is_soft_pose_cnstr = args.soft_pose_cnstrnt,\
                             tf_single_task = t_exec_task)
 
@@ -190,7 +190,7 @@ def main(args):
     print("Number of added subtasks:", flipping_task.n_of_tasks, "\n")
 
     # set constraints and costs
-    flipping_task.setup_prb(rot_error_epsi)
+    flipping_task.setup_prb(rot_error_epsi, is_classical_man = args.use_classical_man)
 
     if solver_type != "ilqr":
 
@@ -519,6 +519,8 @@ if __name__ == '__main__':
                         help = 'base weight for orientation tracking (if using soft constraints)', default = 0.001)
     parser.add_argument('--weight_global_manip', '-wman', type = np.double,\
                         help = 'weight for global manipulability cost function', default = 0.01)
+    parser.add_argument('--weight_class_manip', '-wclass', type = np.double,\
+                        help = 'weight for classical manipulability cost function', default = 0.01)
     parser.add_argument('--warmstart', '-ws', type=str2bool,\
                         help = 'whether to first solve an initialization problem and then use that solution for the main one', default = False)
     parser.add_argument('--soft_warmstart', '-sws', type=str2bool,\
@@ -533,6 +535,8 @@ if __name__ == '__main__':
                         help = 'whether to replay only the best solution or not', default = True)
     # parser.add_argument('--is_sliding_wrist', '-isw', type=str2bool,\
     #                     help = 'whether to add a sliding co-design d.o.f. on the second joint or the wrist', default = False)
+    parser.add_argument('--use_classical_man', '-ucm', type=str2bool,\
+                        help = 'whether to use the classical manipulability index', default = False)
 
     args = parser.parse_args()
 
