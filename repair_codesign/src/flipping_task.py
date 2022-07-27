@@ -45,7 +45,7 @@ filling_n_nodes = 0
 rot_error_epsi = 0.0000001
 
 # generating samples along working surface y direction
-n_y_samples = 5
+n_y_samples = 2
 y_sampl_ub = 0.4
 y_sampl_lb = - y_sampl_ub
 
@@ -182,7 +182,10 @@ def main(args):
                             is_soft_pose_cnstr = args.soft_pose_cnstrnt,\
                             tf_single_task = t_exec_task)
 
-    print("Flipping task node list: ", flipping_task.nodes_list)
+    print("Task node list: ", flipping_task.nodes_list)
+    print("Task list: ", flipping_task.task_list)
+    print("Task names: ", flipping_task.task_names)
+    print("Task dict: ", flipping_task.task_dict)
     print("Total employed nodes: ", flipping_task.total_nnodes)
     print("Number of added subtasks:", flipping_task.n_of_tasks, "\n")
 
