@@ -143,3 +143,139 @@ def add_pose_cnstrnt(unique_id, prb, nodes, pos = None, rot = None, pos_ref = No
       
 
     return pos_cnstrnt, rot_cnstrnt
+
+class SimpleCollHandler:
+
+    def __init__(self,
+                kindyn,
+                q_p, 
+                prb,
+                nodes = None,
+                collision_margins = None,
+                tcp_contact_nodes = None, 
+                link_names = [["arm_1_tcp", "arm_1_link_6", "arm_1_link_4", "arm_1_link_3"],\
+                               ["arm_2_tcp", "arm_2_link_6", "arm_2_link_4", "arm_2_link_3"]]):
+
+        self.kindyn = kindyn
+
+        self.q_p = q_p
+
+        self.link_names = link_names
+
+        self.prb = prb
+
+        self.nodes = nodes
+        self.tcp_contact_nodes = []
+        if (tcp_contact_nodes is not None) and (not len(tcp_contact_nodes) == 0):
+
+            self.tcp_contact_nodes = tcp_contact_nodes
+
+        self.filtered_nodes = self.remove_tcp_coll_nodes()
+
+        self.collision_margin_default = 0.05
+        self.collision_margins = {}
+
+        for i in range(len(link_names[0])):
+
+            if collision_margins is None:
+
+                self.collision_margins[link_names[0][i]] = self.collision_margin_default
+
+            else:
+                
+                if not len(collision_margins) == len(self.link_names[0]):
+
+                    raise Exception("SimpleCollHandler: the provided collision_margin vector does not have the right dimension.")
+
+                self.collision_margins[link_names[0][i]] = collision_margins[i]
+
+        self.fks = {}
+
+        self.coll_cnstrnts = []
+        
+        if not len(link_names) == 2:
+
+            raise Exception("SimpleCollHandler: you have to specify exactly two collision groups")
+
+        for i in range(len(link_names)):
+
+            self.fks[i] = [None] * len(link_names[i])
+
+        for i in range(len(link_names)):
+
+            for j in range(len(link_names[i])):
+
+                self.fks[link_names[i][j]] = self.get_link_abs_pos(link_names[i][j])
+        
+        self.collision_mask = {}
+        for i in range(len(link_names[0])):
+            
+            self.collision_mask[link_names[0][i]] = {}
+            for j in range(len(link_names[1])):
+
+                self.collision_mask[link_names[0][i]][link_names[1][j]] = True
+        
+        # setting collision constraints on the collision pairs
+        # defined by the collision mask
+        for i in range(len(link_names[0])):
+
+            for j in range(len(link_names[1])):
+                
+                if self.collision_mask[link_names[0][i]][link_names[1][j]]:
+                    
+                    if "tcp" in link_names[0][i] and "tcp" in link_names[1][j]: # tcps2tcps
+
+                        self.coll_cnstrnts.append(self.add_p2p_coll_constr(self.prb,
+                                            link_names[0][i],
+                                            link_names[1][j],
+                                            self.filtered_nodes))
+                    
+                    else: # all other pairs
+
+                        self.coll_cnstrnts.append(self.add_p2p_coll_constr(self.prb,
+                                            link_names[0][i],
+                                            link_names[1][j],
+                                            self.nodes))
+
+    def remove_tcp_coll_nodes(self):
+
+        n_nodes_prb = self.prb.getNNodes()
+
+        nodes = None
+
+        if self.nodes is None:
+            
+            self.nodes = [*range(n_nodes_prb)]
+
+        nodes = self.nodes
+
+        for i in range(len(self.tcp_contact_nodes)):
+
+            nodes.remove(self.tcp_contact_nodes[i])
+
+        return nodes
+
+    def get_link_abs_pos(self, link_name):
+
+        fk_link = cs.Function.deserialize(self.kindyn.fk(link_name)) 
+        frame_pos = fk_link(q = self.q_p)["ee_pos"]
+
+        return frame_pos
+
+    def d_2(self, p1, p2):
+
+        d_squared = cs.sumsqr(p2 - p1)
+
+        return d_squared
+
+    def add_p2p_coll_constr(self, prb,\
+                        link1, link2, nodes):
+
+        cnstrnt = prb.createConstraint(link1 + "_" + link2 + "coll",\
+                self.d_2(self.fks[link1], self.fks[link2]),\
+                nodes)
+
+        cnstrnt.setBounds(self.collision_margins[link1], cs.inf)
+
+        return cnstrnt
+        

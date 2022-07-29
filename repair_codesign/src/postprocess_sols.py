@@ -20,6 +20,10 @@ from codesign_pyutils.misc_definitions import get_design_map
 
 import matplotlib.pyplot as plt
 
+from mpl_toolkits import mplot3d
+import numpy as np
+import matplotlib.pyplot as plt
+
 # useful paths
 rospackage = rospkg.RosPack() # Only for taking the path to the leg package
 
@@ -37,7 +41,6 @@ replay_base_path = results_path  + "/" + replay_folder_name
 
 # resample solutions before replaying
 refinement_scale = 10
-
 
 def extract_q_design(input_data):
 
@@ -133,7 +136,7 @@ def main(args):
         plt.title(design_var_names[i], fontdict=None, loc='center')
         plt.grid()
     
-    # histograms
+    # 1D histograms (w.r.t. co-design variables)
     for i in range(n_d_variables):
     
         plt.figure()
@@ -145,8 +148,41 @@ def main(args):
         plt.title(design_var_names[i], fontdict=None, loc='center')
         plt.grid()
 
-    plt.show() # show the plots
+    # 1D histogram (w.r.t. perfomance index) 
+    plt.figure()
+    plt.hist(man_measure, bins = 200)
+    plt.legend(loc="upper left")
+    plt.xlabel(r"rad/s")
+    plt.ylabel(r"N. sol")
+    plt.title(r"Cost histogram", fontdict=None, loc='center')
+    plt.grid()
 
+    # 3D scatterplot of mounting height, shoulder width and roll mounting angle + colormap on the performance index
+    fig = plt.figure()
+    ax = plt.axes(projection ="3d")
+    ax.grid(b = True, color ='grey',
+        linestyle ='-.', linewidth = 0.3,
+        alpha = 0.2)
+    my_cmap = plt.get_cmap('jet_r')
+
+    sctt = ax.scatter3D(opt_q_design[0, :],\
+                        opt_q_design[1, :],\
+                        opt_q_design[2, :],\
+                        alpha = 0.8,
+                        c = man_measure.flatten(),
+                        cmap = my_cmap,
+                        marker ='o')
+    plt.title("Co-design variables scatter plot")
+    ax.set_xlabel('mount. height', fontweight ='bold')
+    ax.set_ylabel('should. width', fontweight ='bold')
+    ax.set_zlabel('mount. roll angle', fontweight ='bold')
+    fig.colorbar(sctt, ax = ax, shrink = 0.5, aspect = 20, label='performance index')
+
+    # clustering test
+
+    
+
+    plt.show() # show all plots
 
 
 if __name__ == '__main__':

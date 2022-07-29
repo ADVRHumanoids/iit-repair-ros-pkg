@@ -5,7 +5,7 @@ from codesign_pyutils.miscell_utils import check_str_list, rot_error_axis_sel_no
 
 from codesign_pyutils.misc_definitions import epsi_default
 
-from codesign_pyutils.horizon_utils import add_pose_cnstrnt
+from codesign_pyutils.horizon_utils import add_pose_cnstrnt, SimpleCollHandler
 
 from codesign_pyutils.ros_utils import MarkerGen, ReplaySol
 
@@ -514,6 +514,10 @@ class TaskGen:
                               [-1.0, 0.0, 0.0],\
                               [0.0, 0.0, -1.0]]) # constant matrix to define the relative orientation between hand frames when 
                                                  # performing the handover maneuver  
+        
+        self.coll_handler = None
+        self.tcp_contact_nodes = [] # used to let the collision handler know when to relax tcp collision 
+        # avoidance constraint
 
 
     def get_main_nodes_offset(self, total_task_nnodes, task_base_n_nodes):
@@ -760,19 +764,14 @@ class TaskGen:
         # min inputs 
         self.add_manip_cost(is_classical_man = is_classical_man)
 
-        # add extremely stupid collision task on y axis
-        # coll = self.prb.createConstraint("avoid_collision_on_y", \
-        #                         self.coll_links_pos_lft[1] - self.coll_links_pos_rght[1])
-        # coll.setBounds(self.hor_offsets[0] - 0.001, cs.inf)
-
-        # tcp_coll = self.prb.createConstraint("avoid_tcp_collision_on_y", \
-        #                         self.lft_tcp_pos_wrt_ws[1] - self.rght_tcp_pos_wrt_ws[1])
-        # tcp_coll.setBounds(self.cocktail_size - 0.004, cs.inf)
-
-        # self.add_tcp_avoidance_cnstrnt()
-
         # here the "custom" task is added to the problem
         self.build_tasks(is_soft_pose_cnstr = self.is_soft_pose_cnstrnt, epsi = epsi)
+
+        # Simple p2p collision avoidance cnstraints (needs to be called after build_tasks)
+        # to allow for tcp collision avoidance constraint removal on contact nodes
+        self.coll_handler = SimpleCollHandler(self.kindyn, self.q, self.prb, \
+                                            collision_margins = [0.005, 0.05, 0.05, 0.05], 
+                                            tcp_contact_nodes = self.tcp_contact_nodes)
     
     def build_tasks(self, is_soft_pose_cnstr = False, epsi = epsi_default):
         
@@ -1143,6 +1142,10 @@ class TaskGen:
                             rot_selection = ["x", "y",  "z"],\
                             weight_rot = self.weight_rot,\
                             is_soft = is_soft_pose_cnstr, epsi = epsi)
+
+
+            self.tcp_contact_nodes.append(cnstrnt_node_index) # signaling to the tcp collision avoidance handler
+            # to relax the constraint
 
         if j == 4: # ARM 1: back to waiting pose | ARM 2: down to picking  pose
 
