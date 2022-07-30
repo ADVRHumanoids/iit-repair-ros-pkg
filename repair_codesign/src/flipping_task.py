@@ -45,8 +45,8 @@ filling_n_nodes = 10
 rot_error_epsi = 0.0000001
 
 # generating samples along working surface y direction
-n_y_samples = 1
-y_sampl_ub = 0.0
+n_y_samples = 4
+y_sampl_ub = 0.3
 y_sampl_lb = - y_sampl_ub
 
 if n_y_samples == 1:

@@ -151,10 +151,10 @@ class SimpleCollHandler:
                 q_p, 
                 prb,
                 nodes = None,
-                collision_margins = None,
+                collision_radii = None,
                 tcp_contact_nodes = None, 
-                link_names = [["arm_1_tcp", "arm_1_link_6", "arm_1_link_4", "arm_1_link_3"],\
-                               ["arm_2_tcp", "arm_2_link_6", "arm_2_link_4", "arm_2_link_3"]]):
+                link_names = [["arm_1_link_6", "arm_1_link_4", "arm_1_link_3"],\
+                               ["arm_2_link_6", "arm_2_link_4", "arm_2_link_3"]]):
 
         self.kindyn = kindyn
 
@@ -172,23 +172,37 @@ class SimpleCollHandler:
 
         self.filtered_nodes = self.remove_tcp_coll_nodes()
 
-        self.collision_margin_default = 0.05
-        self.collision_margins = {}
+        # check dimension consistency between collision radii and link names
+        if len(collision_radii[0]) != len(link_names[0]) or len(collision_radii[1]) != len(link_names[1]):
 
+            raise Exception("SimpleCollHandler: dimesion mismatch between collision radii and link names!")
+
+        # building collision radii dictionary (link_name -> collision radius)
+        self.collision_radius_default = 0.05
+        self.collision_radii = {}
+        for i in range(len(link_names)): # iterate between the two arms
+
+            for j in range(len(link_names[i])): # iterate through each link name 
+
+                if collision_radii is None:
+
+                    self.collision_radii[link_names[i][j]] = self.collision_radius_default
+
+                else:
+
+                    self.collision_radii[link_names[i][j]] = collision_radii[i][j]
+
+        # building collision margins (two-level) dictionary (collision pair -> total collision margin)
+        self.collision_margins = {}
         for i in range(len(link_names[0])):
 
-            if collision_margins is None:
-
-                self.collision_margins[link_names[0][i]] = self.collision_margin_default
-
-            else:
-                
-                if not len(collision_margins) == len(self.link_names[0]):
-
-                    raise Exception("SimpleCollHandler: the provided collision_margin vector does not have the right dimension.")
-
-                self.collision_margins[link_names[0][i]] = collision_margins[i]
-
+            self.collision_margins[link_names[0][i]] = {}
+            for j in range(len(link_names[1])):
+                    
+                    self.collision_margins[link_names[0][i]][link_names[1][j]] =\
+                        self.collision_radii[link_names[0][i]] + \
+                        self.collision_radii[link_names[1][j]]
+        
         self.fks = {}
 
         self.coll_cnstrnts = []
@@ -275,7 +289,7 @@ class SimpleCollHandler:
                 self.d_2(self.fks[link1], self.fks[link2]),\
                 nodes)
 
-        cnstrnt.setBounds(self.collision_margins[link1], cs.inf)
+        cnstrnt.setBounds(self.collision_margins[link1][link2], cs.inf)
 
         return cnstrnt
         
