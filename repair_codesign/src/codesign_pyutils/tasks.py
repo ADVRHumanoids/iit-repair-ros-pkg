@@ -770,8 +770,8 @@ class TaskGen:
         # Simple p2p collision avoidance cnstraints (needs to be called after build_tasks)
         # to allow for tcp collision avoidance constraint removal on contact nodes
         self.coll_handler = SimpleCollHandler(self.kindyn, self.q, self.prb, \
-                                            collision_radii = [[0.05, 0.05, 0.05], \
-                                                                [0.05, 0.05, 0.05]], 
+                                            collision_radii = [[0.05, 0.025, 0.025], \
+                                                                [0.05, 0.025, 0.025]], 
                                             tcp_contact_nodes = self.tcp_contact_nodes)
     
     def build_tasks(self, is_soft_pose_cnstr = False, epsi = epsi_default):
