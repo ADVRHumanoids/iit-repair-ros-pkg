@@ -1135,6 +1135,16 @@ class TaskGen:
                                     
         if j == 3: # ARM 1: waits for contact | ARM 2: makes contact with bartender constraint
             
+            # exchange has to happen with horizontal hands
+            add_pose_cnstrnt(cnstrnt_id_rght, self.prb, cnstrnt_node_index, \
+                                self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
+                                self.object_pos_rght[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
+                                quat2rot(self.object_q_rght[i]),\
+                                pos_selection = [],\
+                                rot_selection = ["x", "y"],\
+                                weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
+                                is_soft = is_soft_pose_cnstr, epsi = epsi)
+
             # relative constraint
             add_pose_cnstrnt(cnstrnt_id_lft, self.prb, cnstrnt_node_index,\
                             pos = self.rght_tcp_pos_wrt_lft_tcp, rot = self.rght_tcp_rot_wrt_lft_tcp,
