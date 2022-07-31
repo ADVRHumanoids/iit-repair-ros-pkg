@@ -14,10 +14,11 @@ import subprocess
 
 import rospkg
 
-from codesign_pyutils.ros_utils import FramePub, ReplaySol
+from codesign_pyutils.ros_utils import ReplaySol
 from codesign_pyutils.miscell_utils import str2bool,\
                                         wait_for_confirmation,\
-                                        get_min_cost_index
+                                        get_min_cost_index,\
+                                        get_full_abs_paths_sol
 from codesign_pyutils.dump_utils import SolDumper
 from codesign_pyutils.task_utils import do_one_solve_pass, \
                                         generate_ig              
@@ -41,12 +42,12 @@ file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 # task-specific options
 right_arm_picks = True
-filling_n_nodes = 10
+filling_n_nodes = 0
 rot_error_epsi = 0.0000001
 
 # generating samples along working surface y direction
-n_y_samples = 4
-y_sampl_ub = 0.3
+n_y_samples = 1
+y_sampl_ub = 0.0
 y_sampl_lb = - y_sampl_ub
 
 if n_y_samples == 1:
@@ -60,7 +61,7 @@ for i in range(n_y_samples):
     y_sampling[i] = y_sampl_lb + dy * i
 
 # number of solution tries
-n_glob_tests = 1
+n_glob_tests = 3
 
 # resampler option (if used)
 refinement_scale = 10
@@ -73,23 +74,7 @@ slvr_opt = {
     "ipopt.constr_viol_tol": 0.001,
     "ilqr.verbose": True}
 
-# loaded initial guess stuff
-
-file_list_opt = os.listdir(init_opt_results_path)
-file_list_failed = os.listdir(init_failed_results_path)
-is_file_opt = [True] * len(file_list_opt) + [False] * len(file_list_failed)
-full_file_list = file_list_opt + file_list_failed
-full_file_paths = [""] * len(full_file_list)
-
-for i in range(len(full_file_list)):
-
-    if is_file_opt[i]:
-
-        full_file_paths[i] = init_opt_results_path + "/" + full_file_list[i]
-    
-    else:
-
-        full_file_paths[i] = init_failed_results_path + "/" + full_file_list[i]
+full_file_paths = get_full_abs_paths_sol(init_opt_results_path, init_failed_results_path)
 
 # seed used for random number generation
 ig_seed = 1
@@ -168,10 +153,18 @@ def main(args):
 
     # add tasks to the task holder object
     next_node = 0 # used to place the next task on the right problem nodes
-    for i in range(len(y_sampling)):
+    # for i in range(len(y_sampling)):
 
-        next_node = flipping_task.add_in_place_flip_task(init_node = next_node,\
-                        object_pos_wrt_ws = np.array([0.0, y_sampling[i], 0.0]), \
+    #     next_node = flipping_task.add_in_place_flip_task(init_node = next_node,\
+    #                     object_pos_wrt_ws = np.array([0.0, y_sampling[i], 0.0]), \
+    #                     object_q_wrt_ws = object_q, \
+    #                     pick_q_wrt_ws = object_q,\
+    #                     right_arm_picks = right_arm_picks)
+
+    for j in range(len(y_sampling)):
+
+        next_node = flipping_task.add_bimanual_task(init_node = next_node,\
+                        object_pos_wrt_ws = np.array([0.0, y_sampling[j], 0.0]), \
                         object_q_wrt_ws = object_q, \
                         pick_q_wrt_ws = object_q,\
                         right_arm_picks = right_arm_picks)
@@ -186,6 +179,7 @@ def main(args):
     print("Task list: ", flipping_task.task_list)
     print("Task names: ", flipping_task.task_names)
     print("Task dict: ", flipping_task.task_dict)
+    print("Base node dict: ", flipping_task.task_base_n_nodes_dict)
     print("Total employed nodes: ", flipping_task.total_nnodes)
     print("Number of added subtasks:", flipping_task.n_of_tasks, "\n")
 
@@ -246,15 +240,15 @@ def main(args):
             init_slvr.set_iteration_callback()
     
     # publishing picking poses frames
-    pose_pub = FramePub("frame_pub")
-    for i in range(len(y_sampling)):
+    # pose_pub = FramePub("frame_pub")
+    # for i in range(len(y_sampling)):
         
-        frame_name = "/repair/obj_picking_pose" + str(i)
+    #     frame_name = "/repair/obj_picking_pose" + str(i)
     
-        pose_pub.add_pose(flipping_task.object_pos_lft[i], flipping_task.object_q_lft[i],\
-                        frame_name, "working_surface_link")
+    #     pose_pub.add_pose(flipping_task.object_pos_lft[i], flipping_task.object_q_lft[i],\
+    #                     frame_name, "working_surface_link")
 
-    pose_pub.spin()
+    # pose_pub.spin()
 
     # clear generated urdf file
     if exists(urdf_full_path): 
@@ -322,7 +316,7 @@ def main(args):
     best_index = get_min_cost_index(sol_costs, solve_failed_array)
 
     other_stuff = {"dt": flipping_task.dt, "filling_nodes": flipping_task.filling_n_nodes,
-                    "task_base_nnodes": flipping_task.task_base_n_nodes,
+                    "task_base_nnodes": flipping_task.task_base_n_nodes_dict,
                     "right_arm_picks": flipping_task.rght_arm_picks, \
                     "wman_base": args.weight_global_manip, \
                     "wpo_bases": args.base_weight_pos, "wrot_base": args.base_weight_rot, \
@@ -330,7 +324,10 @@ def main(args):
                     "wpos_actual": flipping_task.weight_pos, "wrot_actual": flipping_task.weight_rot, 
                     "solve_failed": solve_failed_array, 
                     "n_opt_sol": n_opt_sol, "n_unfeas_sol": n_glob_tests - n_opt_sol,
-                    "sol_costs": sol_costs, "best_sol_index": best_index}
+                    "sol_costs": sol_costs, "best_sol_index": best_index,
+                    "nodes_list": flipping_task.nodes_list, 
+                    "tasks_list": flipping_task.task_list,
+                    "tasks_dict": flipping_task.task_dict}
     
     if args.dump_sol: 
 
@@ -341,7 +338,7 @@ def main(args):
         n_opt_init_sol = len(np.where(np.array(init_solve_failed_array) == False))
 
         other_stuff_init = {"dt": flipping_task_init.dt, "filling_nodes": flipping_task_init.filling_n_nodes,
-                                "task_base_nnodes": flipping_task_init.task_base_n_nodes,
+                                "task_base_nnodes": flipping_task_init.task_base_n_nodes_dict,
                                 "right_arm_picks": flipping_task_init.rght_arm_picks, \
                                 "wman_base": args.weight_global_manip, \
                                 "wpo_bases": args.base_weight_pos, "wrot_base": args.base_weight_rot, \

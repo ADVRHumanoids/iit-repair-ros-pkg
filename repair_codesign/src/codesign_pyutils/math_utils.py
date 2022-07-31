@@ -1,5 +1,6 @@
 import casadi as cs
 import numpy as np
+from sympy import true
 
 def quat2rot(Q):
     
@@ -63,7 +64,6 @@ def rot_error(R_trgt, R_actual, epsi = 0.0):
 
     return rot_err
 
-
 def rot_error2(R_trgt, R_actual, epsi = 0.0):
 
     R_err = R_trgt.T @ R_actual # orientation or actual frame w.r.t. target frame
@@ -86,19 +86,6 @@ def rot_error3(R_trgt, R_actual, epsi = 0.0):
 
     return err
 
-def get_cocktail_matching_rot(R):
+def compute_man_index(solution_dictionary):
     
-    # given the rotation matrix of the TCP of one arm, 
-    # computes the necessary rotation matrix to be used
-    # for the other arm so that the resulting TCP poses fit
-    # the handover task 
-
-    # croocked handover pose (softhand)
-    
-    cocktail_aux_rot = cs.DM([[0.0, -1.0, 0.0],\
-                              [-1.0, 0.0, 0.0],\
-                              [0.0, 0.0, -1.0]]) 
-    
-    R_aux = R @ cocktail_aux_rot
-
-    return R_aux
+    return true

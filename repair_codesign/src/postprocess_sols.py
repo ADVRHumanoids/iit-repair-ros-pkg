@@ -1,18 +1,12 @@
 #!/usr/bin/env python3
 
-from horizon.utils.resampler_trajectory import resampler
-from horizon.ros.replay_trajectory import *
-
-import os, argparse
-from os.path import exists
+import argparse
 
 import subprocess
 
 import rospkg
 
-from codesign_pyutils.ros_utils import ReplaySol
 from codesign_pyutils.miscell_utils import str2bool,\
-                                        get_min_cost_index
             
 from codesign_pyutils.tasks import TaskGen
 from codesign_pyutils.load_utils import LoadSols
@@ -20,7 +14,6 @@ from codesign_pyutils.misc_definitions import get_design_map
 
 import matplotlib.pyplot as plt
 
-from mpl_toolkits import mplot3d
 import numpy as np
 import matplotlib.pyplot as plt
 

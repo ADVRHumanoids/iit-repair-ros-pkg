@@ -2,7 +2,7 @@ import numpy as np
 
 import casadi as cs
 
-from codesign_pyutils.math_utils import quat2rot, rot_error, rot_error2, rot_error3, get_cocktail_matching_rot
+from codesign_pyutils.math_utils import quat2rot, rot_error, rot_error2, rot_error3
 
 from codesign_pyutils.miscell_utils import check_str_list, rot_error_axis_sel_not_supp
 

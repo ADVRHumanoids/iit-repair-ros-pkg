@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from numpy import True_
 from horizon.utils.resampler_trajectory import resampler
 from horizon.ros.replay_trajectory import *
 
@@ -38,6 +39,9 @@ refinement_scale = 10
 def main(args):
 
     sliding_wrist_command = "is_sliding_wrist:=" + "true"
+    show_softhand_command = "show_softhand:=" + "true"
+
+    # preliminary ops
 
     try:
 
@@ -46,6 +50,7 @@ def main(args):
         xacro_gen = subprocess.check_call(["xacro",\
                                         xacro_full_path, \
                                         sliding_wrist_command, \
+                                        show_softhand_command, \
                                         "-o", 
                                         urdf_full_path])
 
@@ -59,7 +64,8 @@ def main(args):
         rviz_window = subprocess.Popen(["roslaunch",\
                                         "repair_urdf",\
                                         "repair_full_markers.launch", \
-                                        sliding_wrist_command])
+                                        sliding_wrist_command,\
+                                        show_softhand_command])
 
     except:
 
@@ -84,41 +90,38 @@ def main(args):
 
     q_replay = [None] * n_opt_sol
 
-    for i in range(n_opt_sol):
+    while True:
 
-        if args.resample_sol:
-            
-            dt_res = sol_loader.add_info_data["dt"][0][0] / refinement_scale
+        for i in range(n_opt_sol):
 
-            # print(sol_loader.add_info_data["dt"][0][0])
-
-            q_replay = resampler(sol_loader.opt_data[i]["q"], sol_loader.opt_data[i]["q_dot"],\
-                                    sol_loader.add_info_data["dt"][0][0], dt_res,\
-                                    {'x': dummy_task.q, 'p': dummy_task.q_dot,\
-                                    'ode': dummy_task.q_dot, 'quad': 0})
-
-            sol_replayer = ReplaySol(dt_res,
-                                        joint_list = dummy_task.joint_names,
-                                        q_replay = q_replay, \
-                                        srt_msg = "\nReplaying solution ( n." + str(sol_loader.opt_data[i]["solution_index"] + 1) + " /" +\
-                                        str(len(sol_loader.add_info_data["solve_failed"])) + " )...")
-
-        else:
-            
-            q_replay = sol_loader.opt_data[i]["q"]
-
-            sol_replayer = ReplaySol(dt = sol_loader.add_info_data[i]["dt"][0][0],\
-                                        joint_list = dummy_task.joint_names,\
-                                        q_replay = q_replay, \
-                                        srt_msg = "\nReplaying best solution ( n." + str(sol_loader.opt_data[i]["solution_index"] + 1) + " /" +\
-                                        str(len(sol_loader.add_info_data["solve_failed"])) + " )...") 
+            if args.resample_sol:
                 
-        sol_replayer.sleep(0.5)
-        sol_replayer.replay(is_floating_base = False, play_once = True)
+                dt_res = sol_loader.add_info_data["dt"][0][0] / refinement_scale
 
-    # closing all child processes and exiting
-    # rviz_window.terminate()
-    # exit()
+                q_replay = resampler(sol_loader.opt_data[i]["q"], sol_loader.opt_data[i]["q_dot"],\
+                                        sol_loader.add_info_data["dt"][0][0], dt_res,\
+                                        {'x': dummy_task.q, 'p': dummy_task.q_dot,\
+                                        'ode': dummy_task.q_dot, 'quad': 0})
+
+                sol_replayer = ReplaySol(dt_res,
+                                            joint_list = dummy_task.joint_names,
+                                            q_replay = q_replay, \
+                                            srt_msg = "\nReplaying solution ( n." + str(sol_loader.opt_data[i]["solution_index"] + 1) + " /" +\
+                                            str(len(sol_loader.add_info_data["solve_failed"])) + " )...")
+
+            else:
+                
+                q_replay = sol_loader.opt_data[i]["q"]
+
+                sol_replayer = ReplaySol(dt = sol_loader.add_info_data["dt"][0][0],\
+                                            joint_list = dummy_task.joint_names,\
+                                            q_replay = q_replay, \
+                                            srt_msg = "\nReplaying best solution ( n." + str(sol_loader.opt_data[i]["solution_index"] + 1) + " /" +\
+                                            str(len(sol_loader.add_info_data["solve_failed"])) + " )...") 
+                    
+            sol_replayer.sleep(0.5)
+            sol_replayer.replay(is_floating_base = False, play_once = True)
+
     
 if __name__ == '__main__':
 

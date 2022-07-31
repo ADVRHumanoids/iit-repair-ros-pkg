@@ -1,7 +1,7 @@
 
 import numpy as np
 
-import time 
+import os
 
 import warnings
 
@@ -88,5 +88,22 @@ def get_min_cost_index(costs, solve_failed_array):
 
     return best_index
 
+def get_full_abs_paths_sol(init_opt_results_path, init_failed_results_path):
 
+  file_list_opt = os.listdir(init_opt_results_path)
+  file_list_failed = os.listdir(init_failed_results_path)
+  is_file_opt = [True] * len(file_list_opt) + [False] * len(file_list_failed)
+  full_file_list = file_list_opt + file_list_failed
+  full_file_paths = [""] * len(full_file_list)
 
+  for i in range(len(full_file_list)):
+
+    if is_file_opt[i]:
+
+        full_file_paths[i] = init_opt_results_path + "/" + full_file_list[i]
+    
+    else:
+
+        full_file_paths[i] = init_failed_results_path + "/" + full_file_list[i]
+
+  return full_file_paths
