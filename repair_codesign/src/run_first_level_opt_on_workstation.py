@@ -318,7 +318,8 @@ if __name__ == '__main__':
         "ipopt.tol": 0.0000001, 
         "ipopt.max_iter": 1000,
         "ipopt.constr_viol_tol": 0.001,
-        "ilqr.verbose": True}
+        "ilqr.verbose": True, 
+        "ipopt.linear_solver": "ma57"}
 
     full_file_paths = None # not used
 
