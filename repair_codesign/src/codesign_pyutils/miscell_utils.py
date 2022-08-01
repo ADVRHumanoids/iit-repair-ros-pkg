@@ -82,8 +82,6 @@ def get_min_cost_index(costs, solve_failed_array):
 
     if best_index < 0:
 
-        warnings.warn("Not able to solve any of the problems!!")
-
         best_index = np.argmin(costs)
 
     return best_index

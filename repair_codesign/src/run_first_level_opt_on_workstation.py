@@ -124,14 +124,14 @@ def gen_task_copies(filling_n_nodes, sliding_wrist_offset,
                         object_q_wrt_ws = object_q, \
                         pick_q_wrt_ws = object_q,\
                         right_arm_picks = right_arm_picks)
-    # bimanual task
-    for j in range(len(y_sampling)):
+    # # bimanual task
+    # for j in range(len(y_sampling)):
 
-        next_node = task.add_bimanual_task(init_node = next_node,\
-                        object_pos_wrt_ws = np.array([0.0, y_sampling[j], 0.0]), \
-                        object_q_wrt_ws = object_q, \
-                        pick_q_wrt_ws = object_q,\
-                        right_arm_picks = right_arm_picks)
+    #     next_node = task.add_bimanual_task(init_node = next_node,\
+    #                     object_pos_wrt_ws = np.array([0.0, y_sampling[j], 0.0]), \
+    #                     object_q_wrt_ws = object_q, \
+    #                     pick_q_wrt_ws = object_q,\
+    #                     right_arm_picks = right_arm_picks)
 
     # initialize problem
     task.init_prb(urdf_full_path, args.base_weight_pos, args.base_weight_rot,\
