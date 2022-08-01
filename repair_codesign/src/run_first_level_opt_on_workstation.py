@@ -275,7 +275,7 @@ if __name__ == '__main__':
     urdf_full_path = urdfs_path + "/" + urdf_name + ".urdf"
     xacro_full_path = urdfs_path + "/" + urdf_name + ".urdf.xacro"
     codesign_path = rospackage.get_path("repair_codesign")
-    results_path = codesign_path + "test_results/test_results_" + unique_id
+    results_path = codesign_path + "/test_results/test_results_" + unique_id
     opt_results_path = results_path + "/opt" 
     failed_results_path = results_path + "/failed"
 
