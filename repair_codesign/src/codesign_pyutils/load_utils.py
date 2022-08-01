@@ -7,7 +7,7 @@ class LoadSols():
     def __init__(self, base_sol_path, 
                 opt_dir_name = "opt", \
                 fail_dir_name = "failed", \
-                additional_info_pattern = "additional_info"):
+                additional_info_pattern = "employed_task_info"):
 
         self.base_sol_path = base_sol_path
         self.opt_path = base_sol_path + "/" + opt_dir_name
@@ -38,7 +38,7 @@ class LoadSols():
                             "Please make sure the loading directory only contains coherent data.")
 
         self.add_info_path = self.base_sol_path + "/" + add_info_filename_aux[0]
-        self.add_info_data = mat_storer.matStorer(self.add_info_path).load()
+        self.task_info_data = mat_storer.matStorer(self.add_info_path).load()
 
         opt_file_list = os.listdir(self.opt_path)
         fail_file_list = os.listdir(self.fail_path)

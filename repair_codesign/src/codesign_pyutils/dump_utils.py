@@ -13,7 +13,7 @@ class SolDumper():
     self.sols_counter = 0
 
     self.unique_id = date.today().strftime("%d-%m-%Y") + "-" +\
-                     datetime.now().strftime("_%H_%M_%S")
+                     datetime.now().strftime("%H_%M_%S")
 
     self.backend_name = backend_name
 
@@ -36,12 +36,12 @@ class SolDumper():
 
         self.storers.append(mat_storer.matStorer(results_path + "/" + \
                             file_name + \
-                            "-" + self.unique_id + ".mat"))
+                            self.unique_id + ".mat"))
 
       else:
 
         self.storers.append(mat_storer.matStorer(results_path + "/" + \
-                           file_name + "-" +  \
+                           file_name +  \
                            ".mat"))
 
     else:

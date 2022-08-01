@@ -6,16 +6,16 @@ import subprocess
 
 import rospkg
 
-from codesign_pyutils.miscell_utils import str2bool,\
+from codesign_pyutils.miscell_utils import str2bool
             
 from codesign_pyutils.tasks import TaskGen
 from codesign_pyutils.load_utils import LoadSols
 from codesign_pyutils.misc_definitions import get_design_map
 
 import matplotlib.pyplot as plt
+from mpl_toolkits import mplot3d
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 # useful paths
 rospackage = rospkg.RosPack() # Only for taking the path to the leg package

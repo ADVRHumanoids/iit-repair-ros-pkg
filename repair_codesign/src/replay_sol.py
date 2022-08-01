@@ -96,28 +96,26 @@ def main(args):
 
             if args.resample_sol:
                 
-                dt_res = sol_loader.add_info_data["dt"][0][0] / refinement_scale
+                dt_res = sol_loader.task_info_data["dt"][0][0] / refinement_scale
 
                 q_replay = resampler(sol_loader.opt_data[i]["q"], sol_loader.opt_data[i]["q_dot"],\
-                                        sol_loader.add_info_data["dt"][0][0], dt_res,\
+                                        sol_loader.task_info_data["dt"][0][0], dt_res,\
                                         {'x': dummy_task.q, 'p': dummy_task.q_dot,\
                                         'ode': dummy_task.q_dot, 'quad': 0})
 
                 sol_replayer = ReplaySol(dt_res,
                                             joint_list = dummy_task.joint_names,
                                             q_replay = q_replay, \
-                                            srt_msg = "\nReplaying solution ( n." + str(sol_loader.opt_data[i]["solution_index"] + 1) + " /" +\
-                                            str(len(sol_loader.add_info_data["solve_failed"])) + " )...")
+                                            srt_msg = "\nReplaying solution ( n." + str(sol_loader.opt_data[i]["solution_index"][0][0] + 1) + " )...")
 
             else:
                 
                 q_replay = sol_loader.opt_data[i]["q"]
 
-                sol_replayer = ReplaySol(dt = sol_loader.add_info_data["dt"][0][0],\
+                sol_replayer = ReplaySol(dt = sol_loader.task_info_data["dt"][0][0],\
                                             joint_list = dummy_task.joint_names,\
                                             q_replay = q_replay, \
-                                            srt_msg = "\nReplaying best solution ( n." + str(sol_loader.opt_data[i]["solution_index"] + 1) + " /" +\
-                                            str(len(sol_loader.add_info_data["solve_failed"])) + " )...") 
+                                            srt_msg = "\nReplaying solution ( n." + str(sol_loader.opt_data[i]["solution_index"][0][0] + 1) + " )...")
                     
             sol_replayer.sleep(0.5)
             sol_replayer.replay(is_floating_base = False, play_once = True)
