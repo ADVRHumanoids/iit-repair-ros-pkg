@@ -114,7 +114,12 @@ def main(args):
     design_var_map = get_design_map()
     design_var_names = list(design_var_map.keys())
     
-    opt_index = np.where(opt_costs == min(opt_costs))
+    opt_index = np.where(opt_costs == min(opt_costs))[0][0]
+
+    opt_sol_index = sol_loader.opt_data[opt_index]["solution_index"][0][0]
+
+    print("Optimal solution index:", opt_sol_index)
+
     n_int = len(opt_full_q_dot[0][0, :]) # getting number of intervals 
     man_measure = compute_man_measure(opt_costs, n_int) # scaling opt costs to make them more interpretable
 
