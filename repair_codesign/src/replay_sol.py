@@ -90,35 +90,73 @@ def main(args):
 
     q_replay = [None] * n_opt_sol
 
+    opt_costs = np.zeros((n_opt_sol, 1)).flatten()
+
+    for i in range(n_opt_sol):
+
+        opt_costs[i] = sol_loader.opt_data[i]["opt_cost"]
+
+    opt_index = np.where(opt_costs == min(opt_costs))[0][0]
+
     while True:
 
-        for i in range(n_opt_sol):
+        if args.replay_only_best:
 
             if args.resample_sol:
-                
-                dt_res = sol_loader.task_info_data["dt"][0][0] / refinement_scale
+                    
+                    dt_res = sol_loader.task_info_data["dt"][0][0] / refinement_scale
 
-                q_replay = resampler(sol_loader.opt_data[i]["q"], sol_loader.opt_data[i]["q_dot"],\
-                                        sol_loader.task_info_data["dt"][0][0], dt_res,\
-                                        {'x': dummy_task.q, 'p': dummy_task.q_dot,\
-                                        'ode': dummy_task.q_dot, 'quad': 0})
+                    q_replay = resampler(sol_loader.opt_data[opt_index]["q"], sol_loader.opt_data[opt_index]["q_dot"],\
+                                            sol_loader.task_info_data["dt"][0][0], dt_res,\
+                                            {'x': dummy_task.q, 'p': dummy_task.q_dot,\
+                                            'ode': dummy_task.q_dot, 'quad': 0})
 
-                sol_replayer = ReplaySol(dt_res,
-                                            joint_list = dummy_task.joint_names,
-                                            q_replay = q_replay, \
-                                            srt_msg = "\nReplaying solution ( n." + str(sol_loader.opt_data[i]["solution_index"][0][0] + 1) + " )...")
+                    sol_replayer = ReplaySol(dt_res,
+                                                joint_list = dummy_task.joint_names,
+                                                q_replay = q_replay, \
+                                                srt_msg = "\nReplaying solution ( n." + str(sol_loader.opt_data[opt_index]["solution_index"][0][0] + 1) + " )...")
 
             else:
                 
-                q_replay = sol_loader.opt_data[i]["q"]
+                q_replay = sol_loader.opt_data[opt_index]["q"]
 
                 sol_replayer = ReplaySol(dt = sol_loader.task_info_data["dt"][0][0],\
                                             joint_list = dummy_task.joint_names,\
                                             q_replay = q_replay, \
-                                            srt_msg = "\nReplaying solution ( n." + str(sol_loader.opt_data[i]["solution_index"][0][0] + 1) + " )...")
-                    
+                                            srt_msg = "\nReplaying solution ( n." + str(sol_loader.opt_data[opt_index]["solution_index"][0][0] + 1) + " )...")
+                        
             sol_replayer.sleep(0.5)
             sol_replayer.replay(is_floating_base = False, play_once = True)
+
+        else:
+
+            for i in range(n_opt_sol):
+
+                if args.resample_sol:
+                    
+                    dt_res = sol_loader.task_info_data["dt"][0][0] / refinement_scale
+
+                    q_replay = resampler(sol_loader.opt_data[i]["q"], sol_loader.opt_data[i]["q_dot"],\
+                                            sol_loader.task_info_data["dt"][0][0], dt_res,\
+                                            {'x': dummy_task.q, 'p': dummy_task.q_dot,\
+                                            'ode': dummy_task.q_dot, 'quad': 0})
+
+                    sol_replayer = ReplaySol(dt_res,
+                                                joint_list = dummy_task.joint_names,
+                                                q_replay = q_replay, \
+                                                srt_msg = "\nReplaying solution ( n." + str(sol_loader.opt_data[i]["solution_index"][0][0] + 1) + " )...")
+
+                else:
+                    
+                    q_replay = sol_loader.opt_data[i]["q"]
+
+                    sol_replayer = ReplaySol(dt = sol_loader.task_info_data["dt"][0][0],\
+                                                joint_list = dummy_task.joint_names,\
+                                                q_replay = q_replay, \
+                                                srt_msg = "\nReplaying solution ( n." + str(sol_loader.opt_data[i]["solution_index"][0][0] + 1) + " )...")
+                        
+                sol_replayer.sleep(0.5)
+                sol_replayer.replay(is_floating_base = False, play_once = True)
 
     
 if __name__ == '__main__':
@@ -128,6 +166,8 @@ if __name__ == '__main__':
         description='just a simple test file for RePAIR co-design')
     parser.add_argument('--resample_sol', '-rs', type=str2bool,\
                         help = 'whether to resample the obtained solution before replaying it', default = False)
+    parser.add_argument('--replay_only_best', '-rob', type=str2bool,\
+                        help = 'whether to only the best solution', default = True)
 
     args = parser.parse_args()
 
