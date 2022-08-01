@@ -255,6 +255,8 @@ if __name__ == '__main__':
                         help = 'whether to load the initial guess from file', default = False)
     parser.add_argument('--use_classical_man', '-ucm', type=str2bool,\
                         help = 'whether to use the classical manipulability index', default = False)
+    parser.add_argument('--n_multistarts', '-msn', type=int,\
+                        help = 'number of multistarts to use', default = 4)
 
     args = parser.parse_args()
     
@@ -308,7 +310,7 @@ if __name__ == '__main__':
     y_sampl_ub = 0.4
 
     # number of solution tries with different (random) initializations
-    n_multistarts = 10
+    n_multistarts = args.n_multistarts
 
     # solver options
     solver_type = 'ipopt'
@@ -340,10 +342,10 @@ if __name__ == '__main__':
         os.makedirs(opt_results_path)
         os.makedirs(failed_results_path)
 
-    task_copies = [None] * len(proc_sol_divs)
-    slvr_copies = [None] * len(proc_sol_divs)
+    task_copies = [None] * processes_n
+    slvr_copies = [None] * processes_n
     
-    for p in range(len(proc_sol_divs)):
+    for p in range(processes_n):
         
         
         task_copies[p], slvr_copies[p] = gen_task_copies(filling_n_nodes, sliding_wrist_offset, 
@@ -385,9 +387,9 @@ if __name__ == '__main__':
 
     print("\n Task info solution dumped. \n")
 
-    proc_list = [None] * len(proc_sol_divs)
+    proc_list = [None] * processes_n
     # launch solvers and solution dumpers on separate processes
-    for p in range(len(proc_sol_divs)):
+    for p in range(processes_n):
 
         proc_list[p] = mp_classic.Process(target=sol_main, args=(args, proc_sol_divs[p],\
                                                             q_ig, q_dot_ig, task_copies[p], slvr_copies[p],\
@@ -397,7 +399,7 @@ if __name__ == '__main__':
         proc_list[p].start()
         # 
     
-    for p in range(len(proc_sol_divs)): # wait until all processes are finished
+    # for p in range(len(proc_sol_divs)): # wait until all processes are finished
 
-        proc_list[p].join() # wait until all processes are terminated
+    #     proc_list[p].join() # wait until all processes are terminated
 
