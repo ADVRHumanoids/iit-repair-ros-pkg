@@ -154,9 +154,12 @@ class SimpleCollHandler:
                 collision_radii = None,
                 tcp_contact_nodes = None, 
                 link_names = [["arm_1_link_6", "arm_1_link_4", "arm_1_link_3"],\
-                               ["arm_2_link_6", "arm_2_link_4", "arm_2_link_3"]]):
+                               ["arm_2_link_6", "arm_2_link_4", "arm_2_link_3"]],
+                ws_name = "working_surface_link"):
 
         self.kindyn = kindyn
+
+        self.ws_name = ws_name
 
         self.q_p = q_p
 
@@ -221,6 +224,8 @@ class SimpleCollHandler:
 
                 self.fks[link_names[i][j]] = self.get_link_abs_pos(link_names[i][j])
         
+        self.fks[self.ws_name] = self.get_ws_abs_pos(self.ws_name)
+
         self.collision_mask = {}
         for i in range(len(link_names[0])):
             
@@ -235,6 +240,7 @@ class SimpleCollHandler:
 
             for j in range(len(link_names[1])):
                 
+                # add p2p collision tasks
                 if self.collision_mask[link_names[0][i]][link_names[1][j]]:
                     
                     if "tcp" in link_names[0][i] and "tcp" in link_names[1][j]: # tcps2tcps
@@ -250,6 +256,15 @@ class SimpleCollHandler:
                                             link_names[0][i],
                                             link_names[1][j],
                                             self.nodes))
+                
+        # add collision task with the working surface (on all nodes)
+        for i in range(len(link_names)):
+
+            for j in range(len(link_names[i])):
+                
+                self.add_ground_coll_constrnt(prb, \
+                            link_names[i][j], self.nodes)
+
 
     def remove_tcp_coll_nodes(self):
 
@@ -275,6 +290,13 @@ class SimpleCollHandler:
         frame_pos = fk_link(q = self.q_p)["ee_pos"]
 
         return frame_pos
+    
+    def get_ws_abs_pos(self, ws_name = "working_surface_link"):
+
+        fk_link = cs.Function.deserialize(self.kindyn.fk(ws_name)) 
+        frame_pos = fk_link(q = self.q_p)["ee_pos"]
+
+        return frame_pos
 
     def d_2(self, p1, p2):
 
@@ -285,11 +307,20 @@ class SimpleCollHandler:
     def add_p2p_coll_constr(self, prb,\
                         link1, link2, nodes):
 
-        cnstrnt = prb.createConstraint(link1 + "_" + link2 + "coll",\
+        cnstrnt = prb.createConstraint(link1 + "_" + link2 + "_coll",\
                 self.d_2(self.fks[link1], self.fks[link2]),\
                 nodes)
 
         cnstrnt.setBounds(self.collision_margins[link1][link2], cs.inf)
 
         return cnstrnt
+
+    def add_ground_coll_constrnt(self, prb, \
+                            link, nodes):
+        
+        cnstrnt = prb.createConstraint(link + "_" + "ws" + "_coll",\
+                (self.fks[link])[2] - (self.fks[self.ws_name])[2],\
+                nodes)
+
+        cnstrnt.setBounds(self.collision_radii[link], cs.inf)
         

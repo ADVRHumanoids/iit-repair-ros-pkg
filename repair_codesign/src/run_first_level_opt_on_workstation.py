@@ -345,9 +345,9 @@ if __name__ == '__main__':
     
     for p in range(len(proc_sol_divs)):
         
+        
         task_copies[p], slvr_copies[p] = gen_task_copies(filling_n_nodes, sliding_wrist_offset, 
                     n_y_samples, y_sampl_ub)
-
 
     # some initializations
     q_ig = [None] * n_multistarts
