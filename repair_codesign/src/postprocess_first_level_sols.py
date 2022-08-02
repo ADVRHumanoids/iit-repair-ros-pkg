@@ -19,6 +19,11 @@ import numpy as np
 
 from codesign_pyutils.miscell_utils import extract_q_design, compute_man_measure, scatter3Dcodesign
 
+from sklearn import cluster, datasets, mixture
+from sklearn.neighbors import kneighbors_graph
+from sklearn.preprocessing import StandardScaler
+from itertools import cycle, islice
+
 # useful paths
 rospackage = rospkg.RosPack() # Only for taking the path to the leg package
 
@@ -101,68 +106,56 @@ def main(args):
     #     plt.grid()
     
     # 1D histograms (w.r.t. co-design variables)
-    for i in range(n_d_variables):
+    # for i in range(n_d_variables):
     
-        plt.figure()
-        plt.hist(opt_q_design[i, :], bins = 100)
-        plt.scatter(opt_q_design[i, opt_index], 0, label=r"", marker="x", s=200, color="orange", linewidth=3)
-        plt.legend(loc="upper left")
-        plt.xlabel(r"")
-        plt.ylabel(r"N. sol")
-        plt.title(design_var_names[i], fontdict=None, loc='center')
-        plt.grid()
+    #     plt.figure()
+    #     plt.hist(opt_q_design[i, :], bins = 100)
+    #     plt.scatter(opt_q_design[i, opt_index], 0, label=r"", marker="x", s=200, color="orange", linewidth=3)
+    #     plt.legend(loc="upper left")
+    #     plt.xlabel(r"")
+    #     plt.ylabel(r"N. sol")
+    #     plt.title(design_var_names[i], fontdict=None, loc='center')
+    #     plt.grid()
 
     # 1D histogram (w.r.t. perfomance index) 
-    plt.figure()
-    plt.hist(man_measure, bins = 200)
-    plt.legend(loc="upper left")
-    plt.xlabel(r"rad/s")
-    plt.ylabel(r"N. sol")
-    plt.title(r"Cost histogram", fontdict=None, loc='center')
-    plt.grid()
+    # plt.figure()
+    # plt.hist(man_measure, bins = 200)
+    # plt.legend(loc="upper left")
+    # plt.xlabel(r"rad/s")
+    # plt.ylabel(r"N. sol")
+    # plt.title(r"Cost histogram", fontdict=None, loc='center')
+    # plt.grid()
 
     # 3D scatterplots
     scatter3Dcodesign(100, opt_costs, opt_q_design, n_int)
-    scatter3Dcodesign(80, opt_costs, opt_q_design, n_int)
-    scatter3Dcodesign(60, opt_costs, opt_q_design, n_int)
-    scatter3Dcodesign(40, opt_costs, opt_q_design, n_int)
-    scatter3Dcodesign(20, opt_costs, opt_q_design, n_int)
-    scatter3Dcodesign(10, opt_costs, opt_q_design, n_int)
-    scatter3Dcodesign(5, opt_costs, opt_q_design, n_int)
-    scatter3Dcodesign(1, opt_costs, opt_q_design, n_int)
+    # scatter3Dcodesign(80, opt_costs, opt_q_design, n_int)
+    # scatter3Dcodesign(60, opt_costs, opt_q_design, n_int)
+    # scatter3Dcodesign(40, opt_costs, opt_q_design, n_int)
+    # scatter3Dcodesign(20, opt_costs, opt_q_design, n_int)
+    # scatter3Dcodesign(10, opt_costs, opt_q_design, n_int)
+    # scatter3Dcodesign(5, opt_costs, opt_q_design, n_int)
+    # scatter3Dcodesign(1, opt_costs, opt_q_design, n_int)
 
-    # perc_print = 1
-    # n_selection = round(n_opt_sol * perc_print/100)
-    # sorted_costs_indeces = np.argsort(opt_costs) # indeces from best cost(lowest) to worst (biggest)
-    # selections_indeces = sorted_costs_indeces[:n_selection]
+    # clustering test
+    
+    options = {
+    "quantile": 0.3,
+    "eps": 0.3,
+    "damping": 0.9,
+    "preference": -200,
+    "n_neighbors": 3,
+    "n_clusters": 3,
+    "min_samples": 7,
+    "xi": 0.05,
+    "min_cluster_size": 0.1,
+    }
 
-    # opt_q_design_selections = opt_q_design[:, selections_indeces]
-    # opt_costs_sorted = [opt_costs[i] for i in selections_indeces] 
+    X = opt_q_design.T # data needs to be arranged as [samples x n_features]
+    # X = StandardScaler().fit_transform(X) # normalize dataset for easier parameter selection
 
-    # man_measure_sorted = compute_man_measure(opt_costs_sorted, n_int) # scaling opt costs to make them more interpretable
+    bandwidth = cluster.estimate_bandwidth(X, quantile=options["quantile"])
 
-    # fig = plt.figure()
-    # ax = plt.axes(projection ="3d")
-    # ax.grid(b = True, color ='grey',
-    #     linestyle ='-.', linewidth = 0.3,
-    #     alpha = 0.2)
-    # my_cmap = plt.get_cmap('jet_r')
-
-    # sctt = ax.scatter3D(opt_q_design_selections[0, :],\
-    #                     opt_q_design_selections[1, :],\
-    #                     opt_q_design_selections[2, :],\
-    #                     alpha = 0.8,
-    #                     c = man_measure_sorted.flatten(),
-    #                     cmap = my_cmap,
-    #                     marker ='o')
-    # plt.title("Co-design variables scatter plot - selection of " + str(perc_print) + "/% of the best solutions")
-    # ax.set_xlabel('mount. height', fontweight ='bold')
-    # ax.set_ylabel('should. width', fontweight ='bold')
-    # ax.set_zlabel('mount. roll angle', fontweight ='bold')
-    # fig.colorbar(sctt, ax = ax, shrink = 0.5, aspect = 20, label='performance index')
-
-    plt.show() # show all plots
-
+    plt.show()
 
 if __name__ == '__main__':
 
