@@ -225,58 +225,56 @@ def generate_ig(arguments: argparse.Namespace,\
 
     solution_index_name = "solution_index"
 
-    if arguments.use_init_guess:
+    np.random.seed(seed)
+    
+    for i in range(n_sol_tries):
 
-        np.random.seed(seed)
-        
-        for i in range(n_sol_tries):
+        if arguments.load_initial_guess:
+            
+            # check compatibility between load paths and number of solution attempts
+            if len(abs_paths) != n_sol_tries:
 
-            if arguments.load_initial_guess:
+                raise Exception("Solution load mismatch: You set " + str(n_sol_tries) + \
+                                " solution attempts, but provided " +\
+                                str(len(abs_paths)) + " solutions to load." )
+                            
+            try:
+            
+                ms_ig_load = mat_storer.matStorer(abs_paths[i])
                 
-                # check compatibility between load paths and number of solution attempts
-                if len(abs_paths) != n_sol_tries:
+                ig_sol = ms_ig_load.load()
 
-                    raise Exception("Solution load mismatch: You set " + str(n_sol_tries) + \
-                                    " solution attempts, but provided " +\
-                                    str(len(abs_paths)) + " solutions to load." )
-                                
-                try:
-              
-                    ms_ig_load = mat_storer.matStorer(abs_paths[i])
-                    
-                    ig_sol = ms_ig_load.load()
+                solution_index = ig_sol[solution_index_name][0][0]
 
-                    solution_index = ig_sol[solution_index_name][0][0]
+                q_ig[solution_index] = ig_sol["q"]
+                q_dot_ig[solution_index] = ig_sol["q_dot"]
 
-                    q_ig[solution_index] = ig_sol["q"]
-                    q_dot_ig[solution_index] = ig_sol["q_dot"]
+                if (np.shape(q_ig[solution_index])[1] != task.total_nnodes) or \
+                (np.shape(q_ig[solution_index])[0] != task.nq):
 
-                    if (np.shape(q_ig[solution_index])[1] != task.total_nnodes) or \
-                    (np.shape(q_ig[solution_index])[0] != task.nq):
+                    raise Exception("\nThe loaded initial guess has shape: [" + \
+                                    str(np.shape(q_ig[i])[0]) +  ", " + str(np.shape(q_ig[i])[1]) +  "]" + \
+                                    " while the problem has shape: [" + \
+                                    str(task.nq) +  ", " + str(task.total_nnodes) + \
+                                    "].\n")
 
-                        raise Exception("\nThe loaded initial guess has shape: [" + \
-                                        str(np.shape(q_ig[i])[0]) +  ", " + str(np.shape(q_ig[i])[1]) +  "]" + \
-                                        " while the problem has shape: [" + \
-                                        str(task.nq) +  ", " + str(task.total_nnodes) + \
-                                        "].\n")
-
-                except:
-                    
-                    raise Exception("Failed to load initial guess from file! I will use random intialization.")
-
-            else:
+            except:
                 
-                
-                q_ig[i] = np.tile(np.random.uniform(task.lbs, task.ubs,\
-                                            (1, task.nq)).T, (1, task.total_nnodes))
+                raise Exception("Failed to load initial guess from file! I will use random intialization.")
 
-                q_dot_ig[i] = np.zeros((task.nv, task.total_nnodes - 1))
+        else:
+            
+            
+            q_ig[i] = np.tile(np.random.uniform(task.lbs, task.ubs,\
+                                        (1, task.nq)).T, (1, task.total_nnodes))
 
-                
-            if verbose:
-                
-                print("q initial guess:", q_ig)
-                print("q_dot initial guess:", q_dot_ig)
+            q_dot_ig[i] = np.zeros((task.nv, task.total_nnodes - 1))
+
+            
+        if verbose:
+            
+            print("q initial guess:", q_ig)
+            print("q_dot initial guess:", q_dot_ig)
             
                                             
     return q_ig, q_dot_ig

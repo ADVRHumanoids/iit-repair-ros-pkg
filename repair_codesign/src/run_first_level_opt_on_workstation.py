@@ -134,10 +134,9 @@ def gen_task_copies(filling_n_nodes, sliding_wrist_offset,
     #                     right_arm_picks = right_arm_picks)
 
     # initialize problem
-    task.init_prb(urdf_full_path, args.base_weight_pos, args.base_weight_rot,\
-                            args.weight_global_manip, args.weight_class_manip,\
-                            is_soft_pose_cnstr = args.soft_pose_cnstrnt,\
-                            tf_single_task = t_exec_task)
+    task.init_prb(urdf_full_path,
+                    weight_glob_man = args.weight_global_manip, weight_class_man = args.weight_class_manip,\
+                    tf_single_task = t_exec_task)
 
     print("Task node list: ", task.nodes_list)
     print("Task list: ", task.task_list)
@@ -185,22 +184,20 @@ def sol_main(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path, op
             solve_failed_array)
 
     # solutions packaging for postprocessing
-
-    if args.dump_sol: 
-
-        sol_dumper = SolDumper()
-
-    n_opt_sol = len(np.where(np.array(solve_failed_array)== False)[0])
-
-    best_index = get_min_cost_index(sol_costs, solve_failed_array)
-
-    other_stuff = {"solve_failed": solve_failed_array, 
-                    "n_opt_sol": n_opt_sol, "n_unfeas_sol": n_multistarts_main - n_opt_sol,
-                    "sol_costs": sol_costs, "best_sol_index": best_index}
     
-    sol_dumper.add_storer(other_stuff, result_path,\
-                            "additional_info_p" + str(process_id) + "_t" + id_unique,\
-                            False)
+    sol_dumper = SolDumper()
+
+    # n_opt_sol = len(np.where(np.array(solve_failed_array)== False)[0])
+
+    # best_index = get_min_cost_index(sol_costs, solve_failed_array)
+
+    # other_stuff = {"solve_failed": solve_failed_array, 
+    #                 "n_opt_sol": n_opt_sol, "n_unfeas_sol": n_multistarts_main - n_opt_sol,
+    #                 "sol_costs": sol_costs, "best_sol_index": best_index}
+    
+    # sol_dumper.add_storer(other_stuff, result_path,\
+    #                         "additional_info_p" + str(process_id) + "_t" + id_unique,\
+    #                         False)
 
     sol_index = 0
     for node in multistart_nodes:
@@ -231,32 +228,21 @@ if __name__ == '__main__':
     # adding script arguments
     parser = argparse.ArgumentParser(
         description='just a simple test file for RePAIR co-design')
-    parser.add_argument('--gen_urdf', '-g', type=str2bool,\
-                        help = 'whether to generate urdf from xacro', default = True)
-    parser.add_argument('--launch_rviz', '-rvz', type=str2bool,\
-                        help = 'whether to launch rviz or not', default = True)
-    parser.add_argument('--rviz_replay', '-rpl', type=str2bool,\
-                        help = 'whether to replay the solution on RViz', default = True)
-    parser.add_argument('--dump_sol', '-ds', type=str2bool,\
-                        help = 'whether to dump results to file', default = True)
-    parser.add_argument('--use_init_guess', '-ig', type=str2bool,\
-                        help = 'whether to use initial guesses between solution loops', default = True)
-    parser.add_argument('--soft_pose_cnstrnt', '-spc', type=str2bool,\
-                        help = 'whether to use soft pose constraints or not', default = False)
-    parser.add_argument('--base_weight_pos', '-wp', type = np.double,\
-                        help = 'base weight for position tracking (if using soft constraints)', default = 0.001)
-    parser.add_argument('--base_weight_rot', '-wr', type = np.double,\
-                        help = 'base weight for orientation tracking (if using soft constraints)', default = 0.001)
+
+    parser.add_argument('--load_initial_guess', '-lig', type=str2bool,\
+                        help = 'whether to load ig from files', default = False)
     parser.add_argument('--weight_global_manip', '-wman', type = np.double,\
                         help = 'weight for global manipulability cost function', default = 0.01)
     parser.add_argument('--weight_class_manip', '-wclass', type = np.double,\
                         help = 'weight for classical manipulability cost function', default = 0.01)
-    parser.add_argument('--load_initial_guess', '-lig', type=str2bool,\
-                        help = 'whether to load the initial guess from file', default = False)
     parser.add_argument('--use_classical_man', '-ucm', type=str2bool,\
                         help = 'whether to use the classical manipulability index', default = False)
     parser.add_argument('--n_multistarts', '-msn', type=int,\
                         help = 'number of multistarts to use', default = 4)
+    parser.add_argument('--ig_seed', '-igs', type=int,\
+                        help = 'seed for random initialization generation', default = 1)                      
+    parser.add_argument('--use_ma57', '-ma57', type=str2bool,\
+                        help = 'whether to use ma57 linear solver or not', default = False)
 
     args = parser.parse_args()
     
@@ -283,22 +269,21 @@ if __name__ == '__main__':
 
     sliding_wrist_command = "is_sliding_wrist:=" + "true"
     show_softhand_command = "show_softhand:=" + "true"
+
     # generate update urdf every time the script runs
-    if args.gen_urdf:
+    try:
 
-        try:
+        # print(sliding_wrist_command)
+        xacro_gen = subprocess.check_call(["xacro",\
+                                        xacro_full_path, \
+                                        sliding_wrist_command, \
+                                        show_softhand_command, \
+                                        "-o", 
+                                        urdf_full_path])
 
-            # print(sliding_wrist_command)
-            xacro_gen = subprocess.check_call(["xacro",\
-                                            xacro_full_path, \
-                                            sliding_wrist_command, \
-                                            show_softhand_command, \
-                                            "-o", 
-                                            urdf_full_path])
+    except:
 
-        except:
-
-            print('Failed to generate URDF.')
+        print('Failed to generate URDF.')
 
     # task-specific options
     right_arm_picks = True
@@ -314,24 +299,36 @@ if __name__ == '__main__':
 
     # solver options
     solver_type = 'ipopt'
-    slvr_opt = {
-        "ipopt.tol": 0.0000001, 
-        "ipopt.max_iter": 1000,
-        "ipopt.constr_viol_tol": 0.001,
-        "ilqr.verbose": True, 
-        "ipopt.linear_solver": "ma57"}
+    if args.use_ma57:
+
+        slvr_opt = {
+            "ipopt.tol": 0.0000001, 
+            "ipopt.max_iter": 1000,
+            "ipopt.constr_viol_tol": 0.000001,
+            "ilqr.verbose": True, 
+            "ipopt.linear_solver": "ma57"}
+
+    else:
+
+        slvr_opt = {
+            "ipopt.tol": 0.0000001, 
+            "ipopt.max_iter": 1000,
+            "ipopt.constr_viol_tol": 0.000001,
+            "ilqr.verbose": True}
+
 
     full_file_paths = None # not used
 
     # seed used for random number generation
-    ig_seed = 1
+    ig_seed = args.ig_seed
 
     # single task execution time
     t_exec_task = 6
 
     # transcription options (if used)
     transcription_method = 'multiple_shooting'
-    transcription_opts = dict(integrator='RK4')
+    intgrtr = 'RK4'
+    transcription_opts = dict(integrator = intgrtr)
 
     sliding_wrist_offset = 0.0
 
@@ -343,11 +340,10 @@ if __name__ == '__main__':
         os.makedirs(opt_results_path)
         os.makedirs(failed_results_path)
 
-    task_copies = [None] * processes_n
-    slvr_copies = [None] * processes_n
+    task_copies = [None] * len(proc_sol_divs)
+    slvr_copies = [None] * len(proc_sol_divs)
     
-    for p in range(processes_n):
-        
+    for p in range(len(proc_sol_divs)):
         
         task_copies[p], slvr_copies[p] = gen_task_copies(filling_n_nodes, sliding_wrist_offset, 
                     n_y_samples, y_sampl_ub)
@@ -365,20 +361,27 @@ if __name__ == '__main__':
     # dumping info on the task 
 
     # inizialize a dumper object for post-processing
-    if args.dump_sol: 
 
-        task_info_dumper = SolDumper()
+    task_info_dumper = SolDumper()
 
     other_stuff = {"dt": task_copies[0].dt, "filling_nodes": task_copies[0].filling_n_nodes,
                     "task_base_nnodes": task_copies[0].task_base_n_nodes_dict,
-                    "right_arm_picks": task_copies[0].rght_arm_picks, \
-                    "wman_base": args.weight_global_manip, \
-                    "wpo_bases": args.base_weight_pos, "wrot_base": args.base_weight_rot, \
-                    "wman_actual": task_copies[0].weight_glob_man, \
-                    "wpos_actual": task_copies[0].weight_pos, "wrot_actual": task_copies[0].weight_rot, 
+                    "right_arm_picks": task_copies[0].rght_arm_picks, 
+                    "w_man_base": args.weight_global_manip, 
+                    "w_clman_base": args.weight_global_manip,
+                    "wman_actual": args.weight_class_manip, 
                     "nodes_list": task_copies[0].nodes_list, 
                     "tasks_list": task_copies[0].task_list,
-                    "tasks_dict": task_copies[0].task_dict}
+                    "tasks_dict": task_copies[0].task_dict, 
+                    "y_sampl_ub": y_sampl_ub, "n_y_samples": n_y_samples, 
+                    "ig_seed": ig_seed, 
+                    "solver_type": solver_type, "slvr_opts": slvr_opt, 
+                    "transcription_method": transcription_method, 
+                    "integrator": intgrtr, 
+                    "sliding_wrist_offset": sliding_wrist_offset, 
+                    "n_multistarts": n_multistarts, 
+                    "proc_sol_divs": proc_sol_divs, 
+                    "unique_id": unique_id}
     
     task_info_dumper.add_storer(other_stuff, results_path,\
                             "employed_task_info_t" + unique_id,\
@@ -388,9 +391,9 @@ if __name__ == '__main__':
 
     print("\n Task info solution dumped. \n")
 
-    proc_list = [None] * processes_n
+    proc_list = [None] * len(proc_sol_divs)
     # launch solvers and solution dumpers on separate processes
-    for p in range(processes_n):
+    for p in range(len(proc_sol_divs)):
 
         proc_list[p] = mp_classic.Process(target=sol_main, args=(args, proc_sol_divs[p],\
                                                             q_ig, q_dot_ig, task_copies[p], slvr_copies[p],\
@@ -398,7 +401,7 @@ if __name__ == '__main__':
                                                             unique_id,\
                                                             p, ))
         proc_list[p].start()
-        # 
+        
     
     # for p in range(len(proc_sol_divs)): # wait until all processes are finished
 
