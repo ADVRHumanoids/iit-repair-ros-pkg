@@ -139,14 +139,14 @@ def main(args):
     # scatter3Dcodesign(1, opt_costs, opt_q_design, n_int)
 
     # clustering test
-    
+    n_clusters = 5
     options = {
     "quantile": 0.3,
     "eps": 0.3,
     "damping": 0.9,
     "preference": -200,
     "n_neighbors": 3,
-    "n_clusters": 10,
+    "n_clusters": n_clusters,
     "min_samples": 7,
     "xi": 0.05,
     "min_cluster_size": 0.1,
@@ -262,7 +262,11 @@ def main(args):
     ax.set_xlabel('mount. height', fontweight ='bold')
     ax.set_ylabel('should. width', fontweight ='bold')
     ax.set_zlabel('mount. roll angle', fontweight ='bold')
-    fig.colorbar(sctt, ax = ax, shrink = 0.5, aspect = 20, label='performance index')
+    # fig.colorbar(sctt, ax = ax, shrink = 0.5, aspect = 20, label='performance index')
+
+    print(y_pred)
+    print(y_pred.shape)
+    print(max(y_pred))
 
     plt.show()
 
