@@ -73,7 +73,7 @@ def solve(multistart_nodes,\
         print("\n SOLVING PROBLEM N.: ", node + 1)
         print("\n")
                     
-        solve_failed = solve_prb_standalone(task, slvr, q_ig[node], q_dot_ig[node])
+        solve_failed, solution_time = solve_prb_standalone(task, slvr, q_ig[node], q_dot_ig[node])
         solutions[sol_index] = slvr.getSolutionDict()
 
         print("Solution cost " + str(node) + ": ", solutions[sol_index]["opt_cost"])
@@ -84,7 +84,7 @@ def solve(multistart_nodes,\
 
         sol_index = sol_index + 1
     
-    return True
+    return solution_time
 
 def gen_y_sampling(n_y_samples, y_sampl_ub):
 
@@ -174,7 +174,7 @@ def sol_main(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path, op
     solutions = [None] * n_multistarts_main
     cnstr_opt = [None] * n_multistarts_main
 
-    solve(multistart_nodes,\
+    solution_time = solve(multistart_nodes,\
             task, slvr,\
             q_ig, q_dot_ig,\
             solutions,\
@@ -203,7 +203,8 @@ def sol_main(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path, op
         full_solution = {**(solutions[sol_index]),
                         **(cnstr_opt[sol_index]),
                         **{"q_ig": q_ig[sol_index], "q_dot_ig": q_dot_ig[sol_index]}, \
-                        **{"solution_index": node}}
+                        **{"solution_index": node}, 
+                        "solution_time": solution_time}
 
         if not solve_failed_array[sol_index]:
 

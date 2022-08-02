@@ -39,7 +39,7 @@ def solve_prb_standalone(task,\
 
     solve_failed = not is_optimal
     
-    return solve_failed
+    return solve_failed, solution_time
 
 def solve_main_prb_soft_init(task: TaskGen, slvr_init: Solver, slvr: Solver,\
                     q_ig_main=None, q_dot_ig_main=None,\
@@ -77,10 +77,10 @@ def solve_main_prb_soft_init(task: TaskGen, slvr_init: Solver, slvr: Solver,\
         
         if proceed_to_hard_anyway:
             
-            solve_failed = solve_prb_standalone(task, slvr, q_ig_main, q_dot_ig_main)
+            solve_failed, _ = solve_prb_standalone(task, slvr, q_ig_main, q_dot_ig_main)
 
 
-    return solve_failed
+    return solve_failed, solution_time
 
 def try_init_solve_or_go_on(arguments: argparse.Namespace,\
                             init_task: TaskGen, init_slvr: Solver,\
