@@ -114,7 +114,7 @@ def main(args):
                     sol_replayer = ReplaySol(dt_res,
                                                 joint_list = dummy_task.joint_names,
                                                 q_replay = q_replay, \
-                                                srt_msg = "\nReplaying solution ( n." + str(sol_loader.opt_data[opt_index]["solution_index"][0][0] + 1) + " )...")
+                                                srt_msg = "\nReplaying solution ( n." + str(sol_loader.opt_data[opt_index]["solution_index"][0][0]) + " )...")
 
             else:
                 
@@ -123,7 +123,7 @@ def main(args):
                 sol_replayer = ReplaySol(dt = sol_loader.task_info_data["dt"][0][0],\
                                             joint_list = dummy_task.joint_names,\
                                             q_replay = q_replay, \
-                                            srt_msg = "\nReplaying solution ( n." + str(sol_loader.opt_data[opt_index]["solution_index"][0][0] + 1) + " )...")
+                                            srt_msg = "\nReplaying solution ( n." + str(sol_loader.opt_data[opt_index]["solution_index"][0][0]) + " )...")
                         
             sol_replayer.sleep(0.5)
             sol_replayer.replay(is_floating_base = False, play_once = True)

@@ -5,7 +5,6 @@ from horizon.transcriptions.transcriptor import Transcriptor
 
 from horizon.solvers import solver
 import os, argparse
-from os.path import exists
 
 import numpy as np
 
@@ -13,8 +12,7 @@ import subprocess
 
 import rospkg
 
-from codesign_pyutils.miscell_utils import str2bool,\
-                                        get_min_cost_index
+from codesign_pyutils.miscell_utils import str2bool
 from codesign_pyutils.dump_utils import SolDumper
 from codesign_pyutils.task_utils import solve_prb_standalone, \
                                         generate_ig              
@@ -255,13 +253,15 @@ if __name__ == '__main__':
     processes_n = mp_classic.cpu_count()
 
     # useful paths
+    dump_folder_name = "first_level"
     rospackage = rospkg.RosPack() # Only for taking the path to the leg package
     urdfs_path = rospackage.get_path("repair_urdf") + "/urdf"
     urdf_name = "repair_full"
     urdf_full_path = urdfs_path + "/" + urdf_name + ".urdf"
     xacro_full_path = urdfs_path + "/" + urdf_name + ".urdf.xacro"
     codesign_path = rospackage.get_path("repair_codesign")
-    results_path = codesign_path + "/test_results/test_results_" + unique_id
+    results_path = codesign_path + "/test_results/test_results_" +\
+                unique_id + "/" + dump_folder_name
     opt_results_path = results_path + "/opt" 
     failed_results_path = results_path + "/failed"
 

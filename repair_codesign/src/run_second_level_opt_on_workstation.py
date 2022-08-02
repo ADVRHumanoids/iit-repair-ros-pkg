@@ -1,79 +1,283 @@
 #!/usr/bin/env python3
 
-import argparse
+from horizon.ros.replay_trajectory import *
+from horizon.transcriptions.transcriptor import Transcriptor
+
+from horizon.solvers import solver
+import os, argparse
+
+import numpy as np
 
 import subprocess
 
 import rospkg
 
-from codesign_pyutils.miscell_utils import str2bool,\
-            
+from codesign_pyutils.miscell_utils import str2bool
+from codesign_pyutils.dump_utils import SolDumper
+from codesign_pyutils.task_utils import solve_prb_standalone, \
+                                        generate_ig              
 from codesign_pyutils.tasks import TaskGen
-from codesign_pyutils.load_utils import LoadSols
-from codesign_pyutils.misc_definitions import get_design_map
 
-import matplotlib.pyplot as plt
+import multiprocessing as mp_classic
 
-import numpy as np
-import matplotlib.pyplot as plt
+from datetime import datetime
+from datetime import date
 
-# useful paths
-rospackage = rospkg.RosPack() # Only for taking the path to the leg package
+def compute_solution_divs(n_multistrt: int, n_prcss: int):
+    
+    n_sol_tries = n_multistrt
+    n_p = n_prcss
 
-urdfs_path = rospackage.get_path("repair_urdf") + "/urdf"
-urdf_name = "repair_full"
-urdf_full_path = urdfs_path + "/" + urdf_name + ".urdf"
-xacro_full_path = urdfs_path + "/" + urdf_name + ".urdf.xacro"
+    n_divs = int(np.round(n_sol_tries / n_p)) 
 
-codesign_path = rospackage.get_path("repair_codesign")
+    n_remaining_sols = n_sol_tries - n_divs * n_p
 
-results_path = codesign_path + "/test_results"
+    opt_divs = [[]] * n_p
 
-replay_folder_name = "replay_directory" 
-replay_base_path = results_path  + "/" + replay_folder_name
 
-# resample solutions before replaying
-refinement_scale = 10
+    for i in range(n_p):
 
-def extract_q_design(input_data):
+        if i == (n_p - 1) and n_remaining_sols != 0:
+            
+            opt_divs[i] = list(range(n_divs * i, n_divs * i + n_divs + n_remaining_sols)) 
 
-    design_var_map = get_design_map()
+        else:
 
-    design_indeces = [design_var_map["mount_h"],\
-        design_var_map["should_wl"],\
-        design_var_map["should_roll_l"],\
-        design_var_map["wrist_off_l"]]
+            opt_divs[i] = list(range(n_divs * i, n_divs * i + n_divs)) 
 
-    n_samples = len(input_data)
 
-    design_data = np.zeros((len(design_indeces), n_samples))
+        # opt_divs = [[]] * (n_p + 1)
 
-    for i in range(n_samples):
+        # for i in range(n_p + 1):
+            
+        #     if i == n_p:
 
-        design_data[:, i] = input_data[i][design_indeces, 0] # design variables are constant over the nodes (index 0 is sufficient)
+        #         opt_divs[i] = list(range(n_divs * i, n_divs * i + n_remaining_sols))
 
-    return design_data
+        #     else:
 
-def compute_man_measure(opt_costs, n_int):
+        #         opt_divs[i] = list(range(n_divs * i, n_divs * i + n_divs))
 
-    man_measure = np.zeros((len(opt_costs), 1))
+    return opt_divs
 
-    for i in range(len(opt_costs)): 
+def solve(multistart_nodes,\
+            task, slvr,\
+            q_ig, q_dot_ig,\
+            solutions,\
+            sol_costs, cnstr_opt,\
+            solve_failed_array):
 
-        man_measure[i] = np.sqrt(opt_costs[i] / n_int) # --> discretized root mean squared joint velocities over the opt interval 
+    sol_index = 0 # different index
+    for node in multistart_nodes:
 
-    return man_measure
+        print("\n SOLVING PROBLEM N.: ", node + 1)
+        print("\n")
+                    
+        solve_failed = solve_prb_standalone(task, slvr, q_ig[node], q_dot_ig[node])
+        solutions[sol_index] = slvr.getSolutionDict()
 
-def main(args):
+        print("Solution cost " + str(node) + ": ", solutions[sol_index]["opt_cost"])
+        sol_costs[sol_index] = solutions[sol_index]["opt_cost"]
+        cnstr_opt[sol_index] = slvr.getConstraintSolutionDict()
 
+        solve_failed_array[sol_index] = solve_failed
+
+        sol_index = sol_index + 1
+    
+    return True
+
+def gen_y_sampling(n_y_samples, y_sampl_ub):
+
+    y_sampl_lb = - y_sampl_ub
+    if n_y_samples == 1:
+        dy = 0.0
+    else:
+        dy = (y_sampl_ub - y_sampl_lb) / (n_y_samples - 1)
+
+    y_sampling = np.array( [0.0] * n_y_samples)
+    for i in range(n_y_samples):
+        
+        y_sampling[i] = y_sampl_lb + dy * i
+
+    return y_sampling
+
+def gen_task_copies(filling_n_nodes, sliding_wrist_offset, 
+                    n_y_samples, y_sampl_ub):
+
+    
+    y_sampling = gen_y_sampling(n_y_samples, y_sampl_ub)
+
+    # initialize problem task
+    task = TaskGen(filling_n_nodes = filling_n_nodes, \
+                                    sliding_wrist_offset = sliding_wrist_offset)
+    object_q = np.array([1, 0, 0, 0])
+
+    # add tasks to the task holder object
+    next_node = 0 # used to place the next task on the right problem nodes
+    # in place flip task
+    for i in range(len(y_sampling)):
+
+        next_node = task.add_in_place_flip_task(init_node = next_node,\
+                        object_pos_wrt_ws = np.array([0.0, y_sampling[i], 0.0]), \
+                        object_q_wrt_ws = object_q, \
+                        pick_q_wrt_ws = object_q,\
+                        right_arm_picks = right_arm_picks)
+    # # bimanual task
+    # for j in range(len(y_sampling)):
+
+    #     next_node = task.add_bimanual_task(init_node = next_node,\
+    #                     object_pos_wrt_ws = np.array([0.0, y_sampling[j], 0.0]), \
+    #                     object_q_wrt_ws = object_q, \
+    #                     pick_q_wrt_ws = object_q,\
+    #                     right_arm_picks = right_arm_picks)
+
+    # initialize problem
+    task.init_prb(urdf_full_path,
+                    weight_glob_man = args.weight_global_manip, weight_class_man = args.weight_class_manip,\
+                    tf_single_task = t_exec_task)
+
+    print("Task node list: ", task.nodes_list)
+    print("Task list: ", task.task_list)
+    print("Task names: ", task.task_names)
+    print("Task dict: ", task.task_dict)
+    print("Total employed nodes: ", task.total_nnodes)
+    print("Number of added subtasks:", task.n_of_tasks, "\n")
+
+    # set constraints and costs
+    task.setup_prb(rot_error_epsi, is_classical_man = args.use_classical_man)
+
+    if solver_type != "ilqr":
+
+        Transcriptor.make_method(transcription_method,\
+                                task.prb,\
+                                transcription_opts)
+    
+    ## Creating the solver
+    slvr = solver.Solver.make_solver(solver_type, task.prb, slvr_opt)
+
+    if solver_type == "ilqr":
+
+        slvr.set_iteration_callback()
+
+
+    return task, slvr
+
+def sol_main(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path, opt_path, fail_path,\
+        id_unique,\
+        process_id):
+    
+    n_multistarts_main = len(multistart_nodes)
+
+    # some initializations before entering the solution loop
+    solve_failed_array = [True] * n_multistarts_main
+    sol_costs = [1e10] * n_multistarts_main
+    solutions = [None] * n_multistarts_main
+    cnstr_opt = [None] * n_multistarts_main
+
+    solve(multistart_nodes,\
+            task, slvr,\
+            q_ig, q_dot_ig,\
+            solutions,\
+            sol_costs, cnstr_opt,\
+            solve_failed_array)
+
+    # solutions packaging for postprocessing
+    
+    sol_dumper = SolDumper()
+
+    # n_opt_sol = len(np.where(np.array(solve_failed_array)== False)[0])
+
+    # best_index = get_min_cost_index(sol_costs, solve_failed_array)
+
+    # other_stuff = {"solve_failed": solve_failed_array, 
+    #                 "n_opt_sol": n_opt_sol, "n_unfeas_sol": n_multistarts_main - n_opt_sol,
+    #                 "sol_costs": sol_costs, "best_sol_index": best_index}
+    
+    # sol_dumper.add_storer(other_stuff, result_path,\
+    #                         "additional_info_p" + str(process_id) + "_t" + id_unique,\
+    #                         False)
+
+    sol_index = 0
+    for node in multistart_nodes:
+            
+        full_solution = {**(solutions[sol_index]),
+                        **(cnstr_opt[sol_index]),
+                        **{"q_ig": q_ig[sol_index], "q_dot_ig": q_dot_ig[sol_index]}, \
+                        **{"solution_index": node}}
+
+        if not solve_failed_array[sol_index]:
+
+            sol_dumper.add_storer(full_solution, opt_path,\
+                            solution_base_name + "_p" + str(process_id) + "_n" + str(node) + "_t" + id_unique, False)
+        else:
+
+            sol_dumper.add_storer(full_solution, fail_path,\
+                            solution_base_name + "_p" + str(process_id) + "_n" + str(node) + "_t" + id_unique, False)
+
+        sol_index = sol_index + 1
+
+    sol_dumper.dump() 
+
+    print("\n Solutions of process " + str(process_id) + " dumped. \n")
+                    
+    
+if __name__ == '__main__':
+
+    # adding script arguments
+    parser = argparse.ArgumentParser(
+        description='just a simple test file for RePAIR co-design')
+
+    parser.add_argument('--load_initial_guess', '-lig', type=str2bool,\
+                        help = 'whether to load ig from files', default = False)
+    parser.add_argument('--weight_global_manip', '-wman', type = np.double,\
+                        help = 'weight for global manipulability cost function', default = 0.01)
+    parser.add_argument('--weight_class_manip', '-wclass', type = np.double,\
+                        help = 'weight for classical manipulability cost function', default = 0.01)
+    parser.add_argument('--use_classical_man', '-ucm', type=str2bool,\
+                        help = 'whether to use the classical manipulability index', default = False)
+    parser.add_argument('--n_multistarts', '-msn', type=int,\
+                        help = 'number of multistarts to use', default = 4)
+    parser.add_argument('--ig_seed', '-igs', type=int,\
+                        help = 'seed for random initialization generation', default = 1)                      
+    parser.add_argument('--use_ma57', '-ma57', type=str2bool,\
+                        help = 'whether to use ma57 linear solver or not', default = False)
+
+    args = parser.parse_args()
+    
+    # unique id used for generation of results
+    unique_id = date.today().strftime("%d-%m-%Y") + "-" +\
+                        datetime.now().strftime("%H_%M_%S")
+
+    # number of parallel processes on which to run optimization
+    # set to number of cpu counts to saturate
+    processes_n = mp_classic.cpu_count()
+
+    # useful paths
+    dump_folder_name = "first_level"
+    rospackage = rospkg.RosPack() # Only for taking the path to the leg package
+    urdfs_path = rospackage.get_path("repair_urdf") + "/urdf"
+    urdf_name = "repair_full"
+    urdf_full_path = urdfs_path + "/" + urdf_name + ".urdf"
+    xacro_full_path = urdfs_path + "/" + urdf_name + ".urdf.xacro"
+    codesign_path = rospackage.get_path("repair_codesign")
+    results_path = codesign_path + "/test_results/test_results_" +\
+                unique_id + "/" + dump_folder_name
+    opt_results_path = results_path + "/opt" 
+    failed_results_path = results_path + "/failed"
+
+    solution_base_name = "repair_codesign_opt"
+
+    sliding_wrist_command = "is_sliding_wrist:=" + "true"
+    show_softhand_command = "show_softhand:=" + "true"
+
+    # generate update urdf every time the script runs
     try:
-
-        sliding_wrist_command = "is_sliding_wrist:=" + "true"
 
         # print(sliding_wrist_command)
         xacro_gen = subprocess.check_call(["xacro",\
                                         xacro_full_path, \
                                         sliding_wrist_command, \
+                                        show_softhand_command, \
                                         "-o", 
                                         urdf_full_path])
 
@@ -81,111 +285,125 @@ def main(args):
 
         print('Failed to generate URDF.')
 
-    # only used to parse urdf
-    dummy_task = TaskGen()
+    # task-specific options
+    right_arm_picks = True
+    filling_n_nodes = 0
+    rot_error_epsi = 0.0000001
 
-    dummy_task.add_in_place_flip_task(0)
+    # samples
+    n_y_samples = 5
+    y_sampl_ub = 0.4
 
-    # initialize problem
-    dummy_task.init_prb(urdf_full_path)
+    # number of solution tries with different (random) initializations
+    n_multistarts = args.n_multistarts
 
-    sol_loader = LoadSols(replay_base_path)
+    # solver options
+    solver_type = 'ipopt'
+    if args.use_ma57:
+
+        slvr_opt = {
+            "ipopt.tol": 0.0000001, 
+            "ipopt.max_iter": 1000,
+            "ipopt.constr_viol_tol": 0.000001,
+            "ilqr.verbose": True, 
+            "ipopt.linear_solver": "ma57"}
+
+    else:
+
+        slvr_opt = {
+            "ipopt.tol": 0.0000001, 
+            "ipopt.max_iter": 1000,
+            "ipopt.constr_viol_tol": 0.000001,
+            "ilqr.verbose": True}
+
+
+    full_file_paths = None # not used
+
+    # seed used for random number generation
+    ig_seed = args.ig_seed
+
+    # single task execution time
+    t_exec_task = 6
+
+    # transcription options (if used)
+    transcription_method = 'multiple_shooting'
+    intgrtr = 'RK4'
+    transcription_opts = dict(integrator = intgrtr)
+
+    sliding_wrist_offset = 0.0
+
+    proc_sol_divs = compute_solution_divs(n_multistarts, processes_n)
+
+    if  (not os.path.isdir(results_path)):
+
+        os.makedirs(results_path)
+        os.makedirs(opt_results_path)
+        os.makedirs(failed_results_path)
+
+    task_copies = [None] * len(proc_sol_divs)
+    slvr_copies = [None] * len(proc_sol_divs)
     
-    n_opt_sol = len(sol_loader.opt_data)
+    for p in range(len(proc_sol_divs)):
+        
+        task_copies[p], slvr_copies[p] = gen_task_copies(filling_n_nodes, sliding_wrist_offset, 
+                    n_y_samples, y_sampl_ub)
 
-    opt_costs = [1e6] * n_opt_sol
+    # some initializations
+    q_ig = [None] * n_multistarts
+    q_dot_ig = [None] * n_multistarts
 
-    opt_full_q = [None] * n_opt_sol
-    opt_full_q_dot = [None] * n_opt_sol
-    opt_costs = np.zeros((n_opt_sol, 1)).flatten()
-
-    for i in range(n_opt_sol):
-
-        opt_full_q[i] = sol_loader.opt_data[i]["q"]
-        opt_full_q_dot[i] = sol_loader.opt_data[i]["q_dot"]
-        opt_costs[i] = sol_loader.opt_data[i]["opt_cost"]
-
-    opt_q_design = extract_q_design(opt_full_q)
-
-    # print(opt_q_design)
-    # exit()
-    n_d_variables = np.shape(opt_q_design)[0]
-
-    design_var_map = get_design_map()
-    design_var_names = list(design_var_map.keys())
+    # generating initial guesses, based on the script arguments
+    q_ig, q_dot_ig =  generate_ig(args, full_file_paths,\
+                                    task_copies[0],\
+                                    n_multistarts, ig_seed,\
+                                    False)
     
-    opt_index = np.where(opt_costs == min(opt_costs))
-    n_int = len(opt_full_q_dot[0][0, :]) # getting number of intervals 
-    man_measure = compute_man_measure(opt_costs, n_int) # scaling opt costs to make them more interpretable
+    # dumping info on the task 
 
-    # scatter plots
-    for i in range(n_d_variables):
+    # inizialize a dumper object for post-processing
+
+    task_info_dumper = SolDumper()
+
+    other_stuff = {"dt": task_copies[0].dt, "filling_nodes": task_copies[0].filling_n_nodes,
+                    "task_base_nnodes": task_copies[0].task_base_n_nodes_dict,
+                    "right_arm_picks": task_copies[0].rght_arm_picks, 
+                    "w_man_base": args.weight_global_manip, 
+                    "w_clman_base": args.weight_global_manip,
+                    "wman_actual": args.weight_class_manip, 
+                    "nodes_list": task_copies[0].nodes_list, 
+                    "tasks_list": task_copies[0].task_list,
+                    "tasks_dict": task_copies[0].task_dict, 
+                    "y_sampl_ub": y_sampl_ub, "n_y_samples": n_y_samples, 
+                    "ig_seed": ig_seed, 
+                    "solver_type": solver_type, "slvr_opts": slvr_opt, 
+                    "transcription_method": transcription_method, 
+                    "integrator": intgrtr, 
+                    "sliding_wrist_offset": sliding_wrist_offset, 
+                    "n_multistarts": n_multistarts, 
+                    "proc_sol_divs": proc_sol_divs, 
+                    "unique_id": unique_id}
     
-        plt.figure()
-        plt.scatter(man_measure, opt_q_design[i, :], label=r"", marker="o", s=50 )
-        plt.legend(loc="upper left")
-        plt.xlabel(r"rad/s")
-        plt.ylabel(design_var_names[i])
-        plt.title(design_var_names[i], fontdict=None, loc='center')
-        plt.grid()
+    task_info_dumper.add_storer(other_stuff, results_path,\
+                            "employed_task_info_t" + unique_id,\
+                            False)
+
+    task_info_dumper.dump()
+
+    print("\n Task info solution dumped. \n")
+
+    proc_list = [None] * len(proc_sol_divs)
+    # launch solvers and solution dumpers on separate processes
+    for p in range(len(proc_sol_divs)):
+
+        proc_list[p] = mp_classic.Process(target=sol_main, args=(args, proc_sol_divs[p],\
+                                                            q_ig, q_dot_ig, task_copies[p], slvr_copies[p],\
+                                                            results_path, opt_results_path, failed_results_path,\
+                                                            unique_id,\
+                                                            p, ))
+        proc_list[p].start()
+        
     
-    # 1D histograms (w.r.t. co-design variables)
-    for i in range(n_d_variables):
-    
-        plt.figure()
-        plt.hist(opt_q_design[i, :], bins = 100)
-        plt.scatter(opt_q_design[i, opt_index], 0, label=r"", marker="x", s=200, color="orange", linewidth=3)
-        plt.legend(loc="upper left")
-        plt.xlabel(r"")
-        plt.ylabel(r"N. sol")
-        plt.title(design_var_names[i], fontdict=None, loc='center')
-        plt.grid()
+    # for p in range(len(proc_sol_divs)): # wait until all processes are finished
 
-    # 1D histogram (w.r.t. perfomance index) 
-    plt.figure()
-    plt.hist(man_measure, bins = 200)
-    plt.legend(loc="upper left")
-    plt.xlabel(r"rad/s")
-    plt.ylabel(r"N. sol")
-    plt.title(r"Cost histogram", fontdict=None, loc='center')
-    plt.grid()
+    #     proc_list[p].join() # wait until all processes are terminated
 
-    # 3D scatterplot of mounting height, shoulder width and roll mounting angle + colormap on the performance index
-    fig = plt.figure()
-    ax = plt.axes(projection ="3d")
-    ax.grid(b = True, color ='grey',
-        linestyle ='-.', linewidth = 0.3,
-        alpha = 0.2)
-    my_cmap = plt.get_cmap('jet_r')
-
-    sctt = ax.scatter3D(opt_q_design[0, :],\
-                        opt_q_design[1, :],\
-                        opt_q_design[2, :],\
-                        alpha = 0.8,
-                        c = man_measure.flatten(),
-                        cmap = my_cmap,
-                        marker ='o')
-    plt.title("Co-design variables scatter plot")
-    ax.set_xlabel('mount. height', fontweight ='bold')
-    ax.set_ylabel('should. width', fontweight ='bold')
-    ax.set_zlabel('mount. roll angle', fontweight ='bold')
-    fig.colorbar(sctt, ax = ax, shrink = 0.5, aspect = 20, label='performance index')
-
-    # clustering test
-
-    
-
-    plt.show() # show all plots
-
-
-if __name__ == '__main__':
-
-    # adding script arguments
-    parser = argparse.ArgumentParser(
-        description='just a simple test file for RePAIR co-design')
-    parser.add_argument('--resample_sol', '-rs', type=str2bool,\
-                        help = 'whether to resample the obtained solution before replaying it', default = False)
-
-    args = parser.parse_args()
-
-    main(args)

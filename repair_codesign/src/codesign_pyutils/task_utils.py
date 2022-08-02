@@ -13,8 +13,6 @@ from codesign_pyutils.tasks import TaskGen
 
 from codesign_pyutils.miscell_utils import wait_for_confirmation
 
-import warnings
-
 import argparse
 
 def solve_prb_standalone(task,\
