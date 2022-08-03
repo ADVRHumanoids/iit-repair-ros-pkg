@@ -206,67 +206,65 @@ def main(args):
         ("Agglomerative\nClustering", average_linkage),
         ("DBSCAN", dbscan),
         ("OPTICS", optics),
-        ("BIRCH", birch),
+        # ("BIRCH", birch),
         ("Gaussian\nMixture", gmm),
     )
 
-    t0 = time.time()
-    spectral.fit(X)
-    
-    t1 = time.time()
-    if hasattr(spectral, "labels_"):
-        y_pred = spectral.labels_.astype(int)
-    else:
-        y_pred = spectral.predict(X)
+    for algorithm_name, algorithm in clustering_algorithms:
 
-    colors = np.array(
-        list(
-            islice(
-                cycle(
-                    [
-                        "#377eb8",
-                        "#ff7f00",
-                        "#4daf4a",
-                        "#f781bf",
-                        "#a65628",
-                        "#984ea3",
-                        "#999999",
-                        "#e41a1c",
-                        "#dede00",
-                    ]
-                ),
-                int(max(y_pred) + 1),
+        t0 = time.time()
+        algorithm.fit(X)
+        
+        t1 = time.time()
+        if hasattr(algorithm, "labels_"):
+            y_pred = algorithm.labels_.astype(int)
+        else:
+            y_pred = algorithm.predict(X)
+
+        colors = np.array(
+            list(
+                islice(
+                    cycle(
+                        [
+                            "#377eb8",
+                            "#ff7f00",
+                            "#4daf4a",
+                            "#f781bf",
+                            "#a65628",
+                            "#984ea3",
+                            "#999999",
+                            "#e41a1c",
+                            "#dede00",
+                        ]
+                    ),
+                    int(max(y_pred) + 1),
+                )
             )
         )
-    )
-    # add black color for outliers (if any)
-    colors = np.append(colors, ["#000000"])
+        # add black color for outliers (if any)
+        colors = np.append(colors, ["#000000"])
 
-    fig = plt.figure()
-    ax = plt.axes(projection ="3d")
-    ax.grid(b = True, color ='grey',
-        linestyle ='-.', linewidth = 0.3,
-        alpha = 0.2)
-    my_cmap = plt.get_cmap('jet_r')
+        fig = plt.figure()
+        ax = plt.axes(projection ="3d")
+        ax.grid(b = True, color ='grey',
+            linestyle ='-.', linewidth = 0.3,
+            alpha = 0.2)
+        my_cmap = plt.get_cmap('jet_r')
 
-    sctt = ax.scatter3D(X[:, 0],\
-                        X[:, 1],\
-                        X[:, 2],\
-                        alpha = 0.8,
-                        c = colors[y_pred],
-                        cmap = my_cmap,
-                        marker ='o', 
-                        s = 30)
+        sctt = ax.scatter3D(X[:, 0],\
+                            X[:, 1],\
+                            X[:, 2],\
+                            alpha = 0.8,
+                            c = colors[y_pred],
+                            cmap = my_cmap,
+                            marker ='o', 
+                            s = 30)
 
-    plt.title("Co-design variables scatter plot - clustering ")
-    ax.set_xlabel('mount. height', fontweight ='bold')
-    ax.set_ylabel('should. width', fontweight ='bold')
-    ax.set_zlabel('mount. roll angle', fontweight ='bold')
-    # fig.colorbar(sctt, ax = ax, shrink = 0.5, aspect = 20, label='performance index')
-
-    print(y_pred)
-    print(y_pred.shape)
-    print(max(y_pred))
+        plt.title("Co-design variables scatter plot - clustering with " + algorithm_name)
+        ax.set_xlabel('mount. height', fontweight ='bold')
+        ax.set_ylabel('should. width', fontweight ='bold')
+        ax.set_zlabel('mount. roll angle', fontweight ='bold')
+        # fig.colorbar(sctt, ax = ax, shrink = 0.5, aspect = 20, label='performance index')
 
     plt.show()
 
