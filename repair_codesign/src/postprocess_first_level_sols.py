@@ -6,7 +6,7 @@ import subprocess
 
 import rospkg
 
-from codesign_pyutils.miscell_utils import str2bool
+from codesign_pyutils.miscell_utils import Clusterer, str2bool
             
 from codesign_pyutils.tasks import TaskGen
 from codesign_pyutils.load_utils import LoadSols
@@ -22,9 +22,14 @@ from codesign_pyutils.miscell_utils import extract_q_design, compute_man_measure
 from sklearn import cluster, datasets, mixture
 from sklearn.neighbors import kneighbors_graph
 from sklearn.preprocessing import StandardScaler
+from scipy.cluster.hierarchy import dendrogram
+from sklearn.cluster import AgglomerativeClustering
+
 from itertools import cycle, islice
 
 import time
+
+from codesign_pyutils.miscell_utils import Clusterer
 
 # useful paths
 rospackage = rospkg.RosPack() # Only for taking the path to the leg package
@@ -138,135 +143,18 @@ def main(args):
     # scatter3Dcodesign(5, opt_costs, opt_q_design, n_int)
     # scatter3Dcodesign(1, opt_costs, opt_q_design, n_int)
 
-    # clustering test
-    n_clusters = 5
-    options = {
-    "quantile": 0.3,
-    "eps": 0.3,
-    "damping": 0.9,
-    "preference": -200,
-    "n_neighbors": 3,
-    "n_clusters": n_clusters,
-    "min_samples": 7,
-    "xi": 0.05,
-    "min_cluster_size": 0.1,
-    }
+    clusterer = Clusterer(opt_q_design.T, n_clusters = None)
 
-    X = opt_q_design.T # data needs to be arranged as [samples x n_features]
-    # X = StandardScaler().fit_transform(X) # normalize dataset for easier parameter selection
+    algo_names = clusterer.get_algo_names()
 
-    bandwidth = cluster.estimate_bandwidth(X, quantile=options["quantile"])
+    clusterer.create_cluster_plot(algo_names[4], show_clusters_sep = True)
 
-    connectivity = kneighbors_graph(
-        X, n_neighbors=options["n_neighbors"], include_self=False
-    )
-
-    # make connectivity symmetric
-    connectivity = 0.5 * (connectivity + connectivity.T)
-
-    # ============
-    # Create cluster objects
-    # ============
-    ms = cluster.MeanShift(bandwidth=bandwidth, bin_seeding=True)
-    two_means = cluster.MiniBatchKMeans(n_clusters=options["n_clusters"])
-    ward = cluster.AgglomerativeClustering(
-        n_clusters=options["n_clusters"], linkage="ward", connectivity=connectivity
-    )
-    spectral = cluster.SpectralClustering(
-        n_clusters=options["n_clusters"],
-        eigen_solver="arpack",
-        affinity="nearest_neighbors",
-    )
-    dbscan = cluster.DBSCAN(eps=options["eps"])
-    optics = cluster.OPTICS(
-        min_samples=options["min_samples"],
-        xi=options["xi"],
-        min_cluster_size=options["min_cluster_size"],
-    )
-    affinity_propagation = cluster.AffinityPropagation(
-        damping=options["damping"], preference=options["preference"], random_state=0
-    )
-    average_linkage = cluster.AgglomerativeClustering(
-        linkage="average",
-        affinity="cityblock",
-        n_clusters=options["n_clusters"],
-        connectivity=connectivity,
-    )
-    birch = cluster.Birch(n_clusters=options["n_clusters"])
-    gmm = mixture.GaussianMixture(
-        n_components=options["n_clusters"], covariance_type="full"
-    )
-
-    clustering_algorithms = (
-        ("MiniBatch\nKMeans", two_means),
-        ("Affinity\nPropagation", affinity_propagation),
-        ("MeanShift", ms),
-        ("Spectral\nClustering", spectral),
-        ("Ward", ward),
-        ("Agglomerative\nClustering", average_linkage),
-        ("DBSCAN", dbscan),
-        ("OPTICS", optics),
-        # ("BIRCH", birch),
-        ("Gaussian\nMixture", gmm),
-    )
-
-    for algorithm_name, algorithm in clustering_algorithms:
-
-        t0 = time.time()
-        algorithm.fit(X)
+    # for i in range(len(algo_names) - 2):
         
-        t1 = time.time()
-        if hasattr(algorithm, "labels_"):
-            y_pred = algorithm.labels_.astype(int)
-        else:
-            y_pred = algorithm.predict(X)
+    #     clusterer.create_cluster_plot(algo_names[i], show_clusters_sep = True)
 
-        colors = np.array(
-            list(
-                islice(
-                    cycle(
-                        [
-                            "#377eb8",
-                            "#ff7f00",
-                            "#4daf4a",
-                            "#f781bf",
-                            "#a65628",
-                            "#984ea3",
-                            "#999999",
-                            "#e41a1c",
-                            "#dede00",
-                        ]
-                    ),
-                    int(max(y_pred) + 1),
-                )
-            )
-        )
-        # add black color for outliers (if any)
-        colors = np.append(colors, ["#000000"])
-
-        fig = plt.figure()
-        ax = plt.axes(projection ="3d")
-        ax.grid(b = True, color ='grey',
-            linestyle ='-.', linewidth = 0.3,
-            alpha = 0.2)
-        my_cmap = plt.get_cmap('jet_r')
-
-        sctt = ax.scatter3D(X[:, 0],\
-                            X[:, 1],\
-                            X[:, 2],\
-                            alpha = 0.8,
-                            c = colors[y_pred],
-                            cmap = my_cmap,
-                            marker ='o', 
-                            s = 30)
-
-        plt.title("Co-design variables scatter plot - clustering with " + algorithm_name)
-        ax.set_xlabel('mount. height', fontweight ='bold')
-        ax.set_ylabel('should. width', fontweight ='bold')
-        ax.set_zlabel('mount. roll angle', fontweight ='bold')
-        # fig.colorbar(sctt, ax = ax, shrink = 0.5, aspect = 20, label='performance index')
-
-    plt.show()
+    clusterer.show_plots()
+    
 
 if __name__ == '__main__':
 

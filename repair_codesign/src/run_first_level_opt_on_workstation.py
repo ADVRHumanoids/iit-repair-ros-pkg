@@ -307,7 +307,7 @@ if __name__ == '__main__':
             "ipopt.max_iter": 1000,
             "ipopt.constr_viol_tol": 0.000001,
             "ilqr.verbose": True, 
-            "ipopt.linear_solver": "ma57"}
+            "ipopt.linear_solver": "ma27"}
 
     else:
 

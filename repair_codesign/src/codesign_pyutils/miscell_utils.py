@@ -1,4 +1,5 @@
 
+from turtle import right
 import numpy as np
 
 import os
@@ -7,6 +8,20 @@ from codesign_pyutils.misc_definitions import get_design_map
 
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
+
+from sklearn import cluster, datasets, mixture
+from sklearn.neighbors import kneighbors_graph
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import AgglomerativeClustering
+
+import time 
+
+import matplotlib.pyplot as plt
+from matplotlib import colors
+
+from pylab import cm
+
+from collections import Counter
 
 def str2bool(v):
   #susendberg's function
@@ -187,3 +202,164 @@ def scatter3Dcodesign(perc: float, opt_costs: list, opt_q_design: np.ndarray, n_
     fig.colorbar(sctt, ax = ax, shrink = 0.5, aspect = 20, label='performance index')
 
     return True
+
+class Clusterer():
+
+  def __init__(self, X, n_clusters = 5):
+
+    self.base_options = {
+    "n_neighbors": 3,
+    "n_clusters": n_clusters,
+    "min_samples": 20,
+    "metric": "euclidean", 
+    "max_neigh_sample_dist": 0.01,
+    }
+
+    self.X = X
+
+    self.connectivity = kneighbors_graph(
+        self.X, n_neighbors=self.base_options["n_neighbors"], include_self=False
+    )
+
+    self.connectivity_mat = 0.5 * (self.connectivity + self.connectivity.T)
+
+    self.algo_dict = {}
+
+    self.algo_dict["kmeans"] = cluster.KMeans(n_clusters=self.base_options["n_clusters"])
+
+    self.algo_dict["minikmeans"] = cluster.MiniBatchKMeans(n_clusters=self.base_options["n_clusters"])
+
+    self.algo_dict["bi_kmeans"] = cluster.BisectingKMeans(n_clusters=self.base_options["n_clusters"])
+
+    self.algo_dict["agg_cl_ward"] = cluster.AgglomerativeClustering(n_clusters=self.base_options["n_clusters"],
+                                                  linkage="ward",
+                                                  connectivity=None, 
+                                                  distance_threshold = 0.4)
+
+    # self.algo_dict["birk"] = cluster.Birch(n_clusters=self.base_options["n_clusters"])
+
+    self.algo_dict["optics"] = cluster.OPTICS(min_samples = self.base_options["min_samples"], 
+                                              metric = self.base_options["metric"], 
+                                              eps = self.base_options["max_neigh_sample_dist"])
+
+    self.algo_dict["dbscan"] = cluster.DBSCAN(eps = self.base_options["max_neigh_sample_dist"], 
+                                              min_samples = self.base_options["min_samples"], 
+                                              metric = self.base_options["metric"], 
+                                              )
+
+  def compute_clust(self, method_name = "kmeans"):
+    
+    algorithm = self.algo_dict[method_name]
+
+    t0 = time.time()
+    model = algorithm.fit(self.X)
+    t1 = time.time()
+
+    if hasattr(algorithm, "labels_"):
+
+        y_pred = algorithm.labels_.astype(int)
+
+    else:
+
+        y_pred = algorithm.predict(self.X)
+
+    n_clusters = len(Counter(y_pred).keys())
+
+    print("Number of clusters set/found: " +  str(n_clusters))
+    
+    clust_indeces, cluster_size_vector = self.get_cluster_sizes(y_pred)
+    print("Cluster size vector: " +  str(cluster_size_vector))
+    print("Cluster indeces" + str(clust_indeces)) 
+    print(np.sum(cluster_size_vector))
+
+    return y_pred
+
+  def get_rbg(self, y):
+
+    n_clusters = len(Counter(y).keys())    
+    cmap = cm.get_cmap('seismic', n_clusters)
+    rbg = []
+    for i in range(cmap.N):
+        rbg.append(colors.rgb2hex(cmap(i)))
+
+    return np.array(rbg)
+
+  def get_cluster_sizes(self, y):
+
+    y_un = np.unique(y) # vector of unique cluster IDs
+
+    cl_size_vector = []
+
+    for i in range(len(y_un)):
+
+      cl_size_vector.append(len(np.where(y == y_un[i])[0]))
+
+    return y_un, np.array(cl_size_vector) 
+  
+  def create_cluster_plot(self, method_name = "kmeans", show_clusters_sep = False):
+    
+    y = self.compute_clust(method_name)
+
+    rgb_colors = self.get_rbg(y)
+
+    plt.figure()
+
+    ax = plt.axes(projection ="3d")
+    ax.grid(b = True, color ='grey',
+        linestyle ='-.', linewidth = 0.3,
+        alpha = 0.2)
+
+    ax.scatter3D(self.X[:, 0],\
+                  self.X[:, 1],\
+                  self.X[:, 2],\
+                  alpha = 0.8,
+                  c = rgb_colors[y],
+                  marker ='o', 
+                  s = 30)
+
+    plt.title("Co-design variables scatter plot - clustering with " + method_name)
+    ax.set_xlabel('mount. height', fontweight ='bold')
+    ax.set_ylabel('should. width', fontweight ='bold')
+    ax.set_zlabel('mount. roll angle', fontweight ='bold')
+    
+    if show_clusters_sep:
+
+      y_un = np.unique(y)
+
+      for i in range(len(y_un)):
+        
+        plt.figure()
+      
+        cluster_selector = np.where(y == y_un[i])[0]
+
+        ax = plt.axes(projection ="3d")
+        ax.set_xlim3d(np.min(self.X[:, 0]), np.max(self.X[:, 0]))
+        ax.set_ylim3d(np.min(self.X[:, 1]), np.max(self.X[:, 1]))
+        ax.set_zlim3d(np.min(self.X[:, 2]), np.max(self.X[:, 2]))
+
+        ax.grid(b = True, color ='grey',  
+            linestyle ='-.', linewidth = 0.3,
+            alpha = 0.2)
+
+        ax.scatter3D(self.X[cluster_selector, 0],\
+                      self.X[cluster_selector, 1],\
+                      self.X[cluster_selector, 2],\
+                      alpha = 0.8,
+                      c = rgb_colors[[y_un[i]] * len(cluster_selector)],
+                      marker ='o', 
+                      s = 30)
+
+        plt.title("Co-design variables scatter plot - clustering with " + method_name + "/" + str(y_un[i]))
+        ax.set_xlabel('mount. height', fontweight ='bold')
+        ax.set_ylabel('should. width', fontweight ='bold')
+        ax.set_zlabel('mount. roll angle', fontweight ='bold')
+
+  def show_plots(self):
+
+    plt.show()
+
+  def get_algo_names(self):
+
+    return list(self.algo_dict.keys())
+
+        
