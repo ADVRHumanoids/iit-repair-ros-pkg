@@ -1,4 +1,5 @@
 
+from re import X
 from turtle import right
 import numpy as np
 
@@ -153,21 +154,30 @@ def compute_man_measure(opt_costs: list, n_int: int):
 
     return man_measure
 
-def scatter3Dcodesign(perc: float, opt_costs: list, opt_q_design: np.ndarray, n_int_prb: int, 
+def select_best_sols(perc: float, opt_costs: list, opt_q_design: np.ndarray):
+
+  perc = abs(float(perc))
+  if perc > 100.0:
+      perc = 100.0
+
+  n_opt_sol = len(opt_costs)
+  n_selection = round(n_opt_sol * perc/100)
+
+  sorted_costs_indeces = np.argsort(np.array(opt_costs)) # indeces from best cost(lowest) to worst (biggest)
+  selection_indeces = sorted_costs_indeces[:n_selection] # first n_selection indeces
+
+  opt_q_design_selections = opt_q_design[:, selection_indeces]
+  opt_costs_sorted = [opt_costs[i] for i in selection_indeces]
+
+  return opt_q_design_selections, opt_costs_sorted
+
+def scatter3Dcodesign(opt_costs: list,
+                      opt_costs_sorted: list, opt_q_design_selections: np.ndarray,
+                      n_int_prb: int, 
                       markersize = 20, use_abs_colormap_scale = True):
 
-    perc = abs(float(perc))
-    if perc > 100.0:
-        perc = 100.0
-
+    n_selection = len(opt_costs_sorted)
     n_opt_sol = len(opt_costs)
-    n_selection = round(n_opt_sol * perc/100)
-
-    sorted_costs_indeces = np.argsort(np.array(opt_costs)) # indeces from best cost(lowest) to worst (biggest)
-    selection_indeces = sorted_costs_indeces[:n_selection] # first n_selection indeces
-
-    opt_q_design_selections = opt_q_design[:, selection_indeces]
-    opt_costs_sorted = [opt_costs[i] for i in selection_indeces] 
 
     man_measure_original = compute_man_measure(opt_costs, n_int_prb)
 
@@ -205,17 +215,29 @@ def scatter3Dcodesign(perc: float, opt_costs: list, opt_q_design: np.ndarray, n_
 
 class Clusterer():
 
-  def __init__(self, X, n_clusters = 5):
+  def __init__(self, X, opt_costs,
+              n_int,
+              n_clusters=5, mark_dim=30,
+              algo_name= "minikmeans"):
 
     self.base_options = {
     "n_neighbors": 3,
     "n_clusters": n_clusters,
-    "min_samples": 20,
+    "min_samples": 32,
     "metric": "euclidean", 
     "max_neigh_sample_dist": 0.01,
+    "distance_threshold_ward": 0.4,
     }
 
     self.X = X
+    self.opt_costs = opt_costs
+    self.n_int = n_int
+    self.man_measure = compute_man_measure(self.opt_costs, self.n_int)
+
+    self.vmin_colorbar = min(self.man_measure)
+    self.vmax_colorbar = max(self.man_measure)
+
+    self.mark_dim = mark_dim
 
     self.connectivity = kneighbors_graph(
         self.X, n_neighbors=self.base_options["n_neighbors"], include_self=False
@@ -231,10 +253,17 @@ class Clusterer():
 
     self.algo_dict["bi_kmeans"] = cluster.BisectingKMeans(n_clusters=self.base_options["n_clusters"])
 
-    self.algo_dict["agg_cl_ward"] = cluster.AgglomerativeClustering(n_clusters=self.base_options["n_clusters"],
-                                                  linkage="ward",
-                                                  connectivity=None, 
-                                                  distance_threshold = 0.4)
+    if self.base_options["n_clusters"] is None:
+
+      self.algo_dict["agg_cl_ward"] = cluster.AgglomerativeClustering(n_clusters=self.base_options["n_clusters"],
+                                                    linkage="ward",
+                                                    connectivity=None, 
+                                                    distance_threshold = self.base_options["distance_threshold_ward"])
+    else:
+
+      self.algo_dict["agg_cl_ward"] = cluster.AgglomerativeClustering(n_clusters=self.base_options["n_clusters"],
+                                                    linkage="ward",
+                                                    connectivity=None)
 
     # self.algo_dict["birk"] = cluster.Birch(n_clusters=self.base_options["n_clusters"])
 
@@ -247,7 +276,53 @@ class Clusterer():
                                               metric = self.base_options["metric"], 
                                               )
 
-  def compute_clust(self, method_name = "kmeans"):
+  def get_clust_ids(self):
+
+    return self.clust_ids
+  
+  def get_cl_size_vect(self):
+
+    return self.cl_size_vect
+ 
+  def get_cluster_selector(self, cl_index: int):
+
+    cluster_selector = np.where(self.data_clust_array == cl_index)[0]
+
+    return cluster_selector
+
+  def get_clust_costs(self, cl_index: int):
+
+    cluster_selector = self.get_cluster_selector(cl_index)
+
+    cl_costs = [self.opt_costs[i] for i in cluster_selector]
+
+    return cl_costs
+
+  def get_cluster_data(self, cl_index: int):
+
+    cluster_selector = self.get_cluster_selector(cl_index)
+
+    X_sel = X[cluster_selector, :]
+
+    return X_sel
+
+  def get_algo_names(self):
+
+    return list(self.algo_dict.keys())
+  
+  def get_n_clust(self):
+
+    return self.n_clust
+
+  def clusterize(self, algo_name="minikmeans"):
+
+    self.data_clust_array = self.compute_clust(algo_name)
+
+    self.clust_ids,  self.cl_size_vect = self.get_cluster_sizes(self.data_clust_array)
+
+    self.n_clust = len(self.clust_ids)
+
+  def compute_clust(self, method_name="minikmeans"):
     
     algorithm = self.algo_dict[method_name]
 
@@ -296,7 +371,10 @@ class Clusterer():
 
     return y_un, np.array(cl_size_vector) 
   
-  def create_cluster_plot(self, method_name = "kmeans", show_clusters_sep = False):
+  def create_cluster_plot(self, method_name = "kmeans",
+                          show_clusters_sep = False, 
+                          show_background_pnts = True, 
+                          show_cluster_costs = False):
     
     y = self.compute_clust(method_name)
 
@@ -315,7 +393,7 @@ class Clusterer():
                   alpha = 0.8,
                   c = rgb_colors[y],
                   marker ='o', 
-                  s = 30)
+                  s = self.mark_dim)
 
     plt.title("Co-design variables scatter plot - clustering with " + method_name)
     ax.set_xlabel('mount. height', fontweight ='bold')
@@ -328,9 +406,10 @@ class Clusterer():
 
       for i in range(len(y_un)):
         
-        plt.figure()
+        fig = plt.figure()
       
         cluster_selector = np.where(y == y_un[i])[0]
+        rest_of_points_selector = np.where(y != y_un[i])[0]
 
         ax = plt.axes(projection ="3d")
         ax.set_xlim3d(np.min(self.X[:, 0]), np.max(self.X[:, 0]))
@@ -341,15 +420,50 @@ class Clusterer():
             linestyle ='-.', linewidth = 0.3,
             alpha = 0.2)
 
-        ax.scatter3D(self.X[cluster_selector, 0],\
+        if show_background_pnts:
+
+          ax.scatter3D(self.X[rest_of_points_selector, 0],\
+                        self.X[rest_of_points_selector, 1],\
+                        self.X[rest_of_points_selector, 2],\
+                        alpha = 0.05,
+                        c = ["#D3D3D3"] * len(rest_of_points_selector),
+                        marker ='o', 
+                        s = self.mark_dim)
+
+        colrs = rgb_colors[[y_un[i]] * len(cluster_selector)]
+
+        if not show_cluster_costs: 
+
+          ax.scatter3D(self.X[cluster_selector, 0],\
                       self.X[cluster_selector, 1],\
                       self.X[cluster_selector, 2],\
-                      alpha = 0.8,
-                      c = rgb_colors[[y_un[i]] * len(cluster_selector)],
+                      alpha = 1,
+                      c = colrs,
                       marker ='o', 
-                      s = 30)
+                      s = self.mark_dim)
+        
+        else:
+          
+          man_measure_clust = compute_man_measure([self.opt_costs[i] for i in cluster_selector],
+                                             self.n_int)
 
-        plt.title("Co-design variables scatter plot - clustering with " + method_name + "/" + str(y_un[i]))
+          my_cmap = plt.get_cmap('jet_r')
+
+          sctt = ax.scatter3D(self.X[cluster_selector, 0],\
+                              self.X[cluster_selector, 1],\
+                              self.X[cluster_selector, 2],\
+                              alpha = 0.8,
+                              c = man_measure_clust.flatten(),
+                              cmap = my_cmap,
+                              marker ='o', 
+                              s = 30, 
+                              vmin = self.vmin_colorbar, vmax = self.vmax_colorbar)
+
+          fig.colorbar(sctt, ax = ax, shrink = 0.5, aspect = 20, label='performance index')
+
+        plt.title("Clustering method: " + method_name + 
+        "\n Cluster index: " + str(y_un[i]) + 
+        "\n Cluster size:" + str(len(cluster_selector)))
         ax.set_xlabel('mount. height', fontweight ='bold')
         ax.set_ylabel('should. width', fontweight ='bold')
         ax.set_zlabel('mount. roll angle', fontweight ='bold')
@@ -358,8 +472,6 @@ class Clusterer():
 
     plt.show()
 
-  def get_algo_names(self):
 
-    return list(self.algo_dict.keys())
 
         

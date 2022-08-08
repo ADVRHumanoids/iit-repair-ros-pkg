@@ -17,7 +17,7 @@ from mpl_toolkits import mplot3d
 
 import numpy as np
 
-from codesign_pyutils.miscell_utils import extract_q_design, compute_man_measure, scatter3Dcodesign
+from codesign_pyutils.miscell_utils import extract_q_design, compute_man_measure, scatter3Dcodesign, select_best_sols
 
 from sklearn import cluster, datasets, mixture
 from sklearn.neighbors import kneighbors_graph
@@ -124,35 +124,27 @@ def main(args):
     #     plt.title(design_var_names[i], fontdict=None, loc='center')
     #     plt.grid()
 
-    # 1D histogram (w.r.t. perfomance index) 
-    # plt.figure()
-    # plt.hist(man_measure, bins = 200)
-    # plt.legend(loc="upper left")
-    # plt.xlabel(r"rad/s")
-    # plt.ylabel(r"N. sol")
-    # plt.title(r"Cost histogram", fontdict=None, loc='center')
-    # plt.grid()
+    #1D histogram (w.r.t. perfomance index) 
+    plt.figure()
+    plt.hist(man_measure, bins = 200)
+    plt.legend(loc="upper left")
+    plt.xlabel(r"rad/s")
+    plt.ylabel(r"N. sol")
+    plt.title(r"Cost histogram", fontdict=None, loc='center')
+    plt.grid()
 
     # 3D scatterplots
-    scatter3Dcodesign(100, opt_costs, opt_q_design, n_int)
-    # scatter3Dcodesign(80, opt_costs, opt_q_design, n_int)
-    # scatter3Dcodesign(60, opt_costs, opt_q_design, n_int)
-    # scatter3Dcodesign(40, opt_costs, opt_q_design, n_int)
-    # scatter3Dcodesign(20, opt_costs, opt_q_design, n_int)
-    # scatter3Dcodesign(10, opt_costs, opt_q_design, n_int)
-    # scatter3Dcodesign(5, opt_costs, opt_q_design, n_int)
-    # scatter3Dcodesign(1, opt_costs, opt_q_design, n_int)
+    opt_q_design_selections, opt_costs_sorted = select_best_sols(100, opt_costs, opt_q_design)
+    scatter3Dcodesign(opt_costs, opt_costs_sorted, opt_q_design_selections,  n_int)
 
-    clusterer = Clusterer(opt_q_design.T, n_clusters = None)
+    clusterer = Clusterer(opt_q_design.T, opt_costs, n_int, n_clusters = 40)
+
+    clusterer.clusterize()
 
     algo_names = clusterer.get_algo_names()
 
-    clusterer.create_cluster_plot(algo_names[4], show_clusters_sep = True)
-
-    # for i in range(len(algo_names) - 2):
-        
-    #     clusterer.create_cluster_plot(algo_names[i], show_clusters_sep = True)
-
+    clusterer.create_cluster_plot(algo_names[1], show_clusters_sep = True, 
+                                    show_cluster_costs = True)
     clusterer.show_plots()
     
 
