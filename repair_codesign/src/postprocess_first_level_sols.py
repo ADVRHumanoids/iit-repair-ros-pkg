@@ -130,7 +130,7 @@ def main(args):
     plt.legend(loc="upper left")
     plt.xlabel(r"rad/s")
     plt.ylabel(r"N. sol")
-    plt.title(r"Cost histogram", fontdict=None, loc='center')
+    plt.title(r"Performance index histogram", fontdict=None, loc='center')
     plt.grid()
 
     # 3D scatterplots
@@ -141,9 +141,13 @@ def main(args):
 
     clusterer.clusterize()
 
-    algo_names = clusterer.get_algo_names()
+    # algo_names = clusterer.get_algo_names()
 
-    clusterer.create_cluster_plot(algo_names[1], show_clusters_sep = True, 
+    # for i in range(clusterer.get_n_clust()):
+
+    #     print(clusterer.get_cluster_data(i))
+    #     print("\n\n")
+    clusterer.create_cluster_plot(show_clusters_sep = True, 
                                     show_cluster_costs = True)
     clusterer.show_plots()
     

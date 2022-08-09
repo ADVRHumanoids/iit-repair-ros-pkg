@@ -134,6 +134,10 @@ def extract_q_design(input_data: list):
         design_var_map["should_roll_l"],\
         design_var_map["wrist_off_l"]]
 
+    # design_indeces = [design_var_map["mount_h"],\
+    #     design_var_map["should_wl"],\
+    #     design_var_map["should_roll_l"]]
+
     n_samples = len(input_data)
 
     design_data = np.zeros((len(design_indeces), n_samples))
@@ -215,10 +219,10 @@ def scatter3Dcodesign(opt_costs: list,
 
 class Clusterer():
 
-  def __init__(self, X, opt_costs,
-              n_int,
+  def __init__(self, X: np.ndarray, opt_costs: list,
+              n_int: int,
               n_clusters=5, mark_dim=30,
-              algo_name= "minikmeans"):
+              algo_name="minikmeans"):
 
     self.base_options = {
     "n_neighbors": 3,
@@ -227,6 +231,8 @@ class Clusterer():
     "metric": "euclidean", 
     "max_neigh_sample_dist": 0.01,
     "distance_threshold_ward": 0.4,
+    "random_seed": 1, # crucial to make clustering deterministic
+    "n_int": 50,
     }
 
     self.X = X
@@ -247,11 +253,17 @@ class Clusterer():
 
     self.algo_dict = {}
 
-    self.algo_dict["kmeans"] = cluster.KMeans(n_clusters=self.base_options["n_clusters"])
+    self.algo_dict["kmeans"] = cluster.KMeans(n_clusters=self.base_options["n_clusters"], 
+                                              n_init=self.base_options["n_int"], 
+                                              random_state=self.base_options["random_seed"])
 
-    self.algo_dict["minikmeans"] = cluster.MiniBatchKMeans(n_clusters=self.base_options["n_clusters"])
+    self.algo_dict["minikmeans"] = cluster.MiniBatchKMeans(n_clusters=self.base_options["n_clusters"],
+                                                          n_init=self.base_options["n_int"], 
+                                                          random_state=self.base_options["random_seed"])
 
-    self.algo_dict["bi_kmeans"] = cluster.BisectingKMeans(n_clusters=self.base_options["n_clusters"])
+    self.algo_dict["bi_kmeans"] = cluster.BisectingKMeans(n_clusters=self.base_options["n_clusters"],
+                                                          n_init=self.base_options["n_int"], 
+                                                          random_state=self.base_options["random_seed"])
 
     if self.base_options["n_clusters"] is None:
 
@@ -302,7 +314,7 @@ class Clusterer():
 
     cluster_selector = self.get_cluster_selector(cl_index)
 
-    X_sel = X[cluster_selector, :]
+    X_sel = self.X[cluster_selector, :]
 
     return X_sel
 
@@ -326,9 +338,7 @@ class Clusterer():
     
     algorithm = self.algo_dict[method_name]
 
-    t0 = time.time()
-    model = algorithm.fit(self.X)
-    t1 = time.time()
+    algorithm.fit(self.X)
 
     if hasattr(algorithm, "labels_"):
 
@@ -344,8 +354,6 @@ class Clusterer():
     
     clust_indeces, cluster_size_vector = self.get_cluster_sizes(y_pred)
     print("Cluster size vector: " +  str(cluster_size_vector))
-    print("Cluster indeces" + str(clust_indeces)) 
-    print(np.sum(cluster_size_vector))
 
     return y_pred
 
@@ -371,7 +379,7 @@ class Clusterer():
 
     return y_un, np.array(cl_size_vector) 
   
-  def create_cluster_plot(self, method_name = "kmeans",
+  def create_cluster_plot(self, method_name = "minikmeans",
                           show_clusters_sep = False, 
                           show_background_pnts = True, 
                           show_cluster_costs = False):
