@@ -68,6 +68,9 @@ def solve(multistart_nodes,\
             solve_failed_array):
 
     sol_index = 0 # different index
+
+    solution_time = -1.0
+
     for node in multistart_nodes:
 
         print("\n SOLVING PROBLEM N.: ", node + 1)
@@ -397,7 +400,7 @@ if __name__ == '__main__':
                     "integrator": intgrtr, 
                     "sliding_wrist_offset": sliding_wrist_offset, 
                     "n_multistarts": n_multistarts, 
-                    "proc_sol_divs": proc_sol_divs, 
+                    # "proc_sol_divs": proc_sol_divs, 
                     "unique_id": unique_id, 
                     "rot_error_epsi": rot_error_epsi, 
                     "t_exec_task": t_exec_task, 
@@ -423,8 +426,16 @@ if __name__ == '__main__':
                                                             p, ))
         proc_list[p].start()
         
-    
-    # for p in range(len(proc_sol_divs)): # wait until all processes are finished
+    for p in range(len(proc_sol_divs)):
 
-    #     proc_list[p].join() # wait until all processes are terminated
+            while proc_list[p].is_alive():
+
+                continue
+                    
+    for p in range(len(proc_sol_divs)):
+
+        print("Joining process" + str(p))
+
+        proc_list[p].join()
+
 

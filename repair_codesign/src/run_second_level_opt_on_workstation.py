@@ -68,11 +68,18 @@ def solve(multistart_nodes,\
             solutions,\
             sol_costs, cnstr_opt,\
             solve_failed_array, 
-            q_codes_first_level):
+            q_codes_first_level, 
+            cluster_id):
 
     sol_index = 0 # different index
+
+    solution_time = -1.0
+
     for node in multistart_nodes:
-                    
+
+        print("\n SOLVING PROBLEM N.: " + str(node + 1) + ", cluster n." + str(cluster_id))
+        print("\n")
+
         solve_failed, solution_time = solve_prb_standalone(task, slvr, q_ig[node], q_dot_ig[node], 
                                                             is_second_level_opt= True, 
                                                             q_codes_first_level=q_codes_first_level)
@@ -188,7 +195,8 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
             solutions,\
             sol_costs, cnstr_opt,\
             solve_failed_array, 
-            q_codes_first_level)
+            q_codes_first_level, 
+            cluster_id)
 
     # solutions packaging for postprocessing
     
@@ -243,9 +251,8 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
 
     sol_dumper.dump() 
 
-    print("\n Solutions of process " + str(process_id) + " dumped. \n")
+    print("\n Solutions of process " + str(process_id) + " ; cluster n. " + str(cluster_id) + " dumped. \n")
                     
-    
 if __name__ == '__main__':
 
     # adding script arguments
@@ -419,7 +426,7 @@ if __name__ == '__main__':
                                                         filling_n_nodes, 
                                                         n_y_samples, y_sampl_ub, 
                                                         use_classical_man)
-
+    
     # some initializations
     q_ig = [None] * n_multistarts
     q_dot_ig = [None] * n_multistarts
@@ -443,31 +450,31 @@ if __name__ == '__main__':
 
     task_info_dumper = SolDumper()
 
-    other_stuff = {"dt": task_copies[0].dt, "filling_nodes": task_copies[0].filling_n_nodes,
+    other_stuff = {"dt": task_copies[0].dt, "filling_nodes": task_copies[0].filling_n_nodes, 
                     "task_base_nnodes": task_copies[0].task_base_n_nodes_dict,
                     "right_arm_picks": task_copies[0].rght_arm_picks, 
                     "w_man_base": weight_global_manip, 
                     "w_clman_base": weight_class_manip,
                     "w_man_actual": task_copies[0].weight_glob_man, 
-                    "w_clman_actual": task_copies[0].weight_classical_man, 
+                    "w_clman_actual": task_copies[0].weight_classical_man,
                     "nodes_list": task_copies[0].nodes_list, 
                     "tasks_list": task_copies[0].task_list,
-                    "tasks_dict": task_copies[0].task_dict, 
+                    "tasks_dict": task_copies[0].task_dict,
                     "y_sampl_ub": y_sampl_ub, "n_y_samples": n_y_samples, 
                     "ig_seed": ig_seed, 
                     "solver_type": solver_type, "slvr_opts": slvr_opt, 
                     "transcription_method": transcription_method, 
                     "integrator": intgrtr, 
-                    "sliding_wrist_offset": sliding_wrist_offset, 
-                    "n_multistarts_per_cl": n_multistarts, 
-                    "proc_sol_divs": proc_sol_divs, 
-                    "unique_id": unique_id, 
+                    "sliding_wrist_offset": sliding_wrist_offset,
+                    "n_multistarts_per_cl": n_multistarts,
+                    # "proc_sol_divs": proc_sol_divs,
+                    "unique_id": unique_id,
                     "n_clust": n_clust,
-                    "first_lev_cand_inds": real_first_level_cand_inds, 
+                    "first_lev_cand_inds": np.array(real_first_level_cand_inds), 
                     "first_lev_best_candidates": first_level_q_design_opt,
                     "first_lev_opt_costs": fist_lev_cand_opt_costs, 
                     "fist_lev_cand_man_measure": fist_lev_cand_man_measure}
-    
+
     task_info_dumper.add_storer(other_stuff, dump_basepath,\
                             "second_level_info_t" + unique_id,\
                             False)
@@ -478,11 +485,13 @@ if __name__ == '__main__':
         task_info_dumper.add_storer(other_stuff, clust_path[i],\
                             "second_level_info_t" + unique_id,\
                             False)
-        
+
     task_info_dumper.dump()
 
     proc_list = [None] * len(proc_sol_divs)
     # launch solvers and solution dumpers on separate processes
+
+
     for cl in range(n_clust): # for each cluster
 
         for p in range(len(proc_sol_divs)): # for each process
@@ -499,19 +508,14 @@ if __name__ == '__main__':
         
         for p in range(len(proc_sol_divs)):
 
-            while proc_list[i].is_alive():
+            while proc_list[p].is_alive():
 
                 continue
-            
-        print("\n Cluster finished \n")
-        
+                    
         for p in range(len(proc_sol_divs)):
+            
+            print("Joining process " + str(p))
 
             proc_list[p].join() # wait until all processes of cluster cl are terminated
 
-        print("\n Joining cluster processes \n")
-
-    # for p in range(len(proc_sol_divs)): # wait until all processes are finished
-
-    #      
 

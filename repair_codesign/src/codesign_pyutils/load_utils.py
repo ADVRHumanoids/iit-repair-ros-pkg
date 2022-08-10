@@ -7,7 +7,7 @@ class LoadSols():
     def __init__(self, base_sol_path, 
                 opt_dir_name = "opt", \
                 fail_dir_name = "failed", \
-                additional_info_pattern = "employed_task_info"):
+                additional_info_pattern = "info"):
 
         self.base_sol_path = base_sol_path
         self.opt_path = base_sol_path + "/" + opt_dir_name
