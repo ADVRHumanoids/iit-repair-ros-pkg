@@ -451,6 +451,8 @@ class TaskGen:
         self.q_dot = None # velocity state
         self.q_design = None # positional state of design variables
         self.q_design_dot = None # velocity state of design variables
+        self.q_codes_ref = None
+        self.wrist_off_ref = None
 
         self.d_var_map = get_design_map() # retrieving design map (dangerous method)
 
@@ -672,6 +674,10 @@ class TaskGen:
         self.q_design_dot = self.q_dot[self.d_var_map["mount_h"],\
                             self.d_var_map["should_wl"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
                             self.d_var_map["should_wr"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]]
+        
+        self.wrist_off_ref = self.prb.createParameter('wrist_off_ref', 1)
+
+        self.q_codes_ref = self.prb.createParameter('q_codes_ref', 4)
 
         self.prb.setDynamics(self.q_dot)
         self.prb.setDt(self.dt)  
@@ -711,7 +717,8 @@ class TaskGen:
     def setup_prb(self,\
                 epsi = epsi_default,\
                 q_ig = None, q_dot_ig = None, 
-                is_classical_man = False):
+                is_classical_man = False, 
+                is_second_lev_opt = False):
          
         ## All the constraints and costs are set here ##
 
@@ -745,11 +752,19 @@ class TaskGen:
                             self.q_design_dot,\
                             nodes = range(0, (self.total_nnodes - 1)))
 
-        if not self.is_sliding_wrist: # setting value for wrist offsets
+        if is_second_lev_opt: # second level opt --> assign codesign var to parameter
 
-            self.prb.createConstraint("wrist_offset_value",\
-                    self.q[self.d_var_map["wrist_off_l"]] - self.sliding_wrist_offset,\
-                    nodes = range(0, (self.total_nnodes - 1)))
+            self.prb.createConstraint("codesign_values",\
+                    self.q_design[0:4] - self.q_codes_ref,\
+                    nodes = 0) # is sufficient to put it on the first node and only on one arm
+
+        else:
+
+            if not self.is_sliding_wrist: # setting value for wrist offsets
+
+                self.prb.createConstraint("wrist_offset_value",\
+                        self.q[self.d_var_map["wrist_off_l"]] - self.wrist_off_ref,\
+                        nodes = 0) # is sufficient to put it on the first node and only on one arm 
               
 
         # TCPs inside working volume (assumed to be a box)

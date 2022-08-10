@@ -34,7 +34,7 @@ class LoadSols():
 
         if len(add_info_filename_aux) > 1:
 
-            raise Exception("LoadSols: too many solution information provided.\n" + 
+            raise Exception("LoadSols: too many solution information files provided.\n" + 
                             "Please make sure the loading directory only contains coherent data.")
 
         self.add_info_path = self.base_sol_path + "/" + add_info_filename_aux[0]

@@ -15,15 +15,30 @@ from codesign_pyutils.miscell_utils import wait_for_confirmation
 
 import argparse
 
-def solve_prb_standalone(task,\
+def solve_prb_standalone(task: TaskGen,\
                         slvr: Solver,\
                         q_init=None, q_dot_init=None,\
                         prbl_name = "Problem",
-                        on_failure = "\n Failed to solve problem!! \n'"):
+                        on_failure = "\n Failed to solve problem!! \n'", 
+                        is_second_level_opt = False, 
+                        q_codes_first_level = None):
 
     # standard routine for solving the problem
         
     task.set_ig(q_init, q_dot_init)
+
+    if not is_second_level_opt:  # first level optimization 
+
+        task.wrist_off_ref.assign(task.sliding_wrist_offset) # has no effect if the task was build with is_sliding_wrist set to False
+    
+    else: # second level optimization
+        
+        if q_codes_first_level is None:
+
+            raise Exception("solve_prb_standalone: if running the second level optimization you must provide \
+                            an initialization for the codesign vars.")
+
+        task.q_codes_ref.assign(q_codes_first_level) # assign design variables from first level optimization
 
     t = time.time()
 
@@ -221,52 +236,52 @@ def generate_ig(arguments: argparse.Namespace,\
     q_ig = [None] * n_sol_tries
     q_dot_ig = [None] * n_sol_tries
 
-    solution_index_name = "solution_index"
+    # solution_index_name = "solution_index"
 
     np.random.seed(seed)
     
     for i in range(n_sol_tries):
 
-        if arguments.load_initial_guess:
+        # if arguments.load_initial_guess:
             
-            # check compatibility between load paths and number of solution attempts
-            if len(abs_paths) != n_sol_tries:
+        #     # check compatibility between load paths and number of solution attempts
+        #     if len(abs_paths) != n_sol_tries:
 
-                raise Exception("Solution load mismatch: You set " + str(n_sol_tries) + \
-                                " solution attempts, but provided " +\
-                                str(len(abs_paths)) + " solutions to load." )
+        #         raise Exception("Solution load mismatch: You set " + str(n_sol_tries) + \
+        #                         " solution attempts, but provided " +\
+        #                         str(len(abs_paths)) + " solutions to load." )
                             
-            try:
+        #     try:
             
-                ms_ig_load = mat_storer.matStorer(abs_paths[i])
+        #         ms_ig_load = mat_storer.matStorer(abs_paths[i])
                 
-                ig_sol = ms_ig_load.load()
+        #         ig_sol = ms_ig_load.load()
 
-                solution_index = ig_sol[solution_index_name][0][0]
+        #         solution_index = ig_sol[solution_index_name][0][0]
 
-                q_ig[solution_index] = ig_sol["q"]
-                q_dot_ig[solution_index] = ig_sol["q_dot"]
+        #         q_ig[solution_index] = ig_sol["q"]
+        #         q_dot_ig[solution_index] = ig_sol["q_dot"]
 
-                if (np.shape(q_ig[solution_index])[1] != task.total_nnodes) or \
-                (np.shape(q_ig[solution_index])[0] != task.nq):
+        #         if (np.shape(q_ig[solution_index])[1] != task.total_nnodes) or \
+        #         (np.shape(q_ig[solution_index])[0] != task.nq):
 
-                    raise Exception("\nThe loaded initial guess has shape: [" + \
-                                    str(np.shape(q_ig[i])[0]) +  ", " + str(np.shape(q_ig[i])[1]) +  "]" + \
-                                    " while the problem has shape: [" + \
-                                    str(task.nq) +  ", " + str(task.total_nnodes) + \
-                                    "].\n")
+        #             raise Exception("\nThe loaded initial guess has shape: [" + \
+        #                             str(np.shape(q_ig[i])[0]) +  ", " + str(np.shape(q_ig[i])[1]) +  "]" + \
+        #                             " while the problem has shape: [" + \
+        #                             str(task.nq) +  ", " + str(task.total_nnodes) + \
+        #                             "].\n")
 
-            except:
+        #     except:
                 
-                raise Exception("Failed to load initial guess from file! I will use random intialization.")
+        #         raise Exception("Failed to load initial guess from file! I will use random intialization.")
 
-        else:
+        # else:
             
             
-            q_ig[i] = np.tile(np.random.uniform(task.lbs, task.ubs,\
-                                        (1, task.nq)).T, (1, task.total_nnodes))
+        q_ig[i] = np.tile(np.random.uniform(task.lbs, task.ubs,\
+                                    (1, task.nq)).T, (1, task.total_nnodes))
 
-            q_dot_ig[i] = np.zeros((task.nv, task.total_nnodes - 1))
+        q_dot_ig[i] = np.zeros((task.nv, task.total_nnodes - 1))
 
             
         if verbose:

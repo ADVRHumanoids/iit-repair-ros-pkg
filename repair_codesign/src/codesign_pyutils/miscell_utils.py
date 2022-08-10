@@ -308,7 +308,7 @@ class Clusterer():
 
     cl_costs = [self.opt_costs[i] for i in cluster_selector]
 
-    return cl_costs
+    return np.array(cl_costs)
 
   def get_cluster_data(self, cl_index: int):
 
@@ -317,6 +317,33 @@ class Clusterer():
     X_sel = self.X[cluster_selector, :]
 
     return X_sel
+
+  def compute_first_level_candidates(self):
+
+    opt_index_abs = [-1] * self.n_clust
+
+    for i in range(self.n_clust):
+
+      cl_costs_i = self.get_clust_costs(i)
+      cl_selector_i = self.get_cluster_selector(i)
+      self.man_measure
+
+      opt_index = np.argwhere(cl_costs_i == np.min(cl_costs_i))[0][0]
+      opt_index_abs[i] = cl_selector_i[opt_index]
+
+    return opt_index_abs
+
+  def get_fist_lev_candidate_man_measure(self):
+
+    opt_index_abs = self.compute_first_level_candidates()
+
+    return self.man_measure[opt_index_abs]
+
+  def get_fist_lev_candidate_opt_cost(self):
+
+    opt_index_abs = self.compute_first_level_candidates()
+
+    return np.array(self.opt_costs)[opt_index_abs]
 
   def get_algo_names(self):
 
@@ -333,6 +360,8 @@ class Clusterer():
     self.clust_ids,  self.cl_size_vect = self.get_cluster_sizes(self.data_clust_array)
 
     self.n_clust = len(self.clust_ids)
+
+    self.compute_first_level_candidates()
 
   def compute_clust(self, method_name="minikmeans"):
     
@@ -384,9 +413,7 @@ class Clusterer():
                           show_background_pnts = True, 
                           show_cluster_costs = False):
     
-    y = self.compute_clust(method_name)
-
-    rgb_colors = self.get_rbg(y)
+    rgb_colors = self.get_rbg(self.data_clust_array)
 
     plt.figure()
 
@@ -399,7 +426,7 @@ class Clusterer():
                   self.X[:, 1],\
                   self.X[:, 2],\
                   alpha = 0.8,
-                  c = rgb_colors[y],
+                  c = rgb_colors[self.data_clust_array],
                   marker ='o', 
                   s = self.mark_dim)
 
@@ -410,14 +437,14 @@ class Clusterer():
     
     if show_clusters_sep:
 
-      y_un = np.unique(y)
+      y_un = np.unique(self.data_clust_array)
 
       for i in range(len(y_un)):
         
         fig = plt.figure()
       
-        cluster_selector = np.where(y == y_un[i])[0]
-        rest_of_points_selector = np.where(y != y_un[i])[0]
+        cluster_selector = np.where(self.data_clust_array == y_un[i])[0]
+        rest_of_points_selector = np.where(self.data_clust_array != y_un[i])[0]
 
         ax = plt.axes(projection ="3d")
         ax.set_xlim3d(np.min(self.X[:, 0]), np.max(self.X[:, 0]))

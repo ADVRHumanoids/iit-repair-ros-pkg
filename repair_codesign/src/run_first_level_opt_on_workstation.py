@@ -204,16 +204,27 @@ def sol_main(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path, op
                         **(cnstr_opt[sol_index]),
                         **{"q_ig": q_ig[sol_index], "q_dot_ig": q_dot_ig[sol_index]}, \
                         **{"solution_index": node}, 
-                        "solution_time": solution_time}
+                        "solution_time": solution_time, 
+                        "solve_failed": solve_failed_array[sol_index]}
 
         if not solve_failed_array[sol_index]:
 
             sol_dumper.add_storer(full_solution, opt_path,\
-                            solution_base_name + "_p" + str(process_id) + "_n" + str(node) + "_t" + id_unique, False)
+                            solution_base_name +\
+                            "_p" +\
+                            str(process_id) + \
+                            "_n" + str(node) +\
+                            "_t" + \
+                            id_unique, False)
         else:
 
             sol_dumper.add_storer(full_solution, fail_path,\
-                            solution_base_name + "_p" + str(process_id) + "_n" + str(node) + "_t" + id_unique, False)
+                            solution_base_name +\
+                            "_p" +\
+                            str(process_id) + \
+                            "_n" + str(node) +\
+                            "_t" + \
+                            id_unique, False)
 
         sol_index = sol_index + 1
 
@@ -226,10 +237,10 @@ if __name__ == '__main__':
 
     # adding script arguments
     parser = argparse.ArgumentParser(
-        description='just a simple test file for RePAIR co-design')
+        description='First level optimization script for the co-design of RePAIR project')
 
-    parser.add_argument('--load_initial_guess', '-lig', type=str2bool,\
-                        help = 'whether to load ig from files', default = False)
+    # parser.add_argument('--load_initial_guess', '-lig', type=str2bool,\
+    #                     help = 'whether to load ig from files', default = False)
     parser.add_argument('--weight_global_manip', '-wman', type = np.double,\
                         help = 'weight for global manipulability cost function', default = 0.01)
     parser.add_argument('--weight_class_manip', '-wclass', type = np.double,\
@@ -237,11 +248,13 @@ if __name__ == '__main__':
     parser.add_argument('--use_classical_man', '-ucm', type=str2bool,\
                         help = 'whether to use the classical manipulability index', default = False)
     parser.add_argument('--n_multistarts', '-msn', type=int,\
-                        help = 'number of multistarts to use', default = 4)
+                        help = 'number of multistarts to use', default = 200)
     parser.add_argument('--ig_seed', '-igs', type=int,\
                         help = 'seed for random initialization generation', default = 1)                      
     parser.add_argument('--use_ma57', '-ma57', type=str2bool,\
                         help = 'whether to use ma57 linear solver or not', default = False)
+    parser.add_argument('--sliding_wrist_offset', '-wo', type = np.double,\
+                        help = 'sliding_wrist_offset', default = 0.0)
 
     args = parser.parse_args()
     
@@ -266,7 +279,7 @@ if __name__ == '__main__':
     opt_results_path = results_path + "/opt" 
     failed_results_path = results_path + "/failed"
 
-    solution_base_name = "repair_codesign_opt"
+    solution_base_name = "repair_codesign_opt_l1"
 
     sliding_wrist_command = "is_sliding_wrist:=" + "true"
     show_softhand_command = "show_softhand:=" + "true"
@@ -307,7 +320,7 @@ if __name__ == '__main__':
             "ipopt.max_iter": 1000,
             "ipopt.constr_viol_tol": 0.000001,
             "ilqr.verbose": True, 
-            "ipopt.linear_solver": "ma27"}
+            "ipopt.linear_solver": "ma57"}
 
     else:
 
@@ -315,7 +328,8 @@ if __name__ == '__main__':
             "ipopt.tol": 0.0000001, 
             "ipopt.max_iter": 1000,
             "ipopt.constr_viol_tol": 0.000001,
-            "ilqr.verbose": True}
+            "ilqr.verbose": True, 
+            "ipopt.linear_solver": "mumps"}
 
 
     full_file_paths = None # not used
@@ -331,7 +345,7 @@ if __name__ == '__main__':
     intgrtr = 'RK4'
     transcription_opts = dict(integrator = intgrtr)
 
-    sliding_wrist_offset = 0.0
+    sliding_wrist_offset = args.sliding_wrist_offset
 
     proc_sol_divs = compute_solution_divs(n_multistarts, processes_n)
 
@@ -368,9 +382,11 @@ if __name__ == '__main__':
     other_stuff = {"dt": task_copies[0].dt, "filling_nodes": task_copies[0].filling_n_nodes,
                     "task_base_nnodes": task_copies[0].task_base_n_nodes_dict,
                     "right_arm_picks": task_copies[0].rght_arm_picks, 
+                    "use_classical_man": args.use_classical_man,
                     "w_man_base": args.weight_global_manip, 
-                    "w_clman_base": args.weight_global_manip,
-                    "wman_actual": args.weight_class_manip, 
+                    "w_clman_base": args.weight_class_manip,
+                    "w_man_actual": task_copies[0].weight_glob_man, 
+                    "w_clman_actual": task_copies[0].weight_classical_man, 
                     "nodes_list": task_copies[0].nodes_list, 
                     "tasks_list": task_copies[0].task_list,
                     "tasks_dict": task_copies[0].task_dict, 
@@ -382,7 +398,11 @@ if __name__ == '__main__':
                     "sliding_wrist_offset": sliding_wrist_offset, 
                     "n_multistarts": n_multistarts, 
                     "proc_sol_divs": proc_sol_divs, 
-                    "unique_id": unique_id}
+                    "unique_id": unique_id, 
+                    "rot_error_epsi": rot_error_epsi, 
+                    "t_exec_task": t_exec_task, 
+                    "sliding_wrist_offset": sliding_wrist_offset
+                    }
     
     task_info_dumper.add_storer(other_stuff, results_path,\
                             "employed_task_info_t" + unique_id,\
