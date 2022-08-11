@@ -182,12 +182,11 @@ def compute_solution_divs(n_multistrt: int, n_prcss: int):
 
     n_remaining_sols = n_sol_tries - n_divs * n_p
 
-    opt_divs = [[]] * n_p
-
+    opt_divs = []
 
     for i in range(n_p):
 
-        opt_divs[i] = list(range(n_divs * i, n_divs * i + n_divs)) 
+        opt_divs.append(list(range(n_divs * i, n_divs * i + n_divs)))
 
     if n_remaining_sols != 0:
         
