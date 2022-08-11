@@ -328,9 +328,6 @@ if __name__ == '__main__':
 
     task_copies = [None] * len(proc_sol_divs)
     slvr_copies = [None] * len(proc_sol_divs)
-    print(len(proc_sol_divs))
-    print(proc_sol_divs)
-    exit()
 
     for p in range(len(proc_sol_divs)):
         
