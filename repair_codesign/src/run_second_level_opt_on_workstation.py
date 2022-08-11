@@ -455,7 +455,6 @@ if __name__ == '__main__':
                                     n_multistarts, ig_seed,\
                                     False)
     
-
     real_first_level_cand_inds = [-1] * n_clust
     first_level_q_design_opt = np.zeros((len(opt_q_design[:, 0]), n_clust))
 
@@ -509,7 +508,8 @@ if __name__ == '__main__':
     proc_list = [None] * len(proc_sol_divs)
     # launch solvers and solution dumpers on separate processes
 
-
+    print(proc_sol_divs)
+    exit()
     for cl in range(n_clust): # for each cluster
 
         for p in range(len(proc_sol_divs)): # for each process
