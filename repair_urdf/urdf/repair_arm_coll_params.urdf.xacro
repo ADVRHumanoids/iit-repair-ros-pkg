@@ -6,13 +6,13 @@
 <xacro:property name="yaml_file" value="$(find repair_urdf)/config/arm_coll.yaml" />
 <xacro:property name="coll_props" value="${xacro.load_yaml(yaml_file)}"/>
 
-<xacro:property name="coll_radii_link1" value="${coll_props['link1_coll']['coll_radii']}" />
-<xacro:property name="coll_radii_link2" value="${coll_props['link2_coll']['coll_radii']}" />
-<xacro:property name="coll_radii_link3" value="${coll_props['link3_coll']['coll_radii']}" />
-<xacro:property name="coll_radii_link4" value="${coll_props['link4_coll']['coll_radii']}" />
-<xacro:property name="coll_radii_link5" value="${coll_props['link5_coll']['coll_radii']}" />
-<xacro:property name="coll_radii_link6" value="${coll_props['link6_coll']['coll_radii']}" />
-<xacro:property name="coll_radii_link7" value="${coll_props['link7_coll']['coll_radii']}" />
+<xacro:property name="coll_radius_link1" value="${coll_props['link1_coll']['coll_radius']}" />
+<xacro:property name="coll_radius_link2" value="${coll_props['link2_coll']['coll_radius']}" />
+<xacro:property name="coll_radius_link3" value="${coll_props['link3_coll']['coll_radius']}" />
+<xacro:property name="coll_radius_link4" value="${coll_props['link4_coll']['coll_radius']}" />
+<xacro:property name="coll_radius_link5" value="${coll_props['link5_coll']['coll_radius']}" />
+<xacro:property name="coll_radius_link6" value="${coll_props['link6_coll']['coll_radius']}" />
+<xacro:property name="coll_radius_link7" value="${coll_props['link7_coll']['coll_radius']}" />
 
 <xacro:property name="link1_coll_offset_x" value="0.0" />
 <xacro:property name="link1_coll_offset_y" value="0.0" />

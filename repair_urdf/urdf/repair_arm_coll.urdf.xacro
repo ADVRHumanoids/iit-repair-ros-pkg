@@ -18,7 +18,7 @@
             <origin xyz="0 0 0" rpy="0 0 0"/>
 
             <geometry>
-                <sphere radius="${coll_radii_link1}"/>
+                <sphere radius="${coll_radius_link1}"/>
             </geometry>
 
             <material name="darkred"/>
@@ -44,7 +44,7 @@
             <origin xyz="0 0 0" rpy="0 0 0"/>
 
             <geometry>
-                <sphere radius="${coll_radii_link2}"/>
+                <sphere radius="${coll_radius_link2}"/>
             </geometry>
 
             <material name="darkred"/>
@@ -70,7 +70,7 @@
             <origin xyz="0 0 0" rpy="0 0 0"/>
 
             <geometry>
-                <sphere radius="${coll_radii_link3}"/>
+                <sphere radius="${coll_radius_link3}"/>
             </geometry>
 
             <material name="darkred"/>
@@ -96,7 +96,7 @@
             <origin xyz="0 0 0" rpy="0 0 0"/>
 
             <geometry>
-                <sphere radius="${coll_radii_link4}"/>
+                <sphere radius="${coll_radius_link4}"/>
             </geometry>
 
             <material name="darkred"/>
@@ -120,7 +120,7 @@
     <visual name="arm_${id}_link5_coll_visual">
 
             <geometry>
-                <sphere radius="${coll_radii_link5}"/>
+                <sphere radius="${coll_radius_link5}"/>
             </geometry>
 
             <material name="darkred"/>
@@ -144,7 +144,7 @@
     <visual name="arm_${id}_link6_coll_visual">
 
             <geometry>
-                <sphere radius="${coll_radii_link6}"/>
+                <sphere radius="${coll_radius_link6}"/>
             </geometry>
 
             <material name="darkred"/>
@@ -169,7 +169,7 @@
         <visual name="arm_${id}_link7_coll_visual">
 
                 <geometry>
-                    <sphere radius="${coll_radii_link7}"/>
+                    <sphere radius="${coll_radius_link7}"/>
                 </geometry>
 
                 <material name="darkred"/>

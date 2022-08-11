@@ -151,7 +151,7 @@ class SimpleCollHandler:
                 kindyn,
                 q_p, 
                 prb,
-                collision_radii = None,
+                yaml_path,
                 nodes = None,
                 tcp_contact_nodes = None, 
                 link_names = [["arm_1_link1_coll", "arm_1_link2_coll", "arm_1_link3_coll",\
@@ -174,9 +174,9 @@ class SimpleCollHandler:
 
         self.prb = prb
 
-        self.collision_radii = collision_radii
-        # self.yaml_path = yaml_path
-        # self.parse_collision_yaml()
+        self.collision_radii = None
+        self.yaml_path = yaml_path
+        self.collision_radii = self.parse_collision_yaml(self.yaml_path)
 
         self.nodes = nodes
         self.tcp_contact_nodes = []
@@ -277,18 +277,25 @@ class SimpleCollHandler:
                             link_names[i][j], self.nodes)
 
 
-    def parse_collision_yaml(self):
+    def parse_collision_yaml(self, yaml_path):
         
-        # TB implemented !!!!
+        with open(yaml_path, 'r') as stream:
+            coll_yaml = yaml.safe_load(stream)
 
-        # with open(self.yaml_path, 'r') as stream:
-        #     coll_yaml = yaml.safe_load(stream)
+        link_basename = "link"
 
-        # coll_radii = [[] * 2]
-        # for i in range(len(link_names[0]))
-        # save_fig_path = coll_yaml["robot_state_log_plotter"]["save_fig_path"]
-    
-        self.yaml_path
+        coll_radii = []
+        yaml_keys = list(coll_yaml.keys())
+
+        for i in range(len(yaml_keys)):
+            
+            if link_basename in yaml_keys[i]:
+
+                coll_radii.append(coll_yaml[yaml_keys[i]]["coll_radius"])
+
+        coll_radii_tot = [coll_radii, coll_radii]
+
+        return coll_radii_tot
         
     def remove_tcp_coll_nodes(self):
 

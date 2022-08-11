@@ -54,7 +54,8 @@ def solve(multistart_nodes,\
     return solution_time
 
 def gen_task_copies(filling_n_nodes, sliding_wrist_offset, 
-                    n_y_samples, y_sampl_ub):
+                    n_y_samples, y_sampl_ub, 
+                    coll_yaml_path = ""):
 
     
     y_sampling = gen_y_sampling(n_y_samples, y_sampl_ub)
@@ -72,7 +73,8 @@ def gen_task_copies(filling_n_nodes, sliding_wrist_offset,
 
     # initialize problem task
     task = TaskGen(filling_n_nodes = filling_n_nodes, \
-                                    sliding_wrist_offset = sliding_wrist_offset)
+                                    sliding_wrist_offset = sliding_wrist_offset,\
+                                    coll_yaml_path = coll_yaml_path)
 
     task.add_tasks(y_sampling, right_arm_picks)
 
@@ -246,6 +248,9 @@ if __name__ == '__main__':
     opt_results_path = results_path + "/opt" 
     failed_results_path = results_path + "/failed"
 
+    coll_yaml_name = "arm_coll.yaml"
+    coll_yaml_path = rospackage.get_path("repair_urdf") + "/config/" + coll_yaml_name
+    
     solution_base_name = "repair_codesign_opt_l1"
 
     sliding_wrist_command = "is_sliding_wrist:=" + "true"
@@ -332,7 +337,8 @@ if __name__ == '__main__':
     for p in range(len(proc_sol_divs)):
         
         task_copies[p], slvr_copies[p] = gen_task_copies(filling_n_nodes, sliding_wrist_offset, 
-                    n_y_samples, y_sampl_ub)
+                    n_y_samples, y_sampl_ub, 
+                    coll_yaml_path)
 
     # some initializations
     q_ig = [None] * n_multistarts

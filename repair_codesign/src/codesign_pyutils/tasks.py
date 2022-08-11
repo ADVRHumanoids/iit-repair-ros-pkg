@@ -427,8 +427,11 @@ class TaskGen:
 
     def __init__(self, filling_n_nodes = 0, \
                 is_sliding_wrist = False,\
-                sliding_wrist_offset = 0.0):
+                sliding_wrist_offset = 0.0, \
+                coll_yaml_path = ""):
         
+        self.coll_yaml_path = coll_yaml_path
+
         self.is_sliding_wrist = is_sliding_wrist # whether to add a fictitious d.o.f. on the wrist or not
         self.sliding_wrist_offset =  sliding_wrist_offset # mounting offset for wrist auxiliary joint
 
@@ -786,10 +789,7 @@ class TaskGen:
 
         # Simple p2p collision avoidance cnstraints 
         self.coll_handler = SimpleCollHandler(self.kindyn, self.q, self.prb, \
-                                            collision_radii = [[0.07, 0.053, 0.08, 0.08, 0.08, 0.07, 0.05], \
-                                                               [0.07, 0.053, 0.08, 0.08, 0.08, 0.07, 0.05]], 
-                                            # collision_radii = [[0.08, 0.07], \
-                                            #                    [0.08, 0.07]], 
+                                            self.coll_yaml_path,\
                                             tcp_contact_nodes = self.tcp_contact_nodes)
     
     def add_tasks(self, y_sampling, right_arm_picks):
