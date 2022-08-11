@@ -184,9 +184,17 @@ def compute_solution_divs(n_multistrt: int, n_prcss: int):
 
     opt_divs = []
 
-    for i in range(n_p):
+    if n_multistrt <= n_prcss: #assign a multistart to each process
+
+      for i in range(n_multistrt):
 
         opt_divs.append(list(range(n_divs * i, n_divs * i + n_divs)))
+        
+    else: # distribute them appropiately
+
+      for i in range(n_p):
+
+          opt_divs.append(list(range(n_divs * i, n_divs * i + n_divs)))
 
     if n_remaining_sols != 0:
         
