@@ -69,7 +69,7 @@ def gen_task_copies(filling_n_nodes, sliding_wrist_offset,
         
         else:
 
-            right_arm_picks[i] = True
+            right_arm_picks[i] = False
 
     # initialize problem task
     task = TaskGen(filling_n_nodes = filling_n_nodes, \
