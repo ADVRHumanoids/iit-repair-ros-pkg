@@ -406,6 +406,10 @@ if __name__ == '__main__':
 
     proc_sol_divs = compute_solution_divs(n_multistarts, processes_n)
 
+    print(proc_sol_divs)
+
+    exit()
+
     if  (not os.path.isdir(dump_basepath)):
 
         os.makedirs(dump_basepath)
