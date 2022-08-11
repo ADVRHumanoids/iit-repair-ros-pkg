@@ -207,12 +207,12 @@ class DoubleArmCartTask:
         # THIS DEFINITIONS CAN CHANGE IF THE URDF CHANGES --> MIND THE URDF!!!
     
         self.q_design = self.q[self.d_var_map["mount_h"],\
-                            self.d_var_map["should_wl"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
-                            self.d_var_map["should_wr"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]] # design vector
+                            self.d_var_map["should_w_l"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
+                            self.d_var_map["should_w_r"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]] # design vector
 
         self.q_design_dot = self.q_dot[self.d_var_map["mount_h"],\
-                            self.d_var_map["should_wl"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
-                            self.d_var_map["should_wr"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]]
+                            self.d_var_map["should_w_l"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
+                            self.d_var_map["should_w_r"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]]
 
         self.p_ref_left_init = self.prb.createParameter('p_ref_left_init', 3)
         self.p_ref_right_init  = self.prb.createParameter('p_ref_right_init ', 3)
@@ -289,8 +289,8 @@ class DoubleArmCartTask:
                                 self.q[self.d_var_map["should_roll_r"]])
 
         self.prb.createConstraint("same_shoulder_w",\
-                                self.q[self.d_var_map["should_wl"]] - \
-                                self.q[self.d_var_map["should_wr"]])
+                                self.q[self.d_var_map["should_w_l"]] - \
+                                self.q[self.d_var_map["should_w_r"]])
 
         self.prb.createConstraint("same_wrist_offset",\
                                 self.q[self.d_var_map["wrist_off_l"]] - \
@@ -668,12 +668,12 @@ class TaskGen:
         # THIS DEFINITIONS CAN CHANGE IF THE URDF CHANGES --> MIND THE URDF!!!
     
         self.q_design = self.q[self.d_var_map["mount_h"],\
-                            self.d_var_map["should_wl"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
-                            self.d_var_map["should_wr"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]] # design vector
+                            self.d_var_map["should_w_l"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
+                            self.d_var_map["should_w_r"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]] # design vector
 
         self.q_design_dot = self.q_dot[self.d_var_map["mount_h"],\
-                            self.d_var_map["should_wl"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
-                            self.d_var_map["should_wr"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]]
+                            self.d_var_map["should_w_l"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
+                            self.d_var_map["should_w_r"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]]
         
         self.wrist_off_ref = self.prb.createParameter('wrist_off_ref', 1)
 
@@ -740,8 +740,8 @@ class TaskGen:
                                 self.q[self.d_var_map["should_roll_r"]])
 
         self.prb.createConstraint("same_shoulder_w",\
-                                self.q[self.d_var_map["should_wl"]] - \
-                                self.q[self.d_var_map["should_wr"]])
+                                self.q[self.d_var_map["should_w_l"]] - \
+                                self.q[self.d_var_map["should_w_r"]])
 
         self.prb.createConstraint("same_wrist_offset",\
                                 self.q[self.d_var_map["wrist_off_l"]] - \

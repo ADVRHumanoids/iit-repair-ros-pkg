@@ -130,12 +130,12 @@ def extract_q_design(input_data: list):
     design_var_map = get_design_map()
 
     design_indeces = [design_var_map["mount_h"],\
-        design_var_map["should_wl"],\
+        design_var_map["should_w_l"],\
         design_var_map["should_roll_l"],\
         design_var_map["wrist_off_l"]]
 
     # design_indeces = [design_var_map["mount_h"],\
-    #     design_var_map["should_wl"],\
+    #     design_var_map["should_w_l"],\
     #     design_var_map["should_roll_l"]]
 
     n_samples = len(input_data)

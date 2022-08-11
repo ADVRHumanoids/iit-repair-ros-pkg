@@ -189,6 +189,24 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
     solutions = [None] * n_multistarts_main
     cnstr_opt = [None] * n_multistarts_main
 
+    # adding q_codes to the initial guess
+    design_var_map = get_design_map()
+
+    design_indeces = [design_var_map["mount_h"],\
+        design_var_map["should_w_l"],\
+        design_var_map["should_roll_l"],\
+        design_var_map["wrist_off_l"],\
+        design_var_map["should_w_r"],\
+        design_var_map["should_roll_r"],\
+        design_var_map["wrist_off_r"]]
+
+    q_codes_first_level_extended = np.concatenate((q_codes_first_level, q_codes_first_level[1:]), axis=0)
+
+    # print(np.tile(q_codes_first_level_extended, len(q_ig[0][0, :])))
+    for i in range(len(q_ig)):
+
+        q_ig[i][design_indeces, :] = np.transpose(np.tile(q_codes_first_level_extended, (len(q_ig[0][0, :]), 1)))
+
     solution_time = solve(multistart_nodes,\
             task, slvr,\
             q_ig, q_dot_ig,\

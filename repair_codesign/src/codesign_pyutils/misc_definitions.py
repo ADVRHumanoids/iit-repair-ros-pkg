@@ -10,11 +10,11 @@ def get_design_map():
     arm_dofs = 7
     d_var_map = {}
     d_var_map["mount_h"] = 1
-    d_var_map["should_wl"] = 2
+    d_var_map["should_w_l"] = 2
     d_var_map["should_roll_l"] = 3
     d_var_map["wrist_off_l"] = 3 + arm_dofs
-    d_var_map["should_wr"] = \
-        d_var_map["should_wl"] + (arm_dofs + 3)
+    d_var_map["should_w_r"] = \
+        d_var_map["should_w_l"] + (arm_dofs + 3)
     d_var_map["should_roll_r"] = \
         d_var_map["should_roll_l"] + (arm_dofs + 3)
     d_var_map["wrist_off_r"] = \
