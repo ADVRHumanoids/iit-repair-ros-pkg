@@ -353,8 +353,12 @@ if __name__ == '__main__':
 
     sliding_wrist_offset = sol_loader.task_info_data["sliding_wrist_offset"][0][0]
 
-    proc_sol_divs = compute_solution_divs(n_multistarts, processes_n)
+    processes_n = compute_solution_divs(n_multistarts, processes_n)
 
+    print("Distribution of multistarts between processes: \n")
+    print(processes_n)
+    print("\n")
+    
     if  (not os.path.isdir(dump_basepath)):
 
         os.makedirs(dump_basepath)
@@ -457,8 +461,6 @@ if __name__ == '__main__':
     proc_list = [None] * len(proc_sol_divs)
     # launch solvers and solution dumpers on separate processes
 
-    print(proc_sol_divs)
-    exit()
     for cl in range(n_clust): # for each cluster
 
         for p in range(len(proc_sol_divs)): # for each process
