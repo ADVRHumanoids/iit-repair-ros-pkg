@@ -59,29 +59,22 @@ def gen_task_copies(filling_n_nodes, sliding_wrist_offset,
     
     y_sampling = gen_y_sampling(n_y_samples, y_sampl_ub)
 
+    right_arm_picks = np.array([True] * len(y_sampling))
+    for i in range(len(y_sampling)):
+        
+        if y_sampling[i] <= 0 : # on the right
+            
+            right_arm_picks[i] = True
+        
+        else:
+
+            right_arm_picks[i] = False
+
     # initialize problem task
     task = TaskGen(filling_n_nodes = filling_n_nodes, \
                                     sliding_wrist_offset = sliding_wrist_offset)
-    object_q = np.array([1, 0, 0, 0])
 
-    # add tasks to the task holder object
-    next_node = 0 # used to place the next task on the right problem nodes
-    # in place flip task
-    for i in range(len(y_sampling)):
-
-        next_node = task.add_in_place_flip_task(init_node = next_node,\
-                        object_pos_wrt_ws = np.array([0.0, y_sampling[i], 0.0]), \
-                        object_q_wrt_ws = object_q, \
-                        pick_q_wrt_ws = object_q,\
-                        right_arm_picks = right_arm_picks)
-    # # bimanual task
-    # for j in range(len(y_sampling)):
-
-    #     next_node = task.add_bimanual_task(init_node = next_node,\
-    #                     object_pos_wrt_ws = np.array([0.0, y_sampling[j], 0.0]), \
-    #                     object_q_wrt_ws = object_q, \
-    #                     pick_q_wrt_ws = object_q,\
-    #                     right_arm_picks = right_arm_picks)
+    task.add_tasks(y_sampling, right_arm_picks)
 
     # initialize problem
     task.init_prb(urdf_full_path,
@@ -198,14 +191,37 @@ if __name__ == '__main__':
                         help = 'weight for classical manipulability cost function', default = 0.01)
     parser.add_argument('--use_classical_man', '-ucm', type=str2bool,\
                         help = 'whether to use the classical manipulability index', default = False)
+
     parser.add_argument('--n_multistarts', '-msn', type=int,\
                         help = 'number of multistarts to use', default = 200)
     parser.add_argument('--ig_seed', '-igs', type=int,\
-                        help = 'seed for random initialization generation', default = 1)                      
+                        help = 'seed for random initialization generation', default = 1)       
+
     parser.add_argument('--use_ma57', '-ma57', type=str2bool,\
                         help = 'whether to use ma57 linear solver or not', default = False)
+
     parser.add_argument('--sliding_wrist_offset', '-wo', type = np.double,\
                         help = 'sliding_wrist_offset', default = 0.0)
+
+    parser.add_argument('--filling_nnodes', '-fnn', type = int,\
+                        help = 'filling nodes between base task nodes', default = 0)
+    parser.add_argument('--n_y_samples', '-nys', type = int,\
+                        help = 'number of y-axis samples on which tasks are placed', default = 5)
+    parser.add_argument('--y_sampl_ub', '-yub', type = np.double,\
+                        help = 'upper bound of the y sampling', default = 0.4)
+    parser.add_argument('--rot_error_epsi', '-rot_ep', type = np.double,\
+                        help = 'rotation error tolerance', default = 0.0000001)
+    parser.add_argument('--t_exec_task', '-t_exec', type = np.double,\
+                        help = 'execution time for a single task', default = 6.0)
+                       
+    parser.add_argument('--ipopt_tol', '-ipopt_tol', type = np.double,\
+                        help = 'IPOPT tolerance', default = 0.0000001)
+    parser.add_argument('--ipopt_max_iter', '-max_iter', type = int,\
+                        help = 'IPOPT max iterations', default = 1000)
+    parser.add_argument('--ipopt_cnstr_tol', '-ipopt_cnstr', type = np.double,\
+                        help = 'IPOPT constraint violation tolerance', default = 0.000001)
+    parser.add_argument('--ipopt_verbose', '-ipopt_v', type = int,\
+                        help = 'IPOPT verbose flag', default = 4)
 
     args = parser.parse_args()
     
@@ -251,13 +267,12 @@ if __name__ == '__main__':
         print('Failed to generate URDF.')
 
     # task-specific options
-    right_arm_picks = True
-    filling_n_nodes = 0
-    rot_error_epsi = 0.0000001
+    filling_n_nodes = args.filling_nnodes
+    rot_error_epsi = args.rot_error_epsi
 
     # samples
-    n_y_samples = 5
-    y_sampl_ub = 0.4
+    n_y_samples = args.n_y_samples
+    y_sampl_ub = args.y_sampl_ub
 
     # number of solution tries with different (random) initializations
     n_multistarts = args.n_multistarts
@@ -267,18 +282,20 @@ if __name__ == '__main__':
     if args.use_ma57:
 
         slvr_opt = {
-            "ipopt.tol": 0.0000001, 
-            "ipopt.max_iter": 1000,
-            "ipopt.constr_viol_tol": 0.000001,
+            "ipopt.tol": args.ipopt_tol, 
+            "ipopt.max_iter": args.ipopt_max_iter,
+            "ipopt.constr_viol_tol": args.ipopt_cnstr_tol,
+            "ipopt.print_level": args.ipopt_verbose, 
             "ilqr.verbose": True, 
             "ipopt.linear_solver": "ma57"}
 
     else:
 
         slvr_opt = {
-            "ipopt.tol": 0.0000001, 
-            "ipopt.max_iter": 1000,
-            "ipopt.constr_viol_tol": 0.000001,
+            "ipopt.tol": args.ipopt_tol, 
+            "ipopt.max_iter": args.ipopt_max_iter,
+            "ipopt.constr_viol_tol": args.ipopt_cnstr_tol,
+            "ipopt.print_level": args.ipopt_verbose, 
             "ilqr.verbose": True, 
             "ipopt.linear_solver": "mumps"}
 
@@ -289,7 +306,7 @@ if __name__ == '__main__':
     ig_seed = args.ig_seed
 
     # single task execution time
-    t_exec_task = 6
+    t_exec_task = args.t_exec_task
 
     # transcription options (if used)
     transcription_method = 'multiple_shooting'

@@ -791,6 +791,24 @@ class TaskGen:
                                                                 [0.05, 0.025, 0.025]], 
                                             tcp_contact_nodes = self.tcp_contact_nodes)
     
+    def add_tasks(self, y_sampling, right_arm_picks):
+
+        next_node = 0 # used to place the next task on the right problem nodes
+        # in place flip task
+        for i in range(len(y_sampling)):
+
+            next_node = self.add_in_place_flip_task(init_node = next_node,\
+                            object_pos_wrt_ws = np.array([0.0, y_sampling[i], 0.0]), \
+                            right_arm_picks = right_arm_picks[i])
+        # # bimanual task
+        # for j in range(len(y_sampling)):
+
+        #     next_node = task.add_bimanual_task(init_node = next_node,\
+        #                     object_pos_wrt_ws = np.array([0.0, y_sampling[j], 0.0]), \
+        #                     object_q_wrt_ws = object_q, \
+        #                     pick_q_wrt_ws = object_q,\
+        #                     right_arm_picks = right_arm_picks)
+
     def build_tasks(self, is_soft_pose_cnstr = False, epsi = epsi_default):
         
         base_nnodes = 0
@@ -857,8 +875,8 @@ class TaskGen:
     def add_in_place_flip_task(self, init_node,\
                                right_arm_picks = True,\
                                object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]),\
-                               object_q_wrt_ws = np.array([0.0, 1.0, 0.0, 0.0]),\
-                               pick_q_wrt_ws = np.array([0.0, 1.0, 0.0, 0.0]),\
+                               object_q_wrt_ws = np.array([1, 0, 0, 0]),\
+                               pick_q_wrt_ws = np.array([1, 0, 0, 0]),\
                                contact_height = 0.4, hor_offset = 0.2):
 
         if self.was_init_called : # we do not support adding more tasks after having built the problem!

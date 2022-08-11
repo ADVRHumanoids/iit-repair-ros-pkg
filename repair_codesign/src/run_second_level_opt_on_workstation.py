@@ -67,29 +67,21 @@ def gen_task_copies(weight_global_manip, weight_class_manip,
     
     y_sampling = gen_y_sampling(n_y_samples, y_sampl_ub)
 
+    right_arm_picks = np.array([True] * len(y_sampling))
+    for i in range(len(y_sampling)):
+        
+        if y_sampling[i] <= 0 : # on the right
+            
+            right_arm_picks[i] = True
+        
+        else:
+
+            right_arm_picks[i] = False
+
     # initialize problem task
     task = TaskGen(filling_n_nodes = filling_n_nodes)
 
-    object_q = np.array([1, 0, 0, 0])
-
-    # add tasks to the task holder object
-    next_node = 0 # used to place the next task on the right problem nodes
-    # in place flip task
-    for i in range(len(y_sampling)):
-
-        next_node = task.add_in_place_flip_task(init_node = next_node,\
-                        object_pos_wrt_ws = np.array([0.0, y_sampling[i], 0.0]), \
-                        object_q_wrt_ws = object_q, \
-                        pick_q_wrt_ws = object_q,\
-                        right_arm_picks = right_arm_picks)
-    # # bimanual task
-    # for j in range(len(y_sampling)):
-
-    #     next_node = task.add_bimanual_task(init_node = next_node,\
-    #                     object_pos_wrt_ws = np.array([0.0, y_sampling[j], 0.0]), \
-    #                     object_q_wrt_ws = object_q, \
-    #                     pick_q_wrt_ws = object_q,\
-    #                     right_arm_picks = right_arm_picks)
+    task.add_tasks(y_sampling, right_arm_picks)
 
     # initialize problem
     task.init_prb(urdf_full_path,
