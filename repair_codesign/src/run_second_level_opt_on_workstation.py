@@ -353,12 +353,12 @@ if __name__ == '__main__':
 
     sliding_wrist_offset = sol_loader.task_info_data["sliding_wrist_offset"][0][0]
 
-    processes_n = compute_solution_divs(n_multistarts, processes_n)
+    proc_sol_divs = compute_solution_divs(n_multistarts, processes_n)
 
     print("Distribution of multistarts between processes: \n")
-    print(processes_n)
+    print(proc_sol_divs)
     print("\n")
-    
+
     if  (not os.path.isdir(dump_basepath)):
 
         os.makedirs(dump_basepath)
