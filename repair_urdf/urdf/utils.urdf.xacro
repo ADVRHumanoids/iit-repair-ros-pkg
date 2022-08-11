@@ -13,7 +13,7 @@
 
 <xacro:property name="x_joint_limit_margin" value="0.1" />
 <xacro:property name="z_joint_limit_margin" value="0.1" />
-<xacro:property name="z_joint_lb" value="0.0" />
+<xacro:property name="z_joint_lb" value="0.5" />
 <xacro:property name="shoulder_width_lb" value="0.25" /> <!-- wrt shoulder center -->
 <xacro:property name="shoulder_width_ub" value="0.5" />
 <xacro:property name="shoulder_roll_lb" value="-${PI_2 + PI_4}" />

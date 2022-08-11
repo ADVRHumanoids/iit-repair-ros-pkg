@@ -63,8 +63,19 @@ class LoadSols():
 
             self.fail_data[i] = mat_storer.matStorer(self.fail_full_paths[i]).load()
 
+# class PostProc2ndLev:
 
-        
+#     def __init__(self, results_path, 
+#                 clust_dir_basename = "clust"):
+
+#         self.results_path = results_path + "/second_level/"
+#         self.loaders = []
+
+
+#     def load_2nd_l_sols(self):
+
+#         self.loader.append()
+
 
 
         

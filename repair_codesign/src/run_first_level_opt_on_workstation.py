@@ -204,11 +204,11 @@ if __name__ == '__main__':
                         help = 'sliding_wrist_offset', default = 0.0)
 
     parser.add_argument('--filling_nnodes', '-fnn', type = int,\
-                        help = 'filling nodes between base task nodes', default = 0)
+                        help = 'filling nodes between base task nodes', default = 5)
     parser.add_argument('--n_y_samples', '-nys', type = int,\
-                        help = 'number of y-axis samples on which tasks are placed', default = 5)
+                        help = 'number of y-axis samples on which tasks are placed', default = 4)
     parser.add_argument('--y_sampl_ub', '-yub', type = np.double,\
-                        help = 'upper bound of the y sampling', default = 0.4)
+                        help = 'upper bound of the y sampling', default = 0.35)
     parser.add_argument('--rot_error_epsi', '-rot_ep', type = np.double,\
                         help = 'rotation error tolerance', default = 0.0000001)
     parser.add_argument('--t_exec_task', '-t_exec', type = np.double,\

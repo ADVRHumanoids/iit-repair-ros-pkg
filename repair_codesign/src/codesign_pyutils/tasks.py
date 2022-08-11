@@ -786,8 +786,8 @@ class TaskGen:
 
         # Simple p2p collision avoidance cnstraints 
         self.coll_handler = SimpleCollHandler(self.kindyn, self.q, self.prb, \
-                                            collision_radii = [[0.07, 0.053, 0.08, 0.08, 0.08, 0.07], \
-                                                               [0.07, 0.053, 0.08, 0.08, 0.08, 0.07]], 
+                                            collision_radii = [[0.07, 0.053, 0.08, 0.08, 0.08, 0.07, 0.05], \
+                                                               [0.07, 0.053, 0.08, 0.08, 0.08, 0.07, 0.05]], 
                                             # collision_radii = [[0.08, 0.07], \
                                             #                    [0.08, 0.07]], 
                                             tcp_contact_nodes = self.tcp_contact_nodes)

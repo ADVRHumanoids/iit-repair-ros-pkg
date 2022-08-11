@@ -155,9 +155,11 @@ class SimpleCollHandler:
                 nodes = None,
                 tcp_contact_nodes = None, 
                 link_names = [["arm_1_link1_coll", "arm_1_link2_coll", "arm_1_link3_coll",\
-                                    "arm_1_link4_coll", "arm_1_link5_coll", "arm_1_link6_coll"],\
+                                    "arm_1_link4_coll", "arm_1_link5_coll", "arm_1_link6_coll", 
+                                    "arm_1_link7_coll"],\
                               ["arm_2_link1_coll", "arm_2_link2_coll", "arm_2_link3_coll",\
-                                    "arm_2_link4_coll", "arm_2_link5_coll", "arm_2_link6_coll"]],
+                                    "arm_2_link4_coll", "arm_2_link5_coll", "arm_2_link6_coll", 
+                                    "arm_2_link7_coll"]],
                 # link_names = [["arm_1_link3_coll", "arm_1_link6_coll"],\
                 #               ["arm_2_link3_coll", "arm_2_link6_coll"]],
                 ws_name = "working_surface_link"):
@@ -320,9 +322,10 @@ class SimpleCollHandler:
 
         return frame_pos
 
-    def d_2(self, p1, p2):
-
-        d_squared = cs.sumsqr(p2 - p1)
+    def d_squared(self, p1, p2):
+        
+        d = p2 - p1
+        d_squared = d[0]**2 + d[1]**2 + d[2]**2
 
         return d_squared
 
@@ -330,10 +333,10 @@ class SimpleCollHandler:
                         link1, link2, nodes):
 
         cnstrnt = prb.createConstraint(link1 + "_" + link2 + "_coll",\
-                self.d_2(self.fks[link1], self.fks[link2]),\
+                self.d_squared(self.fks[link1], self.fks[link2]),\
                 nodes)
 
-        cnstrnt.setBounds(self.collision_margins[link1][link2], cs.inf)
+        cnstrnt.setBounds((self.collision_margins[link1][link2])**2, cs.inf)
 
         return cnstrnt
 
