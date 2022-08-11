@@ -6,8 +6,16 @@
 <xacro:property name="mid_tau_max" value="200.0" />
 <xacro:property name="sm_tau_max" value="200.0" />
 
+<xacro:include filename="$(find repair_urdf)/urdf/repair_arm_coll_params.urdf.xacro"/>
 
-<xacro:macro name="repair_arm" params="id base_link is_sliding_wrist show_softhand" >
+<xacro:macro name="repair_arm" params="id base_link is_sliding_wrist show_softhand show_coll" >
+
+<xacro:if value="${show_coll == True}">
+
+    <xacro:include filename="$(find repair_urdf)/urdf/repair_arm_coll.urdf.xacro"/>
+
+</xacro:if>
+
 <!-- id: 1 for right arm, everything else is considered left arm -->
 <!-- base_link: name of base link a the single arm -->
 <!-- is_sliding_wrist: whether to add a sliding joint along the axis of wrist's second d.o.f.
@@ -145,19 +153,22 @@
         <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
         <origin xyz="0 0 0"/>
     </inertial>
+
     <collision name="arm_${id}_link_3_collision">
         <geometry>
             <mesh filename="package://repair_urdf/meshes/link_3.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
         </geometry>
         <material name="dark"/>
     </collision>
+    
     <visual name="arm_${id}_link_3_visual">
         <geometry>
             <mesh filename="package://repair_urdf/meshes/link_3.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
         </geometry>
         <material name="dark"/>
     </visual>
-</link>
+
+</link> 
 
 <joint name="arm_${id}_joint_4" type="revolute">
 
@@ -170,23 +181,27 @@
 </joint>
 
 <link name="arm_${id}_link_4">
+
     <inertial>
         <mass value="0.1"/>
         <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
         <origin xyz="0 0 0"/>
     </inertial>
+
     <collision name="arm_${id}_link_4_collision">
         <geometry>
             <mesh filename="package://repair_urdf/meshes/link_4.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
         </geometry>
         <material name="dark"/>
     </collision>
+
     <visual name="arm_${id}_link_4_visual">
         <geometry>
             <mesh filename="package://repair_urdf/meshes/link_4.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
         </geometry>
         <material name="dark"/>
     </visual>
+
 </link>
 
 <joint name="arm_${id}_joint_5" type="revolute">
@@ -257,26 +272,27 @@
 
 </xacro:unless>
 
-
-
 <link name="arm_${id}_link_6">
     <inertial>
         <mass value="0.1"/>
         <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
         <origin xyz="0 0 0"/>
     </inertial>
+
     <collision name="arm_${id}_link_6_collision">
         <geometry>
             <mesh filename="package://repair_urdf/meshes/link_6.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
         </geometry>
         <material name="dark"/>
     </collision>
+
     <visual name="arm_${id}_link_6_visual">
         <geometry>
             <mesh filename="package://repair_urdf/meshes/link_6.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
         </geometry>
         <material name="dark"/>
     </visual>
+
 </link>
 
 <joint name="arm_${id}_joint_7" type="revolute">

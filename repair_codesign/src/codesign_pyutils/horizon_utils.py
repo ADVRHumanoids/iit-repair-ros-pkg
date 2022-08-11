@@ -10,7 +10,8 @@ rot_error_approach = "arturo" # options: "siciliano", "arturo", "traversaro"
 
 from codesign_pyutils.misc_definitions import epsi_default
 
-#############
+import yaml
+
 
 def add_pose_cnstrnt(unique_id, prb, nodes, pos = None, rot = None, pos_ref = None, rot_ref = None,\
                      pos_selection = ["x", "y", "z"], rot_selection = ["x", "y", "z"],\
@@ -150,11 +151,15 @@ class SimpleCollHandler:
                 kindyn,
                 q_p, 
                 prb,
-                nodes = None,
                 collision_radii = None,
+                nodes = None,
                 tcp_contact_nodes = None, 
-                link_names = [["arm_1_link_6", "arm_1_link_4", "arm_1_link_3"],\
-                               ["arm_2_link_6", "arm_2_link_4", "arm_2_link_3"]],
+                link_names = [["arm_1_link1_coll", "arm_1_link2_coll", "arm_1_link3_coll",\
+                                    "arm_1_link4_coll", "arm_1_link5_coll", "arm_1_link6_coll"],\
+                              ["arm_2_link1_coll", "arm_2_link2_coll", "arm_2_link3_coll",\
+                                    "arm_2_link4_coll", "arm_2_link5_coll", "arm_2_link6_coll"]],
+                # link_names = [["arm_1_link3_coll", "arm_1_link6_coll"],\
+                #               ["arm_2_link3_coll", "arm_2_link6_coll"]],
                 ws_name = "working_surface_link"):
 
         self.kindyn = kindyn
@@ -167,6 +172,10 @@ class SimpleCollHandler:
 
         self.prb = prb
 
+        self.collision_radii = collision_radii
+        # self.yaml_path = yaml_path
+        # self.parse_collision_yaml()
+
         self.nodes = nodes
         self.tcp_contact_nodes = []
         if (tcp_contact_nodes is not None) and (not len(tcp_contact_nodes) == 0):
@@ -176,24 +185,24 @@ class SimpleCollHandler:
         self.filtered_nodes = self.remove_tcp_coll_nodes()
 
         # check dimension consistency between collision radii and link names
-        if len(collision_radii[0]) != len(link_names[0]) or len(collision_radii[1]) != len(link_names[1]):
+        if len(self.collision_radii[0]) != len(link_names[0]) or len(self.collision_radii[1]) != len(link_names[1]):
 
             raise Exception("SimpleCollHandler: dimesion mismatch between collision radii and link names!")
 
         # building collision radii dictionary (link_name -> collision radius)
         self.collision_radius_default = 0.05
-        self.collision_radii = {}
+        self.collision_radii_dict = {}
         for i in range(len(link_names)): # iterate between the two arms
 
             for j in range(len(link_names[i])): # iterate through each link name 
 
-                if collision_radii is None:
+                if self.collision_radii is None:
 
-                    self.collision_radii[link_names[i][j]] = self.collision_radius_default
+                    self.collision_radii_dict[link_names[i][j]] = self.collision_radius_default
 
                 else:
 
-                    self.collision_radii[link_names[i][j]] = collision_radii[i][j]
+                    self.collision_radii_dict[link_names[i][j]] = self.collision_radii[i][j]
 
         # building collision margins (two-level) dictionary (collision pair -> total collision margin)
         self.collision_margins = {}
@@ -203,8 +212,8 @@ class SimpleCollHandler:
             for j in range(len(link_names[1])):
                     
                     self.collision_margins[link_names[0][i]][link_names[1][j]] =\
-                        self.collision_radii[link_names[0][i]] + \
-                        self.collision_radii[link_names[1][j]]
+                        self.collision_radii_dict[link_names[0][i]] + \
+                        self.collision_radii_dict[link_names[1][j]]
         
         self.fks = {}
 
@@ -243,19 +252,19 @@ class SimpleCollHandler:
                 # add p2p collision tasks
                 if self.collision_mask[link_names[0][i]][link_names[1][j]]:
                     
-                    if "tcp" in link_names[0][i] and "tcp" in link_names[1][j]: # tcps2tcps
+                    # if "tcp" in link_names[0][i] and "tcp" in link_names[1][j]: # no constraint on tcp contact nodes
 
-                        self.coll_cnstrnts.append(self.add_p2p_coll_constr(self.prb,
-                                            link_names[0][i],
-                                            link_names[1][j],
-                                            self.filtered_nodes))
+                    #     self.coll_cnstrnts.append(self.add_p2p_coll_constr(self.prb,
+                    #                         link_names[0][i],
+                    #                         link_names[1][j],
+                    #                         self.filtered_nodes))
                     
-                    else: # all other pairs
+                    # else: # all other pairs
 
-                        self.coll_cnstrnts.append(self.add_p2p_coll_constr(self.prb,
-                                            link_names[0][i],
-                                            link_names[1][j],
-                                            self.nodes))
+                    self.coll_cnstrnts.append(self.add_p2p_coll_constr(self.prb,
+                                        link_names[0][i],
+                                        link_names[1][j],
+                                        self.nodes))
                 
         # add collision task with the working surface (on all nodes)
         for i in range(len(link_names)):
@@ -266,6 +275,19 @@ class SimpleCollHandler:
                             link_names[i][j], self.nodes)
 
 
+    def parse_collision_yaml(self):
+        
+        # TB implemented !!!!
+
+        # with open(self.yaml_path, 'r') as stream:
+        #     coll_yaml = yaml.safe_load(stream)
+
+        # coll_radii = [[] * 2]
+        # for i in range(len(link_names[0]))
+        # save_fig_path = coll_yaml["robot_state_log_plotter"]["save_fig_path"]
+    
+        self.yaml_path
+        
     def remove_tcp_coll_nodes(self):
 
         n_nodes_prb = self.prb.getNNodes()
@@ -322,5 +344,5 @@ class SimpleCollHandler:
                 (self.fks[link])[2] - (self.fks[self.ws_name])[2],\
                 nodes)
 
-        cnstrnt.setBounds(self.collision_radii[link], cs.inf)
+        cnstrnt.setBounds(self.collision_radii_dict[link], cs.inf)
         

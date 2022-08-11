@@ -250,15 +250,18 @@ if __name__ == '__main__':
 
     sliding_wrist_command = "is_sliding_wrist:=" + "true"
     show_softhand_command = "show_softhand:=" + "true"
+    show_coll_command = "show_coll:=" + "true"
+    # preliminary ops
 
-    # generate update urdf every time the script runs
     try:
 
+        
         # print(sliding_wrist_command)
         xacro_gen = subprocess.check_call(["xacro",\
                                         xacro_full_path, \
                                         sliding_wrist_command, \
                                         show_softhand_command, \
+                                        show_coll_command, \
                                         "-o", 
                                         urdf_full_path])
 

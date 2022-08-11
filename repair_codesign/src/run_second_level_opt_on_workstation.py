@@ -227,7 +227,11 @@ if __name__ == '__main__':
                         help = 'directory name from where results are to be loaded', default = "load_dir")
     parser.add_argument('--n_clust', '-nc', type=int,\
                         help = 'number of clusters to be selected', default = 40)
+    parser.add_argument('--ipopt_verbose', '-ipopt_v', type = int,\
+                        help = 'IPOPT verbose flag', default = 4)
+
     args = parser.parse_args()
+
 
     # number of parallel processes on which to run optimization
     # set to number of cpu counts to saturate
@@ -249,15 +253,18 @@ if __name__ == '__main__':
 
     sliding_wrist_command = "is_sliding_wrist:=" + "true"
     show_softhand_command = "show_softhand:=" + "true"
+    show_coll_command = "show_coll:=" + "true"
+    # preliminary ops
 
-    # generate update urdf every time the script runs
     try:
 
+        
         # print(sliding_wrist_command)
         xacro_gen = subprocess.check_call(["xacro",\
                                         xacro_full_path, \
                                         sliding_wrist_command, \
                                         show_softhand_command, \
+                                        show_coll_command, \
                                         "-o", 
                                         urdf_full_path])
 
@@ -327,6 +334,7 @@ if __name__ == '__main__':
             "ipopt.tol": sol_loader.task_info_data["slvr_opts"]["ipopt.tol"][0][0][0][0], 
             "ipopt.max_iter": sol_loader.task_info_data["slvr_opts"]["ipopt.max_iter"][0][0][0][0],
             "ipopt.constr_viol_tol": sol_loader.task_info_data["slvr_opts"]["ipopt.constr_viol_tol"][0][0][0][0],
+            "ipopt.print_level": args.ipopt_verbose,\
             "ilqr.verbose": bool(sol_loader.task_info_data["slvr_opts"]["ilqr.verbose"][0][0][0][0]), 
             "ipopt.linear_solver": sol_loader.task_info_data["slvr_opts"]["ipopt.linear_solver"][0][0][0]}
 
