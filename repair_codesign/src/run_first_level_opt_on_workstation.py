@@ -200,7 +200,7 @@ if __name__ == '__main__':
                         help = 'seed for random initialization generation', default = 1)       
 
     parser.add_argument('--use_ma57', '-ma57', type=str2bool,\
-                        help = 'whether to use ma57 linear solver or not', default = False)
+                        help = 'whether to use ma57 linear solver or not', default = True)
 
     parser.add_argument('--sliding_wrist_offset', '-wo', type = np.double,\
                         help = 'sliding_wrist_offset', default = 0.0)
