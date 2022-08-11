@@ -328,7 +328,10 @@ if __name__ == '__main__':
 
     task_copies = [None] * len(proc_sol_divs)
     slvr_copies = [None] * len(proc_sol_divs)
-    
+    print(len(proc_sol_divs))
+    print(proc_sol_divs)
+    exit()
+
     for p in range(len(proc_sol_divs)):
         
         task_copies[p], slvr_copies[p] = gen_task_copies(filling_n_nodes, sliding_wrist_offset, 
