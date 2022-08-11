@@ -20,47 +20,11 @@ from codesign_pyutils.tasks import TaskGen
 
 import multiprocessing as mp_classic
 
-from codesign_pyutils.miscell_utils import extract_q_design, compute_man_measure, select_best_sols
+from codesign_pyutils.miscell_utils import extract_q_design, compute_man_measure,\
+                                             compute_solution_divs, gen_y_sampling
 from codesign_pyutils.miscell_utils import Clusterer
 from codesign_pyutils.misc_definitions import get_design_map
 from codesign_pyutils.load_utils import LoadSols
-
-def compute_solution_divs(n_multistrt: int, n_prcss: int):
-    
-    n_sol_tries = n_multistrt
-    n_p = n_prcss
-
-    n_divs = int(np.round(n_sol_tries / n_p)) 
-
-    n_remaining_sols = n_sol_tries - n_divs * n_p
-
-    opt_divs = [[]] * n_p
-
-
-    for i in range(n_p):
-
-        if i == (n_p - 1) and n_remaining_sols != 0:
-            
-            opt_divs[i] = list(range(n_divs * i, n_divs * i + n_divs + n_remaining_sols)) 
-
-        else:
-
-            opt_divs[i] = list(range(n_divs * i, n_divs * i + n_divs)) 
-
-
-        # opt_divs = [[]] * (n_p + 1)
-
-        # for i in range(n_p + 1):
-            
-        #     if i == n_p:
-
-        #         opt_divs[i] = list(range(n_divs * i, n_divs * i + n_remaining_sols))
-
-        #     else:
-
-        #         opt_divs[i] = list(range(n_divs * i, n_divs * i + n_divs))
-
-    return opt_divs
 
 def solve(multistart_nodes,\
             task, slvr,\
@@ -94,21 +58,6 @@ def solve(multistart_nodes,\
         sol_index = sol_index + 1
     
     return solution_time
-
-def gen_y_sampling(n_y_samples, y_sampl_ub):
-
-    y_sampl_lb = - y_sampl_ub
-    if n_y_samples == 1:
-        dy = 0.0
-    else:
-        dy = (y_sampl_ub - y_sampl_lb) / (n_y_samples - 1)
-
-    y_sampling = np.array( [0.0] * n_y_samples)
-    for i in range(n_y_samples):
-        
-        y_sampling[i] = y_sampl_lb + dy * i
-
-    return y_sampling
 
 def gen_task_copies(weight_global_manip, weight_class_manip, 
                     filling_n_nodes, 
@@ -405,10 +354,6 @@ if __name__ == '__main__':
     sliding_wrist_offset = sol_loader.task_info_data["sliding_wrist_offset"][0][0]
 
     proc_sol_divs = compute_solution_divs(n_multistarts, processes_n)
-
-    print(proc_sol_divs)
-
-    exit()
 
     if  (not os.path.isdir(dump_basepath)):
 

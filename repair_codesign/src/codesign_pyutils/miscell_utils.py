@@ -158,6 +158,57 @@ def compute_man_measure(opt_costs: list, n_int: int):
 
     return man_measure
 
+def gen_y_sampling(n_y_samples, y_sampl_ub):
+
+    y_sampl_lb = - y_sampl_ub
+    if n_y_samples == 1:
+        dy = 0.0
+    else:
+        dy = (y_sampl_ub - y_sampl_lb) / (n_y_samples - 1)
+
+    y_sampling = np.array( [0.0] * n_y_samples)
+    for i in range(n_y_samples):
+        
+        y_sampling[i] = y_sampl_lb + dy * i
+
+    return y_sampling
+
+def compute_solution_divs(n_multistrt: int, n_prcss: int):
+    
+    n_sol_tries = n_multistrt
+    n_p = n_prcss
+
+    n_divs = int(np.floor(n_sol_tries / n_p)) 
+
+    n_remaining_sols = n_sol_tries - n_divs * n_p
+
+    opt_divs = [[]] * n_p
+
+
+    for i in range(n_p):
+
+        opt_divs[i] = list(range(n_divs * i, n_divs * i + n_divs)) 
+
+    if n_remaining_sols != 0:
+        
+        for i in range(n_remaining_sols):
+
+            opt_divs[i].append(n_divs * (n_p - 1) + n_divs + i)
+
+        # opt_divs = [[]] * (n_p + 1)
+
+        # for i in range(n_p + 1):
+            
+        #     if i == n_p:
+
+        #         opt_divs[i] = list(range(n_divs * i, n_divs * i + n_remaining_sols))
+
+        #     else:
+
+        #         opt_divs[i] = list(range(n_divs * i, n_divs * i + n_divs))
+
+    return opt_divs
+
 def select_best_sols(perc: float, opt_costs: list, opt_q_design: np.ndarray):
 
   perc = abs(float(perc))
