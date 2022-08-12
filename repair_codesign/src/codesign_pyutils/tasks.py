@@ -587,14 +587,14 @@ class TaskGen:
         epsi = 1 # used to make classical man cost robust wrt singularity
 
         if n_of_tasks != 1: # the cost has to be removed from the final node of each task
-            # so that the transition nodes between
+            # so that the transition nodes between them do not influence the optimization
 
             for i in range(n_of_tasks): # iterate through each task
                 
                 start_node = self.nodes_list[i][0] # first node of task i
                 last_node = self.nodes_list[i][-1] # last node of task i
                 
-                if not is_classical_man:
+                if not is_classical_man: # use global manipulability measure
 
                     # min inputs 
                     self.prb.createIntermediateCost("max_global_manipulability" + str(i),\
