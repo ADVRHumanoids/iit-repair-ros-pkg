@@ -2,6 +2,7 @@ import os
 
 from horizon.utils import mat_storer
 
+from codesign_pyutils.miscell_utils import compute_man_measure
 class LoadSols():
 
     def __init__(self, base_sol_path, 
@@ -63,19 +64,76 @@ class LoadSols():
 
             self.fail_data[i] = mat_storer.matStorer(self.fail_full_paths[i]).load()
 
-# class PostProc2ndLev:
+class PostProc2ndLev:
 
-#     def __init__(self, results_path, 
-#                 clust_dir_basename = "clust"):
+    def __init__(self, results_path, 
+                clust_dir_basename = "clust", 
+                additional_info_pattern = "info"):
 
-#         self.results_path = results_path + "/second_level/"
-#         self.loaders = []
+        self.results_path = results_path + "/second_level/"
+        self.clust_dir_basename = clust_dir_basename
 
+        # read sol paths from directory
+        additional_info_name = additional_info_pattern
+        additional_info_candidates = os.listdir(self.results_path)
+        self.add_info_filename = ""
 
-#     def load_2nd_l_sols(self):
+        add_info_filename_aux = []
 
-#         self.loader.append()
+        for i in range(len(additional_info_candidates)):
 
+            if additional_info_name in additional_info_candidates[i]:
 
+                add_info_filename_aux.append(additional_info_candidates[i]) 
 
+        if len(add_info_filename_aux) == 0:
+
+            raise Exception("PostProc2ndLev: didn't find any solution information file matching pattern \"" +
+                            additional_info_name + "\"" + "in base directory " + self.results_path + ".\n" +
+                            "Please provide a valid solution information file.")
+
+        if len(add_info_filename_aux) > 1:
+
+            raise Exception("PostProc2ndLev: too many solution information files provided.\n" + 
+                            "Please make sure the loading directory only contains coherent data.")
+
+        self.add_info_path = self.results_path + "/" + add_info_filename_aux[0]
+        self.task_info_data = mat_storer.matStorer(self.add_info_path).load()
+
+        self.n_clust = self.task_info_data["n_clust"][0][0] # double loaded as matrix --> [0][0] necessary
+        self.first_lev_opt_costs = self.task_info_data["first_lev_opt_costs"][0]
+        self.n_int = self.task_info_data["nodes_list"][-1][-1] # getting last node index (will be equal to n_nodes - 1)
+        self.first_lev_cand_indeces = self.task_info_data["first_lev_cand_inds"][0]
+        self.first_lev_best_qcodes_candidates = self.task_info_data["first_lev_best_candidates"]
+        self.unique_id = self.task_info_data["unique_id"]
+        self.first_lev_man_measure = compute_man_measure(self.first_lev_opt_costs, self.n_int)
         
+        self.loaders = [] * self.n_clust # list of loaders (one for each cluster)
+        self.second_lev_opt_costs = [] 
+        self.second_lev_man_measure = []
+        self.opt_mult_indeces = [] # index of the solution (w.r.t. the n multistarts per cluster)
+
+        self.load_clust_sols()
+        
+    def load_clust_sols(self):
+
+        for cl in range(self.n_clust):
+            
+            self.loaders.append(LoadSols(self.results_path + self.clust_dir_basename + str(cl))) 
+            #solutions are loaded mantaining cluster order
+
+            opt_cost_aux_list = []
+            opt_man_meas_aux_list = []
+            opt_mult_aux_indeces = []
+
+            for opt_sol_index in range(len(self.loaders[cl].opt_data)):
+
+                opt_cost_aux_list.append(self.loaders[cl].opt_data[opt_sol_index]["opt_cost"][0][0])
+                opt_mult_aux_indeces.append(self.loaders[cl].opt_data[opt_sol_index]["solution_index"][0][0])
+            
+            self.second_lev_opt_costs.append(opt_cost_aux_list)
+            self.second_lev_man_measure.append(compute_man_measure(opt_cost_aux_list, self.n_int))
+
+            self.opt_mult_indeces.append(opt_mult_aux_indeces)
+
+
