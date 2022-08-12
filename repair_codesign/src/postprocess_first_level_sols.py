@@ -48,6 +48,12 @@ def main(args):
 
     sol_loader = LoadSols(results_path)
     
+    is_classical_man = bool(sol_loader.task_info_data["use_classical_man"])
+
+    if is_classical_man:
+
+        raise Exception("You still have to adapt this script to the classical man measure!!!!!!!!!!")
+
     n_opt_sol = len(sol_loader.opt_data)
 
     opt_costs = [1e6] * n_opt_sol
@@ -117,9 +123,9 @@ def main(args):
     fist_lev_cand_man_measure = clusterer.get_fist_lev_candidate_man_measure()
 
     print(first_lev_cand_inds)
-    # clusterer.create_cluster_plot(show_clusters_sep = True, 
-    #                                 show_cluster_costs = True)
-    # clusterer.show_plots()
+    clusterer.create_cluster_plot(show_clusters_sep = True, 
+                                    show_cluster_costs = True)
+    clusterer.show_plots()
     
 
 if __name__ == '__main__':

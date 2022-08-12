@@ -18,7 +18,7 @@ from codesign_pyutils.task_utils import solve_prb_standalone, \
                                         generate_ig              
 from codesign_pyutils.tasks import TaskGen
 
-import multiprocessing as mp_classic
+import multiprocessing as mp
 
 from codesign_pyutils.miscell_utils import extract_q_design, compute_man_measure,\
                                              compute_solution_divs, gen_y_sampling
@@ -119,8 +119,7 @@ def gen_task_copies(weight_global_manip, weight_class_manip,
     if solver_type == "ilqr":
 
         slvr.set_iteration_callback()
-
-
+    
     return task, slvr
 
 def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
@@ -243,7 +242,7 @@ if __name__ == '__main__':
 
     # number of parallel processes on which to run optimization
     # set to number of cpu counts to saturate
-    processes_n = mp_classic.cpu_count()
+    processes_n = mp.cpu_count()
 
     # useful paths
     dump_folder_name = "second_level"
@@ -399,8 +398,25 @@ if __name__ == '__main__':
     weight_global_manip = sol_loader.task_info_data["w_man_base"][0][0]
     weight_class_manip = sol_loader.task_info_data["w_clman_base"][0][0]
 
+    # manager = mp.Manager() ## --> does not work because "TypeError: cannot pickle 'casadi_kin_dyn.py3casadi_kin_dyn.CasadiKinDyn' object"
+    # task_copies = manager.list()
+    # slvr_copies = manager.list()
+    # copy_jobs = []
+    # for p in range(len(proc_sol_divs)):
+
+    #     proc = mp.Process(target=gen_task_copies, args=(task_copies, slvr_copies,
+    #                                                     weight_global_manip, 
+    #                                                     weight_class_manip, 
+    #                                                     filling_n_nodes, 
+    #                                                     n_y_samples, y_sampl_ub, 
+    #                                                     use_classical_man, 
+    #                                                     coll_yaml_path, ))
+    #     copy_jobs.append(proc)
+    #     copy_jobs[p].start()
+
     task_copies = [None] * len(proc_sol_divs)
     slvr_copies = [None] * len(proc_sol_divs)
+
     for p in range(len(proc_sol_divs)):
         
         task_copies[p], slvr_copies[p] = gen_task_copies(weight_global_manip, 
@@ -477,7 +493,7 @@ if __name__ == '__main__':
 
         for p in range(len(proc_sol_divs)): # for each process (for each cluster, multistarts are solved parallelizing on processes)
 
-            proc_list[p] = mp_classic.Process(target=sol_main, args=(proc_sol_divs[p],\
+            proc_list[p] = mp.Process(target=sol_main, args=(proc_sol_divs[p],\
                                                                 q_ig, q_dot_ig, task_copies[p], slvr_copies[p],\
                                                                 opt_path[cl], fail_path[cl],\
                                                                 unique_id,\
