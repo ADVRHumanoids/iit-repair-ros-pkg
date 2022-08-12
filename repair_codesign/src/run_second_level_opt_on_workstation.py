@@ -41,7 +41,10 @@ def solve(multistart_nodes,\
 
     for node in multistart_nodes:
 
-        print("\n SOLVING PROBLEM N.: " + str(node + 1) + ", cluster n." + str(cluster_id))
+        print("\n SOLVING PROBLEM N.: " + str(node + 1) +\
+                                        ", cluster n." + str(cluster_id) + \
+                                        ". In-process index: " + str(sol_index + 1) + \
+                                        "/" + str(len(multistart_nodes)))
         print("\n")
 
         solve_failed, solution_time = solve_prb_standalone(task, slvr, q_ig[node], q_dot_ig[node], 
@@ -49,7 +52,10 @@ def solve(multistart_nodes,\
                                                             q_codes_first_level=q_codes_first_level)
         solutions[sol_index] = slvr.getSolutionDict()
 
-        print("Solution cost " + str(node) + ": ", solutions[sol_index]["opt_cost"])
+        print("Solution cost " + str(node) + \
+            "-"  + str(sol_index + 1) + "/" + str(len(multistart_nodes)) + \
+            ": " + str(solutions[sol_index]["opt_cost"]))
+
         sol_costs[sol_index] = solutions[sol_index]["opt_cost"]
         cnstr_opt[sol_index] = slvr.getConstraintSolutionDict()
 
@@ -467,9 +473,9 @@ if __name__ == '__main__':
     proc_list = [None] * len(proc_sol_divs)
     # launch solvers and solution dumpers on separate processes
 
-    for cl in range(n_clust): # for each cluster
+    for cl in range(n_clust): # for each cluster (clusters are solved sequenctially)
 
-        for p in range(len(proc_sol_divs)): # for each process
+        for p in range(len(proc_sol_divs)): # for each process (for each cluster, multistarts are solved parallelizing on processes)
 
             proc_list[p] = mp_classic.Process(target=sol_main, args=(proc_sol_divs[p],\
                                                                 q_ig, q_dot_ig, task_copies[p], slvr_copies[p],\

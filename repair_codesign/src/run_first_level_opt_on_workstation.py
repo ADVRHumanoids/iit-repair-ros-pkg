@@ -13,13 +13,15 @@ import subprocess
 import rospkg
 
 from codesign_pyutils.miscell_utils import str2bool, compute_solution_divs,\
-                                            gen_y_sampling
+                                            gen_y_sampling, \
+                                            printProgressBar
 from codesign_pyutils.dump_utils import SolDumper
 from codesign_pyutils.task_utils import solve_prb_standalone, \
                                         generate_ig              
 from codesign_pyutils.tasks import TaskGen
 
 import multiprocessing as mp_classic
+from multiprocessing import Queue
 
 from datetime import datetime
 from datetime import date
@@ -37,20 +39,25 @@ def solve(multistart_nodes,\
 
     for node in multistart_nodes:
 
-        print("\n SOLVING PROBLEM N.: ", node + 1)
+        print("\n SOLVING PROBLEM N.: " + str(node + 1) +\
+                    ". In-process index: " + str(sol_index + 1) +\
+                    "/" + str(len(multistart_nodes)))
+
         print("\n")
                     
         solve_failed, solution_time = solve_prb_standalone(task, slvr, q_ig[node], q_dot_ig[node])
         solutions[sol_index] = slvr.getSolutionDict()
 
-        print("Solution cost " + str(node) + ": ", solutions[sol_index]["opt_cost"])
+        print("Solution cost " + str(node) + \
+            "-"  + str(sol_index + 1) + "/" + str(len(multistart_nodes)) + \
+            ": " + str(solutions[sol_index]["opt_cost"]))
         sol_costs[sol_index] = solutions[sol_index]["opt_cost"]
         cnstr_opt[sol_index] = slvr.getConstraintSolutionDict()
 
         solve_failed_array[sol_index] = solve_failed
 
         sol_index = sol_index + 1
-    
+
     return solution_time
 
 def gen_task_copies(filling_n_nodes, sliding_wrist_offset, 
@@ -178,7 +185,12 @@ def sol_main(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path, op
     sol_dumper.dump() 
 
     print("\n Solutions of process " + str(process_id) + " dumped. \n")
-                    
+
+def prova(q: Queue):
+    print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+    print(q.get())
+    print("\n")
+
 if __name__ == '__main__':
 
     # adding script arguments
@@ -234,6 +246,7 @@ if __name__ == '__main__':
     # number of parallel processes on which to run optimization
     # set to number of cpu counts to saturate
     processes_n = mp_classic.cpu_count()
+
 
     # useful paths
     dump_folder_name = "first_level"
@@ -389,17 +402,19 @@ if __name__ == '__main__':
 
     print("\n Task info solution dumped. \n")
 
+    progress_bar_index = 0
     proc_list = [None] * len(proc_sol_divs)
     # launch solvers and solution dumpers on separate processes
+    
     for p in range(len(proc_sol_divs)):
 
         proc_list[p] = mp_classic.Process(target=sol_main, args=(args, proc_sol_divs[p],\
                                                             q_ig, q_dot_ig, task_copies[p], slvr_copies[p],\
                                                             results_path, opt_results_path, failed_results_path,\
                                                             unique_id,\
-                                                            p, ))
+                                                            p,))
         proc_list[p].start()
-        
+
     for p in range(len(proc_sol_divs)):
 
             while proc_list[p].is_alive():
