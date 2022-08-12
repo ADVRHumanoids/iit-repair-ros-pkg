@@ -455,6 +455,7 @@ if __name__ == '__main__':
                     "w_clman_base": weight_class_manip,
                     "w_man_actual": task_copies[0].weight_glob_man, 
                     "w_clman_actual": task_copies[0].weight_classical_man,
+                    "use_classical_man": use_classical_man,
                     "nodes_list": task_copies[0].nodes_list, 
                     "tasks_list": task_copies[0].task_list,
                     "tasks_dict": task_copies[0].task_dict,
