@@ -305,7 +305,8 @@
 
     <xacro:unless value="${id == 1}">
 
-        <origin xyz="${180.000 * mmTom} 0 0" rpy="${-PI_2} 0 ${-PI_2}"/>
+        <origin xyz="${180.000 * mmTom} 0 0" rpy="${-PI_2} ${PI} ${-PI_2}"/>
+        <!-- <origin xyz="${180.000 * mmTom} 0 0" rpy="${-PI_2} 0 ${-PI_2}"/> -->
 
     </xacro:unless>
 
