@@ -382,7 +382,7 @@ if __name__ == '__main__':
                     "integrator": intgrtr, 
                     "sliding_wrist_offset": sliding_wrist_offset, 
                     "n_multistarts": n_multistarts, 
-                    # "proc_sol_divs": proc_sol_divs, 
+                    "proc_sol_divs": np.array(proc_sol_divs, dtype=object), 
                     "unique_id": unique_id, 
                     "rot_error_epsi": rot_error_epsi, 
                     "t_exec_task": t_exec_task, 

@@ -259,31 +259,31 @@ class PostProc2ndLev:
 
         task_info_dumper = SolDumper()
 
-        other_stuff = {"unique_id": self.unique_id,\
+        stuff = {"unique_id": self.unique_id,\
                     "n_clust": self.n_clust,
                     "n_int": self.n_int,
                     "first_lev_cand_indeces": self.first_lev_cand_indeces,
                     "first_lev_best_qcodes_candidates": self.first_lev_best_qcodes_candidates,
                     "first_lev_opt_costs": self.first_lev_opt_costs, 
                     "first_lev_man_measure": self.first_lev_man_measure,
-                    # "second_lev_opt_costs": self.second_lev_opt_costs,
-                    # "second_lev_man_measure": self.second_lev_man_measure,
-                    # "opt_mult_indeces": self.opt_mult_indeces,
-                    # "confidence_coeffs": self.confidence_coeffs,
-                    # "second_lev_true_costs": self.second_lev_true_costs,
-                    # "n_of_improved_costs": self.n_of_improved_costs,
-                    # "second_lev_weighted_costs": self.second_lev_weighted_costs,
-                    # "best_second_lev_cost": self.best_second_lev_cost,
-                    # "best_second_lev_cl_index": self.best_second_lev_cl_index,
-                    # "best_second_lev_man_measure": self.best_second_lev_man_measure,
-                    # "best_second_lev_qcodes": self.best_second_lev_qcodes,
-                    # "best_second_lev_weight_cost": self.best_second_lev_weight_cost,
-                    # "best_second_lev_weight_cl_index": self.best_second_lev_weight_cl_index,
-                    # "best_second_lev_weight_man_measure": self.best_second_lev_weight_man_measure,
-                    # "best_second_lev_weight_qcodes": self.best_second_lev_weight_qcodes
+                    "second_lev_opt_costs": np.array(self.second_lev_opt_costs, dtype=object),
+                    "second_lev_man_measure": np.array(self.second_lev_man_measure, dtype=object),
+                    "opt_mult_indeces": np.array(self.opt_mult_indeces, dtype=object),
+                    "confidence_coeffs": self.confidence_coeffs,
+                    "second_lev_true_costs": self.second_lev_true_costs,
+                    "n_of_improved_costs": self.n_of_improved_costs,
+                    "second_lev_weighted_costs": self.second_lev_weighted_costs,
+                    "best_second_lev_cost": self.best_second_lev_cost,
+                    "best_second_lev_cl_index": self.best_second_lev_cl_index,
+                    "best_second_lev_man_measure": self.best_second_lev_man_measure,
+                    "best_second_lev_qcodes": self.best_second_lev_qcodes,
+                    "best_second_lev_weight_cost": self.best_second_lev_weight_cost,
+                    "best_second_lev_weight_cl_index": self.best_second_lev_weight_cl_index,
+                    "best_second_lev_weight_man_measure": self.best_second_lev_weight_man_measure,
+                    "best_second_lev_weight_qcodes": self.best_second_lev_weight_qcodes
                     }
 
-        task_info_dumper.add_storer(other_stuff, self.dump_path,\
+        task_info_dumper.add_storer(stuff, self.dump_path,\
                                 "2nd_lev_postproc" + str(self.unique_id),\
                                 False)        
 

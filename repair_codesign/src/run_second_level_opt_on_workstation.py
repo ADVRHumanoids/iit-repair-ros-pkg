@@ -466,7 +466,7 @@ if __name__ == '__main__':
                     "integrator": intgrtr, 
                     "sliding_wrist_offset": sliding_wrist_offset,
                     "n_multistarts_per_cl": n_multistarts,
-                    # "proc_sol_divs": proc_sol_divs,
+                    "proc_sol_divs": np.array(proc_sol_divs, dtype=object),
                     "unique_id": unique_id,
                     "n_clust": n_clust,
                     "first_lev_cand_inds": np.array(real_first_level_cand_inds), 
