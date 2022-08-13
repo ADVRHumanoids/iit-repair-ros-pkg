@@ -96,7 +96,7 @@ def solve(multistart_nodes,\
 
         print(colored("\nSOLVING PROBLEM OF MULTISTART NODE: " + str(multistart_nodes[sol_index]) +\
                         ".\nProcess n." + str(process_id) + \
-                        ".\nIn-process index: " + str(sol_index) + \
+                        ".\nIn-process index: " + str(sol_index + 1) + \
                         "/" + str(len(multistart_nodes)), "magenta"))
 
         print("\n")
@@ -109,7 +109,7 @@ def solve(multistart_nodes,\
         print_color = "magenta" if not solve_failed else "yellow"
         print(colored("COMLETED SOLUTION PROCEDURE OF MULTISTART NODE:" + str(multistart_nodes[sol_index]) + \
             ".\nProcess n." + str(process_id) + \
-            ".\nIn-process index: " + str(sol_index) + \
+            ".\nIn-process index: " + str(sol_index + 1) + \
             "/" + str(len(multistart_nodes)) + \
             ".\nOpt. cost: " + str(solutions[sol_index]["opt_cost"]), print_color))
 

@@ -108,7 +108,7 @@ def solve(multistart_nodes,\
         print(colored("\nSOLVING PROBLEM OF MULTISTART NODE: " + str(multistart_nodes[sol_index]) +\
                         ".\nCluster n." + str(cluster_id) + \
                         ".\nProcess n." + str(process_id) + \
-                        ".\nIn-process index: " + str(sol_index) + \
+                        ".\nIn-process index: " + str(sol_index + 1) + \
                         "/" + str(len(multistart_nodes)), "magenta"))
         print("\n")
 
@@ -147,7 +147,7 @@ def solve(multistart_nodes,\
         print(colored("COMLETED SOLUTION PROCEDURE OF MULTISTART NODE:" + str(multistart_nodes[sol_index]) + \
             ".\nCluster n." + str(cluster_id) + \
             ".\nProcess n." + str(process_id) + \
-            ".\nIn-process index: " + str(sol_index) + \
+            ".\nIn-process index: " + str(sol_index + 1) + \
             "/" + str(len(multistart_nodes)) + \
             ".\nOpt. cost: " + str(solutions[sol_index]["opt_cost"]), "magenta"))
 
