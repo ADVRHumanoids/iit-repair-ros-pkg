@@ -196,7 +196,7 @@ class PostProc2ndLev:
             best_second_lev_cl_index = \
                 np.argwhere(np.array(self.second_lev_weighted_costs) == min(self.second_lev_weighted_costs))[0][0]
 
-            best_second_lev_man_measure = compute_man_measure([min(self.second_lev_true_costs)], self.n_int)[0]
+            best_second_lev_man_measure = compute_man_measure([min(self.second_lev_weighted_costs)], self.n_int)[0]
             
             for i in range(len(best_second_lev_qcodes)):
 
