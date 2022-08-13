@@ -490,8 +490,13 @@ class Clusterer():
   def create_cluster_plot(self, method_name = "minikmeans",
                           show_clusters_sep = False, 
                           show_background_pnts = True, 
-                          show_cluster_costs = False):
+                          show_cluster_costs = False, 
+                          plt_red_factor = 1,
+                          show_leg = True):
     
+    y_un = np.unique(self.data_clust_array)
+    clust_plt_ind = list(range(0, int(len(y_un)/plt_red_factor)))
+
     rgb_colors = self.get_rbg(self.data_clust_array)
 
     plt.figure()
@@ -501,13 +506,32 @@ class Clusterer():
         linestyle ='-.', linewidth = 0.3,
         alpha = 0.2)
 
-    ax.scatter3D(self.X[:, 0],\
-                  self.X[:, 1],\
-                  self.X[:, 2],\
-                  alpha = 0.8,
-                  c = rgb_colors[self.data_clust_array],
-                  marker ='o', 
-                  s = self.mark_dim)
+    for i in clust_plt_ind:
+
+      cluster_selector = np.where(self.data_clust_array == y_un[i])[0]
+
+      ax.scatter3D(self.X[cluster_selector, 0],\
+                    self.X[cluster_selector, 1],\
+                    self.X[cluster_selector, 2],\
+                    alpha = 0.8,
+                    c = rgb_colors[self.data_clust_array[i]],
+                    marker ='o', 
+                    s = self.mark_dim, 
+                    label="cluster n." + str(y_un[i]))
+
+    if show_background_pnts:
+
+      ax.scatter3D(self.X[:, 0],\
+                    self.X[:, 1],\
+                    self.X[:, 2],\
+                    alpha = 0.05,
+                    c = ["#D3D3D3"] * len(self.opt_costs),
+                    marker ='o', 
+                    s = self.mark_dim)
+
+    if show_leg:
+      leg = ax.legend(loc="upper left")
+      leg.set_draggable(True)
 
     plt.title("Co-design variables scatter plot - clustering with " + method_name)
     ax.set_xlabel('mount. height', fontweight ='bold')
@@ -516,9 +540,7 @@ class Clusterer():
     
     if show_clusters_sep:
 
-      y_un = np.unique(self.data_clust_array)
-
-      for i in range(len(y_un)):
+      for i in clust_plt_ind:
         
         fig = plt.figure()
       
@@ -554,7 +576,8 @@ class Clusterer():
                       alpha = 1,
                       c = colrs,
                       marker ='o', 
-                      s = self.mark_dim)
+                      s = self.mark_dim, 
+                      label="cluster n." + str(y_un[i]))
         
         else:
           
@@ -571,12 +594,16 @@ class Clusterer():
                               cmap = my_cmap,
                               marker ='o', 
                               s = 30, 
-                              vmin = self.vmin_colorbar, vmax = self.vmax_colorbar)
+                              vmin = self.vmin_colorbar, vmax = self.vmax_colorbar, 
+                              label="cluster n." + str(y_un[i]))
 
           fig.colorbar(sctt, ax = ax, shrink = 0.5, aspect = 20, label='performance index')
 
+        if show_leg:
+          leg = ax.legend(loc="upper left")
+          leg.set_draggable(True)
+        
         plt.title("Clustering method: " + method_name + 
-        "\n Cluster index: " + str(y_un[i]) + 
         "\n Cluster size:" + str(len(cluster_selector)))
         ax.set_xlabel('mount. height', fontweight ='bold')
         ax.set_ylabel('should. width', fontweight ='bold')

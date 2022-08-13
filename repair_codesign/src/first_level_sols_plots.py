@@ -17,6 +17,16 @@ from codesign_pyutils.miscell_utils import extract_q_design, compute_man_measure
 
 from codesign_pyutils.miscell_utils import Clusterer
 
+import functools
+
+def man_meas2_opt_cost(x, n_int):
+
+    return x**2 * n_int
+
+def opt_cost2_man_meas(x, n_int):
+
+    return np.sqrt(x/n_int)
+
 def main(args):
 
     # useful paths
@@ -103,17 +113,23 @@ def main(args):
     #     plt.grid()
 
     #1D histogram (w.r.t. perfomance index) 
-    plt.figure()
-    plt.hist(man_measure, bins = 200)
-    plt.legend(loc="upper left")
-    plt.xlabel(r"rad/s")
-    plt.ylabel(r"N. sol")
-    plt.title(r"Performance index histogram", fontdict=None, loc='center')
-    plt.grid()
-
+    fig_hist,ax_hist = plt.subplots()
+    # =fig_hist.add_subplot(1, 1, 1)
+    hist_plot = ax_hist.hist(man_measure, bins = int(n_opt_sol/20.0))
+    # ax_hist.legend(loc="upper left")
+    ax_hist.set_xlabel(r"perf. index[rad/s]")
+    ax_hist.set_ylabel(r"N samples")
+    # ax_hist.secondary_xaxis('top', functions=(functools.partial(man_meas2_opt_cost, n_int=n_int),
+    #                                         functools.partial(opt_cost2_man_meas, n_int=n_int)))
+    ax_hist.set_title(r"Performance index histogram", fontdict=None, loc='center')
+    ax_hist.grid()
+    # ax_hist.set_aspect('equal', 'box')
+    # ax_hist.set_facecolor("#d3d3d3")
+    # plt.show()
+    
     # 3D scatterplots
-    opt_q_design_selections, opt_costs_sorted = select_best_sols(100, opt_costs, opt_q_design)
-    scatter3Dcodesign(opt_costs, opt_costs_sorted, opt_q_design_selections,  n_int)
+    # opt_q_design_selections, opt_costs_sorted = select_best_sols(100, opt_costs, opt_q_design)
+    # scatter3Dcodesign(opt_costs, opt_costs_sorted, opt_q_design_selections,  n_int)
 
     clusterer = Clusterer(opt_q_design.T, opt_costs, n_int, n_clusters = 40)
 
@@ -124,7 +140,8 @@ def main(args):
 
     print(first_lev_cand_inds)
     clusterer.create_cluster_plot(show_clusters_sep = True, 
-                                    show_cluster_costs = True)
+                                    show_cluster_costs = True, 
+                                    plt_red_factor = 3)
     clusterer.show_plots()
     
 
