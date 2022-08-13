@@ -43,8 +43,6 @@ if __name__ == '__main__':
                         help = 'number of multistarts (per cluster) to use', default = 108)
     parser.add_argument('--max_trials_factor', '-mtf', type=int,\
                         help = 'for each multistart node, at best max_trials_factor new solutions will be tried to obtain an optimal solution', default = 15)
-    parser.add_argument('--res_dirname', '-d', type=str,\
-                        help = 'directory name from where results are to be loaded', default = "load_dir")
     parser.add_argument('--n_clust_l2', '-nc_l2', type=int,\
                         help = 'number of clusters to be generated', default = 30)
 
