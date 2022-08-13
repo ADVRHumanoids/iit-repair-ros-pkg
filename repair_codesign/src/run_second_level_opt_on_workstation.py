@@ -26,44 +26,7 @@ from codesign_pyutils.miscell_utils import Clusterer
 from codesign_pyutils.misc_definitions import get_design_map
 from codesign_pyutils.load_utils import LoadSols
 
-def solve(multistart_nodes,\
-            task, slvr,\
-            q_ig, q_dot_ig,\
-            solutions,\
-            sol_costs, cnstr_opt,\
-            solve_failed_array, 
-            q_codes_first_level, 
-            cluster_id):
-
-    sol_index = 0 # different index
-
-    solution_time = -1.0
-
-    for node in multistart_nodes:
-
-        print("\n SOLVING PROBLEM N.: " + str(node + 1) +\
-                                        ", cluster n." + str(cluster_id) + \
-                                        ". In-process index: " + str(sol_index + 1) + \
-                                        "/" + str(len(multistart_nodes)))
-        print("\n")
-
-        solve_failed, solution_time = solve_prb_standalone(task, slvr, q_ig[node], q_dot_ig[node], 
-                                                            is_second_level_opt= True, 
-                                                            q_codes_first_level=q_codes_first_level)
-        solutions[sol_index] = slvr.getSolutionDict()
-
-        print("Solution cost " + str(node) + \
-            "-"  + str(sol_index + 1) + "/" + str(len(multistart_nodes)) + \
-            ": " + str(solutions[sol_index]["opt_cost"]))
-
-        sol_costs[sol_index] = solutions[sol_index]["opt_cost"]
-        cnstr_opt[sol_index] = slvr.getConstraintSolutionDict()
-
-        solve_failed_array[sol_index] = solve_failed
-
-        sol_index = sol_index + 1
-    
-    return solution_time
+from termcolor import colored
 
 def gen_task_copies(weight_global_manip, weight_class_manip, 
                     filling_n_nodes, 
@@ -96,12 +59,12 @@ def gen_task_copies(weight_global_manip, weight_class_manip,
                     weight_glob_man = weight_global_manip, weight_class_man = weight_class_manip,\
                     tf_single_task = t_exec_task)
 
-    print("Task node list: ", task.nodes_list)
-    print("Task list: ", task.task_list)
-    print("Task names: ", task.task_names)
-    print("Task dict: ", task.task_dict)
-    print("Total employed nodes: ", task.total_nnodes)
-    print("Number of added subtasks:", task.n_of_tasks, "\n")
+    print(colored("Task node list: " + str(task.nodes_list), "magenta"))
+    print(colored("Task list: " + str(task.task_list), "magenta"))
+    print(colored("Task names: " + str(task.task_names), "magenta"))
+    print(colored("Task dict: " + str( task.task_dict), "magenta"))
+    print(colored("Total employed nodes: " + str(task.total_nnodes), "magenta"))
+    print(colored("Number of added subtasks:" + str(task.n_of_tasks) + "\n", "magenta"))
 
     # set constraints and costs
     task.setup_prb(rot_error_epsi, is_classical_man = use_classical_man, 
@@ -122,12 +85,87 @@ def gen_task_copies(weight_global_manip, weight_class_manip,
     
     return task, slvr
 
+def solve(multistart_nodes,\
+            task, slvr,\
+            q_ig, q_dot_ig,\
+            solutions,\
+            sol_costs, cnstr_opt,\
+            solve_failed_array, 
+            q_codes_first_level, 
+            cluster_id, 
+            trial_idxs, 
+            n_multistarts, 
+            max_retry_n, 
+            process_id):
+
+    solution_time = -1.0
+
+    for sol_index in range(len(multistart_nodes)):
+
+        trial_index = 0
+        solve_failed = True
+
+        print(colored("\nSOLVING PROBLEM OF MULTISTART NODE: " + str(multistart_nodes[sol_index]) +\
+                        ".\nCluster n." + str(cluster_id) + \
+                        ".\nProcess n." + str(process_id) + \
+                        ".\nIn-process index: " + str(sol_index) + \
+                        "/" + str(len(multistart_nodes)), "magenta"))
+        print("\n")
+
+        while True:
+            
+            solve_failed, solution_time = solve_prb_standalone(task, slvr,\
+                                q_ig[multistart_nodes[sol_index] + n_multistarts * trial_index],\
+                                q_dot_ig[multistart_nodes[sol_index] + n_multistarts * trial_index], \
+                                is_second_level_opt= True, \
+                                q_codes_first_level=q_codes_first_level)
+            
+            if trial_index < max_retry_n: # not reached maximum retry number
+
+                if solve_failed:
+                    
+                    trial_index = trial_index + 1
+
+                    print(colored("Solution of node " + str(multistart_nodes[sol_index]) + \
+                        "- in-process index: "  + str(sol_index + 1) + "/" + str(len(multistart_nodes)) + \
+                        "\n (cluster n." + str(cluster_id) + ")\n" + \
+                        "failed --> starting trial n." + str(trial_index), "yellow"))
+                
+                else:
+
+                    break # exit while
+            
+            else:
+
+                break # exit loop and read solution (even if it failed)
+
+        
+        trial_idxs[sol_index] = trial_index # assign trial index (== 0 if solution is optimal on first attempt)
+
+        solutions[sol_index] = slvr.getSolutionDict() # get the first available optimal solution
+
+        print(colored("COMLETED SOLUTION PROCEDURE OF MULTISTART NODE:" + str(multistart_nodes[sol_index]) + \
+            ".\nCluster n." + str(cluster_id) + \
+            ".\nProcess n." + str(process_id) + \
+            ".\nIn-process index: " + str(sol_index) + \
+            "/" + str(len(multistart_nodes)) + \
+            ".\nOpt. cost: " + str(solutions[sol_index]["opt_cost"]), "magenta"))
+
+        sol_costs[sol_index] = solutions[sol_index]["opt_cost"]
+        cnstr_opt[sol_index] = slvr.getConstraintSolutionDict()
+
+        solve_failed_array[sol_index] = solve_failed # for now, solve_failed will always be true
+    
+    return solution_time
+    
 def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
         id_unique,\
         process_id,
         cluster_id,
         first_lev_sol_id, 
-        q_codes_first_level):
+        q_codes_first_level, 
+        n_multistarts, 
+        max_retry_n):
     
     n_multistarts_main = len(multistart_nodes)
 
@@ -136,6 +174,7 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
     sol_costs = [1e10] * n_multistarts_main
     solutions = [None] * n_multistarts_main
     cnstr_opt = [None] * n_multistarts_main
+    trial_idxs = [-1] * n_multistarts_main
 
     # adding q_codes to the initial guess
     design_var_map = get_design_map()
@@ -162,44 +201,37 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
             sol_costs, cnstr_opt,\
             solve_failed_array, 
             q_codes_first_level, 
-            cluster_id)
+            cluster_id, 
+            trial_idxs, 
+            n_multistarts, 
+            max_retry_n, 
+            process_id)
 
     # solutions packaging for postprocessing
     
     sol_dumper = SolDumper()
 
-    # n_opt_sol = len(np.where(np.array(solve_failed_array)== False)[0])
-
-    # best_index = get_min_cost_index(sol_costs, solve_failed_array)
-
-    # other_stuff = {"solve_failed": solve_failed_array, 
-    #                 "n_opt_sol": n_opt_sol, "n_unfeas_sol": n_multistarts_main - n_opt_sol,
-    #                 "sol_costs": sol_costs, "best_sol_index": best_index}
-    
-    # sol_dumper.add_storer(other_stuff, result_path,\
-    #                         "additional_info_p" + str(process_id) + "_t" + id_unique,\
-    #                         False)
-
-    sol_index = 0
-    for node in multistart_nodes:
+    for sol_index in range(len(multistart_nodes)):
             
         full_solution = {**(solutions[sol_index]),
                         **(cnstr_opt[sol_index]),
-                        **{"q_ig": q_ig[sol_index], "q_dot_ig": q_dot_ig[sol_index]}, \
-                        **{"solution_index": node}, 
+                        "q_ig": q_ig[multistart_nodes[sol_index] + n_multistarts * trial_idxs[sol_index]],\
+                        "q_dot_ig": q_dot_ig[multistart_nodes[sol_index] + n_multistarts * trial_idxs[sol_index]], \
+                        "solution_index": multistart_nodes[sol_index], 
+                        "trial_index": trial_idxs[sol_index], 
                         "solution_time": solution_time, 
                         "cluster_id": cluster_id, 
                         "first_lev_sol_id": first_lev_sol_id, 
                         "solve_failed": solve_failed_array[sol_index]}
 
-        if not solve_failed_array[sol_index]:
+        if not solve_failed_array[sol_index]: # for now, the script will only save optimal solutions (does not make much sense to save also failed, at this point)
 
             sol_dumper.add_storer(full_solution, opt_path,\
                             solution_base_name + \
                             "_id" + str(first_lev_sol_id) + \
                             "_cl" + str(cluster_id) + \
                             "_p" + str(process_id) + \
-                            "_n" + str(node) + \
+                            "_n" + str(multistart_nodes[sol_index]) + \
                             "_t" + \
                              id_unique, False)
         else:
@@ -209,23 +241,25 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
                             "_id" + str(first_lev_sol_id) + \
                             "_cl" + str(cluster_id) + \
                             "_p" + str(process_id) + \
-                            "_n" + str(node) + \
+                            "_n" + str(multistart_nodes[sol_index]) + \
                             "_t" + \
                              id_unique, False)
 
-        sol_index = sol_index + 1
-
     sol_dumper.dump() 
 
-    print("\n Solutions of process " + str(process_id) + " ; cluster n. " + str(cluster_id) + " dumped. \n")
+    print(colored("\nSolutions of process " + str(process_id) + \
+            " ; cluster n. " + str(cluster_id) + \
+            " dumped. \n", "magenta"))
                     
 if __name__ == '__main__':
 
     # adding script arguments
     parser = argparse.ArgumentParser(
         description='Second level optimization script for the co-design of RePAIR project')
-    parser.add_argument('--n_multistarts', '-msn', type=int,\
+    parser.add_argument('--n_msrt_trgt', '-mst', type=int,\
                         help = 'number of multistarts (per cluster) to use', default = 2)
+    parser.add_argument('--max_trials_factor', '-mtf', type=int,\
+                        help = 'for each multistart node, at best max_trials_factor new solutions will be tried to obtain an optimal solution', default = 15)
     parser.add_argument('--ig_seed', '-igs', type=int,\
                         help = 'seed for random initialization generation', default = 1)                      
     parser.add_argument('--use_ma57', '-ma57', type=str2bool,\
@@ -236,6 +270,21 @@ if __name__ == '__main__':
                         help = 'number of clusters to be selected', default = 40)
     parser.add_argument('--ipopt_verbose', '-ipopt_v', type = int,\
                         help = 'IPOPT verbose flag', default = 4)
+    
+    parser.add_argument('--dump_dir_name', '-dfn', type=str,\
+                    help = 'dump directory name',
+                    default = "second_level")
+
+    parser.add_argument('--load_dir_name', '-ldn', type=str,\
+                    help = 'load directory name',
+                    default = "first_level")
+
+    parser.add_argument('--res_dir_basename', '-rdbs', type=str,\
+                    help = '',
+                    default = "test_results")
+    parser.add_argument('--solution_base_name', '-sbn', type=str,\
+                    help = '',
+                    default = "repair_codesign_opt_l2")
 
     args = parser.parse_args()
 
@@ -245,7 +294,7 @@ if __name__ == '__main__':
     processes_n = mp.cpu_count()
 
     # useful paths
-    dump_folder_name = "second_level"
+    dump_folder_name = args.dump_dir_name
     rospackage = rospkg.RosPack() # Only for taking the path to the leg package
     urdfs_path = rospackage.get_path("repair_urdf") + "/urdf"
     urdf_name = "repair_full"
@@ -253,13 +302,13 @@ if __name__ == '__main__':
     xacro_full_path = urdfs_path + "/" + urdf_name + ".urdf.xacro"
     codesign_path = rospackage.get_path("repair_codesign")
 
-    load_path = codesign_path + "/test_results/" + args.res_dirname + "/first_level"
-    dump_basepath = codesign_path + "/test_results/" + args.res_dirname + "/" + dump_folder_name
+    load_path = codesign_path + "/" + args.res_dir_basename + "/" + args.res_dirname + "/" + args.load_dir_name
+    dump_basepath = codesign_path + "/" + args.res_dir_basename + "/" + args.res_dirname + "/" + dump_folder_name
 
     coll_yaml_name = "arm_coll.yaml"
     coll_yaml_path = rospackage.get_path("repair_urdf") + "/config/" + coll_yaml_name
 
-    solution_base_name = "repair_codesign_opt_l2"
+    solution_base_name = args.solution_base_name
 
     sliding_wrist_command = "is_sliding_wrist:=" + "true"
     show_softhand_command = "show_softhand:=" + "true"
@@ -280,7 +329,7 @@ if __name__ == '__main__':
 
     except:
 
-        print('Failed to generate URDF.')
+        print(colored('Failed to generate URDF.', "red"))
 
     # loading solution and extracting data
     sol_loader = LoadSols(load_path)
@@ -314,8 +363,6 @@ if __name__ == '__main__':
 
     clusterer = Clusterer(opt_q_design.T, opt_costs, n_int, n_clusters = args.n_clust)
 
-    clusterer.clusterize()
-
     first_lev_cand_inds = clusterer.compute_first_level_candidates()
     fist_lev_cand_man_measure = clusterer.get_fist_lev_candidate_man_measure()
     fist_lev_cand_opt_costs = clusterer.get_fist_lev_candidate_opt_cost()
@@ -329,13 +376,12 @@ if __name__ == '__main__':
     right_arm_picks = sol_loader.task_info_data["right_arm_picks"][0][0]
     filling_n_nodes = sol_loader.task_info_data["filling_nodes"][0][0]
     rot_error_epsi = sol_loader.task_info_data["rot_error_epsi"][0][0]
-
     # samples
     n_y_samples = sol_loader.task_info_data["n_y_samples"][0][0]
     y_sampl_ub = sol_loader.task_info_data["y_sampl_ub"][0][0]
 
     # number of solution tries with different (random) initializations
-    n_multistarts = args.n_multistarts
+    n_msrt_trgt = args.n_msrt_trgt
 
     # solver options
     solver_type = sol_loader.task_info_data["solver_type"][0]
@@ -363,9 +409,11 @@ if __name__ == '__main__':
 
     sliding_wrist_offset = sol_loader.task_info_data["sliding_wrist_offset"][0][0]
 
-    proc_sol_divs = compute_solution_divs(n_multistarts, processes_n)
+    max_retry_n = args.max_trials_factor - 1
+    max_ig_trials = n_msrt_trgt * args.max_trials_factor
+    proc_sol_divs = compute_solution_divs(n_msrt_trgt, processes_n)
 
-    print("Distribution of multistarts between processes: \n")
+    print(colored("Distribution of multistarts between processes: \n", "magenta"))
     print(proc_sol_divs)
     print("\n")
 
@@ -398,22 +446,6 @@ if __name__ == '__main__':
     weight_global_manip = sol_loader.task_info_data["w_man_base"][0][0]
     weight_class_manip = sol_loader.task_info_data["w_clman_base"][0][0]
 
-    # manager = mp.Manager() ## --> does not work because "TypeError: cannot pickle 'casadi_kin_dyn.py3casadi_kin_dyn.CasadiKinDyn' object"
-    # task_copies = manager.list()
-    # slvr_copies = manager.list()
-    # copy_jobs = []
-    # for p in range(len(proc_sol_divs)):
-
-    #     proc = mp.Process(target=gen_task_copies, args=(task_copies, slvr_copies,
-    #                                                     weight_global_manip, 
-    #                                                     weight_class_manip, 
-    #                                                     filling_n_nodes, 
-    #                                                     n_y_samples, y_sampl_ub, 
-    #                                                     use_classical_man, 
-    #                                                     coll_yaml_path, ))
-    #     copy_jobs.append(proc)
-    #     copy_jobs[p].start()
-
     task_copies = [None] * len(proc_sol_divs)
     slvr_copies = [None] * len(proc_sol_divs)
 
@@ -425,15 +457,11 @@ if __name__ == '__main__':
                                                         n_y_samples, y_sampl_ub, 
                                                         use_classical_man, 
                                                         coll_yaml_path)
-    
-    # some initializations
-    q_ig = [None] * n_multistarts
-    q_dot_ig = [None] * n_multistarts
 
     # generating initial guesses, based on the script arguments
     q_ig, q_dot_ig =  generate_ig(args, full_file_paths,\
                                     task_copies[0],\
-                                    n_multistarts, ig_seed,\
+                                    max_ig_trials, ig_seed,\
                                     False)
     
     real_first_level_cand_inds = [-1] * n_clust
@@ -465,7 +493,8 @@ if __name__ == '__main__':
                     "transcription_method": transcription_method, 
                     "integrator": intgrtr, 
                     "sliding_wrist_offset": sliding_wrist_offset,
-                    "n_multistarts_per_cl": n_multistarts,
+                    "n_msrt_trgt": n_msrt_trgt,
+                    "max_retry_n": max_retry_n, 
                     "proc_sol_divs": np.array(proc_sol_divs, dtype=object),
                     "unique_id": unique_id,
                     "n_clust": n_clust,
@@ -501,7 +530,9 @@ if __name__ == '__main__':
                                                                 p,\
                                                                 cl,\
                                                                 real_first_level_cand_inds[cl],\
-                                                                first_level_q_design_opt[:, cl]))
+                                                                first_level_q_design_opt[:, cl], \
+                                                                n_msrt_trgt, 
+                                                                max_retry_n))
             proc_list[p].start()
         
         for p in range(len(proc_sol_divs)):
@@ -512,7 +543,7 @@ if __name__ == '__main__':
                     
         for p in range(len(proc_sol_divs)):
             
-            print("Joining process " + str(p))
+            print(colored("Joining process " + str(p), "magenta"))
 
             proc_list[p].join() # wait until all processes of cluster cl are terminated
 

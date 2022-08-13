@@ -127,21 +127,28 @@ def main(args):
     # ax_hist.set_facecolor("#d3d3d3")
     # plt.show()
     
+    green_diamond = dict(markerfacecolor='g', marker='D')
+    fig_box, ax_box = plt.subplots(1)
+    ax_box.boxplot(man_measure, flierprops = green_diamond, vert=True, 
+                    # whis = (0, 100),
+                    autorange = True)
+    # leg = ax_sigma.legend(loc="upper left")
+    # leg.set_draggable()
+    ax_box.set_xlabel("cluster index")
+    ax_box.set_ylabel("$\eta$\,[rad/s]")
+    ax_box.set_title(r"Second level boxplot", fontdict=None, loc='center')
+    ax_box.grid()
+
     # 3D scatterplots
     # opt_q_design_selections, opt_costs_sorted = select_best_sols(100, opt_costs, opt_q_design)
     # scatter3Dcodesign(opt_costs, opt_costs_sorted, opt_q_design_selections,  n_int)
 
-    clusterer = Clusterer(opt_q_design.T, opt_costs, n_int, n_clusters = 40)
-
-    clusterer.clusterize()
+    clusterer = Clusterer(opt_q_design.T, opt_costs, n_int, n_clusters = 40, 
+                        algo_name = "minikmeans")
     
-    first_lev_cand_inds = clusterer.compute_first_level_candidates()
-    fist_lev_cand_man_measure = clusterer.get_fist_lev_candidate_man_measure()
-
-    print(first_lev_cand_inds)
     clusterer.create_cluster_plot(show_clusters_sep = True, 
                                     show_cluster_costs = True, 
-                                    plt_red_factor = 3)
+                                    plt_red_factor = 5)
     clusterer.show_plots()
     
 

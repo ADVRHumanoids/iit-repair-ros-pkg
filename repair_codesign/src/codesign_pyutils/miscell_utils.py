@@ -33,7 +33,7 @@ def wait_for_confirmation(do_something = "proceed",\
                           on_confirmation = "Confirmation received!",\
                           on_denial = "Stop received!"):
 
-  usr_input = input("\n \n Press Enter to " + do_something + \
+  usr_input = input("\n \nPress Enter to " + do_something + \
                     " or type \"N/n\" to " + or_do_something_else + ". \n -> ")
 
   if usr_input == "":
@@ -50,7 +50,7 @@ def wait_for_confirmation(do_something = "proceed",\
         
       else: # user typed something else
 
-        print("\n Ops.. you did not type any of the options! \n")
+        print("\nOps.. you did not type any of the options! \n")
 
         go_on = wait_for_confirmation()
 
@@ -295,7 +295,7 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
     # Print New Line on Complete
     if iteration == total: 
         print()
-        
+
 class Clusterer():
 
   def __init__(self, X: np.ndarray, opt_costs: list,
@@ -366,6 +366,9 @@ class Clusterer():
                                               min_samples = self.base_options["min_samples"], 
                                               metric = self.base_options["metric"], 
                                               )
+    self.clusterize()
+
+    self.separate_clust_man_measure()
 
   def get_clust_ids(self):
 
@@ -432,6 +435,19 @@ class Clusterer():
 
     return self.n_clust
 
+  def separate_clust_man_measure(self):
+
+    y_un = np.unique(self.data_clust_array)
+
+    self.clusts_man_meas = [-1.0] * self.n_clust
+    self.clusts_opt_costs = [-1.0] * self.n_clust
+
+    for cl in range(self.n_clust):
+
+      cluster_selector = np.where(self.data_clust_array == y_un[cl])[0]
+      self.clusts_opt_costs[cl] = [self.opt_costs[i] for i in cluster_selector]
+      self.clusts_man_meas[cl] = compute_man_measure(self.clusts_opt_costs[cl],
+                                                      self.n_int)
   def clusterize(self, algo_name="minikmeans"):
 
     self.data_clust_array = self.compute_clust(algo_name)
@@ -519,15 +535,15 @@ class Clusterer():
                     s = self.mark_dim, 
                     label="cluster n." + str(y_un[i]))
 
-    if show_background_pnts:
+    # if show_background_pnts:
 
-      ax.scatter3D(self.X[:, 0],\
-                    self.X[:, 1],\
-                    self.X[:, 2],\
-                    alpha = 0.05,
-                    c = ["#D3D3D3"] * len(self.opt_costs),
-                    marker ='o', 
-                    s = self.mark_dim)
+    #   ax.scatter3D(self.X[:, 0],\
+    #                 self.X[:, 1],\
+    #                 self.X[:, 2],\
+    #                 alpha = 0.05,
+    #                 c = ["#D3D3D3"] * len(self.opt_costs),
+    #                 marker ='o', 
+    #                 s = self.mark_dim)
 
     if show_leg:
       leg = ax.legend(loc="upper left")
@@ -566,7 +582,7 @@ class Clusterer():
                         marker ='o', 
                         s = self.mark_dim)
 
-        colrs = rgb_colors[[y_un[i]] * len(cluster_selector)]
+        colrs = rgb_colors[[y_un[i]] * len(self.clusts_man_meas[i])]
 
         if not show_cluster_costs: 
 
@@ -580,9 +596,6 @@ class Clusterer():
                       label="cluster n." + str(y_un[i]))
         
         else:
-          
-          man_measure_clust = compute_man_measure([self.opt_costs[i] for i in cluster_selector],
-                                             self.n_int)
 
           my_cmap = plt.get_cmap('jet_r')
 
@@ -590,7 +603,7 @@ class Clusterer():
                               self.X[cluster_selector, 1],\
                               self.X[cluster_selector, 2],\
                               alpha = 0.8,
-                              c = man_measure_clust.flatten(),
+                              c = self.clusts_man_meas[i].flatten(),
                               cmap = my_cmap,
                               marker ='o', 
                               s = 30, 
@@ -609,6 +622,16 @@ class Clusterer():
         ax.set_ylabel('should. width', fontweight ='bold')
         ax.set_zlabel('mount. roll angle', fontweight ='bold')
 
+    green_diamond = dict(markerfacecolor='g', marker='D')
+    _, ax_box = plt.subplots(1)
+    ax_box.boxplot(self.clusts_man_meas, flierprops = green_diamond, vert=True, 
+                    # whis = (0, 100),
+                    autorange = True)
+    ax_box.set_xlabel("cluster index")
+    ax_box.set_ylabel("$\eta$\,[rad/s]")
+    ax_box.set_title(r"First level cluster boxplot", fontdict=None, loc='center')
+    ax_box.grid()
+      
   def show_plots(self):
 
     plt.show()

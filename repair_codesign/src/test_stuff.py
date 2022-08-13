@@ -7,10 +7,10 @@ from matplotlib import colors
 from pylab import cm
 
 from collections import Counter
-from codesign_pyutils.load_utils import LoadSols
+from codesign_pyutils.load_utils import LoadSols, PostProc2ndLev
 
-import yaml
+import os
 
-sol_loader = LoadSols("/home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/load_dir/first_level")
-
+import numpy as np
+post_proc = PostProc2ndLev("/home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/load_dir")
 

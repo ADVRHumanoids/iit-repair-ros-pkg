@@ -46,7 +46,7 @@ class SolDumper():
 
     else:
 
-      raise Exception("\n Sorry, the chosen backend" + \
+      raise Exception("\nSorry, the chosen backend" + \
                       " is not supported.\n Supported backends: " + \
                       self.backend_list) 
 

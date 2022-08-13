@@ -132,11 +132,16 @@ class PostProc2ndLev:
         self.compute_conf_coeff()
 
         self.second_lev_true_costs = [-1] * self.n_clust
+        self.second_lev_true_man = [-1] * self.n_clust
         self.n_of_improved_costs = 0
         self.compute_second_lev_true_costs()
 
         self.second_lev_weighted_costs = [-1] * self.n_clust
         self.compute_weighted_costs()
+        
+        self.rmse_man_meas = [-1] * self.n_clust
+        self.rmse_opt_cost = [-1] * self.n_clust
+        self.compute_rmse()
 
         self.best_second_lev_cost, self.best_second_lev_cl_index,\
             self.best_second_lev_man_measure, self.best_second_lev_qcodes = self.compute_second_lev_best_sol()
@@ -173,7 +178,23 @@ class PostProc2ndLev:
         for cl in range(self.n_clust):
 
             self.second_lev_weighted_costs[cl] = self.second_lev_true_costs[cl] / self.confidence_coeffs[cl]
+
+    def compute_rmse(self):
         
+        for cl in range(self.n_clust):
+            
+            min_man_cl = self.second_lev_true_man[cl]
+            sum_sqrd_man = 0.0
+            sum_sqrd_cost = 0.0
+            n_opt_ms_cl = len(self.second_lev_man_measure[cl])
+            for ms_sample in range(n_opt_ms_cl):
+                
+                sum_sqrd_man = sum_sqrd_man + (self.second_lev_man_measure[cl][ms_sample] - min_man_cl)**2
+                sum_sqrd_cost = sum_sqrd_cost + (self.second_lev_opt_costs[cl][ms_sample] - min_man_cl)**2
+
+            self.rmse_man_meas[cl] = np.sqrt(sum_sqrd_man / n_opt_ms_cl)
+            self.rmse_opt_cost[cl] = np.sqrt(sum_sqrd_cost / n_opt_ms_cl)
+
     def compute_second_lev_best_sol(self, use_weighted = False):
 
         best_second_lev_qcodes = np.zeros((len(self.first_lev_best_qcodes_candidates), 1)).flatten()

@@ -15,11 +15,14 @@ from codesign_pyutils.miscell_utils import wait_for_confirmation
 
 import argparse
 
+from termcolor import colored
+
 def solve_prb_standalone(task: TaskGen,\
                         slvr: Solver,\
                         q_init=None, q_dot_init=None,\
                         prbl_name = "Problem",
                         on_failure = "\n Failed to solve problem!! \n'", 
+                        on_success = "\n Converged to an optimal solution!! \n",
                         is_second_level_opt = False, 
                         q_codes_first_level = None):
 
@@ -45,12 +48,16 @@ def solve_prb_standalone(task: TaskGen,\
     is_optimal = slvr.solve()  # solving
 
     solution_time = time.time() - t
-
-    print(f'\n {prbl_name} converged to solution in {solution_time} s \n')
     
     if not is_optimal:
 
-        print(on_failure)
+        print(colored(on_failure, 'red'))
+
+    else:
+
+        print(colored(on_success, 'green'))
+
+    print(colored(f'\nTime elapsed: {solution_time} s \n', "magenta"))
 
     solve_failed = not is_optimal
     
@@ -142,62 +149,6 @@ def try_init_solve_or_go_on(arguments: argparse.Namespace,\
 
             
         return soft_sol_failed, sol_failed
-
-# def build_multiple_flipping_tasks(arguments: argparse.Namespace,\
-#                     task: TaskGen, n_filling_nodes, y_sampling, right_arm_picks,\
-#                     urdf_full_path,\
-#                     ig_abs_path, \
-                    
-#                     is_soft_pose_cnstr = False,\
-#                     t_exec = 6.0, epsi = 0.001, verbose = False, \
-#                     object_length = 0.05):
-
-#     # Routine for automatically adding multiple flipping tasks,
-#     # based on the provided y-axis sampling. 
-
-#     # initialize main problem task
-#     task = TaskGen(cocktail_size = object_length, filling_n_nodes = n_filling_nodes)
-
-#     # add tasks to the task holder object
-#     next_node = 0 # used to place the next task on the right problem nodes
-#     for i in range(len(y_sampling)):
-
-#         next_node = task.add_in_place_flip_task(init_node = next_node,\
-#                                     object_pos_wrt_ws = np.array([0.0, y_sampling[i], 0.0]), \
-#                                     object_q_wrt_ws = np.array([0, 1, 0, 0]), \
-#                                     #  pick_q_wrt_ws = np.array([np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]),\
-#                                     right_arm_picks = right_arm_picks)
-
-#     if verbose:
-        
-#         print("Flipping task node list: ", task.nodes_list)
-#         print("Total employed nodes: ", task.total_nnodes)
-#         print("Number of added subtasks:", task.n_of_tasks, "\n")
-
-#     # initialize problem
-#     task.init_prb(urdf_full_path, arguments.base_weight_pos, arguments.base_weight_rot,\
-#                 arguments.weight_global_manip,\
-#                 is_soft_pose_cnstr = arguments.soft_pose_cnstrnt,\
-#                 tf_single_task = t_exec)
-
-#     # generate an initial guess, based one the script arguments
-#     q_ig_main, q_dot_ig_main =  generate_ig(arguments, ig_abs_path,\
-#                             task,\
-#                             n_glob_tests, ig_seed,\
-#                             True)
-#     # set constraints and costs
-#     task.setup_prb(rot_error_epsi, q_ig_main, q_dot_ig_main)
-
-#     # build the main problem
-#     build_multiple_flipping_tasks(args, task, y_sampling,\
-#                                 right_arm_picks, urdf_full_path,\
-#                                 epsi = rot_error_epsi)
-
-#     # build the problem 
-#     task.init_prb(urdf_full_path, weight_glob_man = arguments.weight_global_manip,\
-#                             is_soft_pose_cnstr = is_soft_pose_cnstr, epsi = epsi)
-
-#     return task
 
 def do_one_solve_pass(arguments: argparse.Namespace,\
                     task: TaskGen, slvr: Solver,\

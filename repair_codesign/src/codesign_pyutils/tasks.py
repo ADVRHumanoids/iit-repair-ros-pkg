@@ -379,7 +379,7 @@ class DoubleArmCartTask:
         self.q_ref_left_init.assign(self.lft_default_q_wrt_ws)
         self.q_ref_right_init.assign(self.rght_default_q_wrt_ws)
 
-        print("\n \n Please move both markers in order to start the solution loop!!\n \n ")
+        print("\n \nPlease move both markers in order to start the solution loop!!\n \n ")
 
         while (mark_lft_pos_trgt is None) or (mark_lft_q_trgt is None) \
             or (mark_rght_pos_trgt is None) or (mark_rght_q_trgt is None):
@@ -390,7 +390,7 @@ class DoubleArmCartTask:
 
             time.sleep(0.1)
 
-        print("\n \n Valid feedback from markers received! Starting solution loop ...\n \n ")
+        print("\n \nValid feedback from markers received! Starting solution loop ...\n \n ")
 
         while True:
             

@@ -13,52 +13,18 @@ import subprocess
 import rospkg
 
 from codesign_pyutils.miscell_utils import str2bool, compute_solution_divs,\
-                                            gen_y_sampling, \
-                                            printProgressBar
+                                            gen_y_sampling
 from codesign_pyutils.dump_utils import SolDumper
 from codesign_pyutils.task_utils import solve_prb_standalone, \
                                         generate_ig              
 from codesign_pyutils.tasks import TaskGen
 
-import multiprocessing as mp_classic
-from multiprocessing import Queue
+import multiprocessing as mp
 
 from datetime import datetime
 from datetime import date
 
-def solve(multistart_nodes,\
-            task, slvr,\
-            q_ig, q_dot_ig,\
-            solutions,\
-            sol_costs, cnstr_opt,\
-            solve_failed_array):
-
-    sol_index = 0 # different index
-
-    solution_time = -1.0
-
-    for node in multistart_nodes:
-
-        print("\n SOLVING PROBLEM N.: " + str(node + 1) +\
-                    ". In-process index: " + str(sol_index + 1) +\
-                    "/" + str(len(multistart_nodes)))
-
-        print("\n")
-                    
-        solve_failed, solution_time = solve_prb_standalone(task, slvr, q_ig[node], q_dot_ig[node])
-        solutions[sol_index] = slvr.getSolutionDict()
-
-        print("Solution cost " + str(node) + \
-            "-"  + str(sol_index + 1) + "/" + str(len(multistart_nodes)) + \
-            ": " + str(solutions[sol_index]["opt_cost"]))
-        sol_costs[sol_index] = solutions[sol_index]["opt_cost"]
-        cnstr_opt[sol_index] = slvr.getConstraintSolutionDict()
-
-        solve_failed_array[sol_index] = solve_failed
-
-        sol_index = sol_index + 1
-
-    return solution_time
+from termcolor import colored
 
 def gen_task_copies(filling_n_nodes, sliding_wrist_offset, 
                     n_y_samples, y_sampl_ub, 
@@ -90,12 +56,12 @@ def gen_task_copies(filling_n_nodes, sliding_wrist_offset,
                     weight_glob_man = args.weight_global_manip, weight_class_man = args.weight_class_manip,\
                     tf_single_task = t_exec_task)
 
-    print("Task node list: ", task.nodes_list)
-    print("Task list: ", task.task_list)
-    print("Task names: ", task.task_names)
-    print("Task dict: ", task.task_dict)
-    print("Total employed nodes: ", task.total_nnodes)
-    print("Number of added subtasks:", task.n_of_tasks, "\n")
+    print(colored("Task node list: " + str(task.nodes_list), "magenta"))
+    print(colored("Task list: " + str(task.task_list), "magenta"))
+    print(colored("Task names: " + str(task.task_names), "magenta"))
+    print(colored("Task dict: " + str( task.task_dict), "magenta"))
+    print(colored("Total employed nodes: " + str(task.total_nnodes), "magenta"))
+    print(colored("Number of added subtasks:" + str(task.n_of_tasks) + "\n", "magenta"))
 
     # set constraints and costs
     task.setup_prb(rot_error_epsi, is_classical_man = args.use_classical_man)
@@ -116,6 +82,44 @@ def gen_task_copies(filling_n_nodes, sliding_wrist_offset,
 
     return task, slvr
 
+def solve(multistart_nodes,\
+            task, slvr,\
+            q_ig, q_dot_ig,\
+            solutions,\
+            sol_costs, cnstr_opt,\
+            solve_failed_array, 
+            process_id):
+
+    solution_time = -1.0
+
+    for sol_index in range(len(multistart_nodes)):
+
+        print(colored("\nSOLVING PROBLEM OF MULTISTART NODE: " + str(multistart_nodes[sol_index]) +\
+                        ".\nProcess n." + str(process_id) + \
+                        ".\nIn-process index: " + str(sol_index) + \
+                        "/" + str(len(multistart_nodes)), "magenta"))
+
+        print("\n")
+                    
+        solve_failed, solution_time = solve_prb_standalone(task,\
+            slvr, q_ig[multistart_nodes[sol_index]],\
+            q_dot_ig[multistart_nodes[sol_index]])
+        solutions[sol_index] = slvr.getSolutionDict()
+
+        print_color = "magenta" if not solve_failed else "yellow"
+        print(colored("COMLETED SOLUTION PROCEDURE OF MULTISTART NODE:" + str(multistart_nodes[sol_index]) + \
+            ".\nProcess n." + str(process_id) + \
+            ".\nIn-process index: " + str(sol_index) + \
+            "/" + str(len(multistart_nodes)) + \
+            ".\nOpt. cost: " + str(solutions[sol_index]["opt_cost"]), print_color))
+
+        sol_costs[sol_index] = solutions[sol_index]["opt_cost"]
+        cnstr_opt[sol_index] = slvr.getConstraintSolutionDict()
+
+        solve_failed_array[sol_index] = solve_failed
+
+    return solution_time
+
 def sol_main(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path, opt_path, fail_path,\
         id_unique,\
         process_id):
@@ -133,7 +137,8 @@ def sol_main(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path, op
             q_ig, q_dot_ig,\
             solutions,\
             sol_costs, cnstr_opt,\
-            solve_failed_array)
+            solve_failed_array, 
+            process_id)
 
     # solutions packaging for postprocessing
     
@@ -151,13 +156,12 @@ def sol_main(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path, op
     #                         "additional_info_p" + str(process_id) + "_t" + id_unique,\
     #                         False)
 
-    sol_index = 0
-    for node in multistart_nodes:
+    for sol_index in range(len(multistart_nodes)):
             
         full_solution = {**(solutions[sol_index]),
                         **(cnstr_opt[sol_index]),
                         **{"q_ig": q_ig[sol_index], "q_dot_ig": q_dot_ig[sol_index]}, \
-                        **{"solution_index": node}, 
+                        **{"solution_index": multistart_nodes[sol_index]}, 
                         "solution_time": solution_time, 
                         "solve_failed": solve_failed_array[sol_index]}
 
@@ -167,7 +171,7 @@ def sol_main(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path, op
                             solution_base_name +\
                             "_p" +\
                             str(process_id) + \
-                            "_n" + str(node) +\
+                            "_n" + str(multistart_nodes[sol_index]) +\
                             "_t" + \
                             id_unique, False)
         else:
@@ -176,15 +180,13 @@ def sol_main(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path, op
                             solution_base_name +\
                             "_p" +\
                             str(process_id) + \
-                            "_n" + str(node) +\
+                            "_n" + str(multistart_nodes[sol_index]) +\
                             "_t" + \
                             id_unique, False)
 
-        sol_index = sol_index + 1
-
     sol_dumper.dump() 
 
-    print("\n Solutions of process " + str(process_id) + " dumped. \n")
+    print(colored("\nSolutions of process " + str(process_id) + " dumped. \n", "magenta"))
 
 if __name__ == '__main__':
 
@@ -232,26 +234,47 @@ if __name__ == '__main__':
     parser.add_argument('--ipopt_verbose', '-ipopt_v', type = int,\
                         help = 'IPOPT verbose flag', default = 4)
 
+    parser.add_argument('--run_externally', '-run_ext', type=str2bool,\
+                        help = 'whether this script is run from the higher level pipeline script', default = False)
+    parser.add_argument('--unique_id', '-id', type=str,\
+                        help = 'unique id passed from higherl level script (only used if run_externally == True)',
+                        default = "")
+    parser.add_argument('--dump_folder_name', '-dfn', type=str,\
+                    help = 'dump directory name',
+                    default = "first_level")
+    parser.add_argument('--res_dir_basename', '-rdbs', type=str,\
+                    help = '',
+                    default = "test_results")
+    parser.add_argument('--solution_base_name', '-sbn', type=str,\
+                    help = '',
+                    default = "repair_codesign_opt_l1")
+
     args = parser.parse_args()
     
-    # unique id used for generation of results
-    unique_id = date.today().strftime("%d-%m-%Y") + "-" +\
-                        datetime.now().strftime("%H_%M_%S")
+    unique_id = ""
+    if args.run_externally:
+
+        unique_id = args.unique_id
+    
+    else:
+
+        # unique id used for generation of results
+        unique_id = date.today().strftime("%d-%m-%Y") + "-" +\
+                            datetime.now().strftime("%H_%M_%S")
 
     # number of parallel processes on which to run optimization
     # set to number of cpu counts to saturate
-    processes_n = mp_classic.cpu_count()
-
+    processes_n = mp.cpu_count()
 
     # useful paths
-    dump_folder_name = "first_level"
+    dump_folder_name = args.dump_folder_name
     rospackage = rospkg.RosPack() # Only for taking the path to the leg package
     urdfs_path = rospackage.get_path("repair_urdf") + "/urdf"
     urdf_name = "repair_full"
     urdf_full_path = urdfs_path + "/" + urdf_name + ".urdf"
     xacro_full_path = urdfs_path + "/" + urdf_name + ".urdf.xacro"
     codesign_path = rospackage.get_path("repair_codesign")
-    results_path = codesign_path + "/test_results/test_results_" +\
+    results_path = codesign_path + "/" + args.res_dir_basename + "/" + args.res_dir_basename + "_" +\
                 unique_id + "/" + dump_folder_name
     opt_results_path = results_path + "/opt" 
     failed_results_path = results_path + "/failed"
@@ -259,7 +282,7 @@ if __name__ == '__main__':
     coll_yaml_name = "arm_coll.yaml"
     coll_yaml_path = rospackage.get_path("repair_urdf") + "/config/" + coll_yaml_name
     
-    solution_base_name = "repair_codesign_opt_l1"
+    solution_base_name = args.solution_base_name
 
     sliding_wrist_command = "is_sliding_wrist:=" + "true"
     show_softhand_command = "show_softhand:=" + "true"
@@ -280,7 +303,7 @@ if __name__ == '__main__':
 
     except:
 
-        print('Failed to generate URDF.')
+        print(colored('Failed to generate URDF.', "red"))
 
     # task-specific options
     filling_n_nodes = args.filling_nnodes
@@ -395,7 +418,7 @@ if __name__ == '__main__':
 
     task_info_dumper.dump()
 
-    print("\n Task info solution dumped. \n")
+    print(colored("\nTask info solution dumped. \n", "magenta"))
 
     progress_bar_index = 0
     proc_list = [None] * len(proc_sol_divs)
@@ -403,7 +426,7 @@ if __name__ == '__main__':
     
     for p in range(len(proc_sol_divs)):
 
-        proc_list[p] = mp_classic.Process(target=sol_main, args=(args, proc_sol_divs[p],\
+        proc_list[p] = mp.Process(target=sol_main, args=(args, proc_sol_divs[p],\
                                                             q_ig, q_dot_ig, task_copies[p], slvr_copies[p],\
                                                             results_path, opt_results_path, failed_results_path,\
                                                             unique_id,\
@@ -418,7 +441,7 @@ if __name__ == '__main__':
                     
     for p in range(len(proc_sol_divs)):
 
-        print("Joining process" + str(p))
+        print(colored("Joining process" + str(p), "magenta"))
 
         proc_list[p].join()
 
