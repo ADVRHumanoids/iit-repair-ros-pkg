@@ -21,11 +21,11 @@ if __name__ == '__main__':
 
     # first level specific arguments
     parser.add_argument('--multistart_n_l1', '-msn_l1', type = int,\
-                        help = '', default = 1296)
+                        help = '', default = 2592)
     parser.add_argument('--ig_seed_l1', '-ig_l1', type = int,\
                         help = '', default = 1)
     parser.add_argument('--ipopt_verb_lev', '-ipopt_v', type = int,\
-                        help = '', default = 5)
+                        help = '', default = 1)
     parser.add_argument('--filling_nnodes', '-fnn', type = int,\
                         help = '', default = 0)
     parser.add_argument('--use_ma57', '-ma57', type=str2bool,\
