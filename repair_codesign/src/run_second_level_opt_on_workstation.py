@@ -227,7 +227,8 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
                         "solution_time": solution_time, 
                         "cluster_id": cluster_id, 
                         "first_lev_sol_id": first_lev_sol_id, 
-                        "solve_failed": solve_failed_array[sol_index]}
+                        "solve_failed": solve_failed_array[sol_index] ,
+                        "run_id": id_unique}
 
         if not solve_failed_array[sol_index]: # for now, the script will only save optimal solutions (does not make much sense to save also failed, at this point)
 

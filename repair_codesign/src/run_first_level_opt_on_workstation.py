@@ -216,7 +216,8 @@ def sol_main(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path, op
                         "multistart_index": multistart_nodes[sol_index], 
                         "trial_index": trial_idxs[sol_index], 
                         "solution_time": solution_time, 
-                        "solve_failed": solve_failed_array[sol_index]}
+                        "solve_failed": solve_failed_array[sol_index], 
+                        "run_id": id_unique}
 
         if not solve_failed_array[sol_index]:
 
