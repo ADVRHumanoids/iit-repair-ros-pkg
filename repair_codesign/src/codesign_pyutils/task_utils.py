@@ -21,7 +21,7 @@ def solve_prb_standalone(task: TaskGen,\
                         slvr: Solver,\
                         q_init=None, q_dot_init=None,\
                         prbl_name = "Problem",
-                        on_failure = "\n Failed to solve problem!! \n'", 
+                        on_failure = "\n Failed to solve problem!! \n", 
                         on_success = "\n Converged to an optimal solution!! \n",
                         is_second_level_opt = False, 
                         q_codes_l1 = None):
