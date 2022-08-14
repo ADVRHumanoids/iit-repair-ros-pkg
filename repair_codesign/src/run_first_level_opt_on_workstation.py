@@ -163,7 +163,7 @@ def solve(multistart_nodes,\
 
         solutions[sol_index] = slvr.getSolutionDict()
 
-        print_color = "magenta" if not solve_failed else "yellow"
+        print_color = "green" if not solve_failed else "yellow"
         print(colored("COMLETED SOLUTION PROCEDURE OF MULTISTART NODE:" + str(multistart_nodes[sol_index]) + \
             ".\nProcess n." + str(process_id) + \
             ".\nIn-process index: " + str(sol_index + 1) + \

@@ -248,7 +248,6 @@ class PostProc2ndLev:
 
         max_n_cl_opt_sol = np.max(np.array(opt_sols_n_aux_list))
 
-
         self.confidence_coeffs = [opt_sols_n_aux_list[cl]/max_n_cl_opt_sol for cl in range(self.n_clust)]
 
     def load_clust_sols(self):
