@@ -43,7 +43,6 @@ def add_l1_codes2ig(q_codes_l1, q_ig):
 
     q_codes_l1_extended = np.concatenate((q_codes_l1, q_codes_l1[1:]), axis=0)
 
-    # print(np.tile(q_codes_first_level_extended, len(q_ig[0][0, :])))
     for i in range(len(q_ig)):
 
         q_ig[i][design_indeces, :] = np.transpose(np.tile(q_codes_l1_extended, (len(q_ig[0][0, :]), 1)))
@@ -278,7 +277,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_clust', '-nc', type=int,\
                         help = 'number of clusters to be selected', default = 40)
     parser.add_argument('--ipopt_verbose', '-ipopt_v', type = int,\
-                        help = 'IPOPT verbose flag', default = 4)
+                        help = 'IPOPT verbose flag', default = 2)
     
     parser.add_argument('--dump_dir_name', '-dfn', type=str,\
                     help = 'dump directory name',
@@ -461,7 +460,7 @@ if __name__ == '__main__':
     for p in range(len(proc_sol_divs)):
         
         print(colored("Generating task copy for process n." + str(p), "magenta"))
-        
+
         task_copies[p], slvr_copies[p] = gen_task_copies(weight_global_manip, 
                                                         weight_class_manip, 
                                                         filling_n_nodes, 

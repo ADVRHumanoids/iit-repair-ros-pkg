@@ -26,6 +26,34 @@ from datetime import date
 
 from termcolor import colored
 
+from codesign_pyutils.misc_definitions import get_design_map
+
+def enforce_codes_cnstr_on_ig(q_ig):
+
+    # adding q_codes to the initial guess
+    design_var_map = get_design_map()
+
+    design_indeces = [design_var_map["mount_h"],\
+        design_var_map["should_w_l"],\
+        design_var_map["should_roll_l"],\
+        design_var_map["wrist_off_l"],\
+        design_var_map["should_w_r"],\
+        design_var_map["should_roll_r"],\
+        design_var_map["wrist_off_r"]]
+
+    design_indeces_aux = [design_var_map["mount_h"],\
+        design_var_map["should_w_l"],\
+        design_var_map["should_roll_l"],\
+        design_var_map["wrist_off_l"]]
+
+    for i in range(len(q_ig)):
+
+        q_codes_ig = q_ig[i][design_indeces_aux, :]
+
+        q_codes_extended = np.concatenate((q_codes_ig, q_codes_ig[1:]), axis=0)
+
+        q_ig[i][design_indeces, :] = np.transpose(np.tile(q_codes_extended, (len(q_ig[0][0, :]), 1)))
+
 def gen_task_copies(filling_n_nodes, sliding_wrist_offset, 
                     n_y_samples, y_sampl_ub, 
                     coll_yaml_path = ""):
@@ -261,11 +289,11 @@ if __name__ == '__main__':
     parser.add_argument('--ipopt_tol', '-ipopt_tol', type = np.double,\
                         help = 'IPOPT tolerance', default = 0.0000001)
     parser.add_argument('--ipopt_max_iter', '-max_iter', type = int,\
-                        help = 'IPOPT max iterations', default = 1000)
+                        help = 'IPOPT max iterations', default = 300)
     parser.add_argument('--ipopt_cnstr_tol', '-ipopt_cnstr', type = np.double,\
                         help = 'IPOPT constraint violation tolerance', default = 0.000001)
     parser.add_argument('--ipopt_verbose', '-ipopt_v', type = int,\
-                        help = 'IPOPT verbose flag', default = 4)
+                        help = 'IPOPT verbose flag', default = 2)
 
     parser.add_argument('--run_externally', '-run_ext', type=str2bool,\
                         help = 'whether this script is run from the higher level pipeline script', default = False)
@@ -404,6 +432,7 @@ if __name__ == '__main__':
     for p in range(len(proc_sol_divs)):
         
         print(colored("Generating task copy for process n." + str(p), "magenta"))
+
         task_copies[p], slvr_copies[p] = gen_task_copies(filling_n_nodes,
                                                 sliding_wrist_offset, 
                                                 n_y_samples, y_sampl_ub, 
