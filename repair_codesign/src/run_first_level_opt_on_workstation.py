@@ -213,7 +213,7 @@ def sol_main(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path, op
                         **(cnstr_opt[sol_index]),
                         "q_ig": q_ig[multistart_nodes[sol_index] + n_multistarts * trial_idxs[sol_index]],
                         "q_dot_ig": q_dot_ig[multistart_nodes[sol_index] + n_multistarts * trial_idxs[sol_index]], \
-                        "solution_index": multistart_nodes[sol_index], 
+                        "multistart_index": multistart_nodes[sol_index], 
                         "trial_index": trial_idxs[sol_index], 
                         "solution_time": solution_time, 
                         "solve_failed": solve_failed_array[sol_index]}

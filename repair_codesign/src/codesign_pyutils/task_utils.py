@@ -52,12 +52,14 @@ def solve_prb_standalone(task: TaskGen,\
     if not is_optimal:
 
         print(colored(on_failure, 'red'))
+        
+        print(colored(f'\nTime elapsed: {solution_time} s \n', "red"))
 
     else:
 
         print(colored(on_success, 'green'))
 
-    print(colored(f'\nTime elapsed: {solution_time} s \n', "magenta"))
+        print(colored(f'\nTime elapsed: {solution_time} s \n', "green"))
 
     solve_failed = not is_optimal
     
