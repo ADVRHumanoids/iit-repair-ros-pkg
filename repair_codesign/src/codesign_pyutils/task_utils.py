@@ -24,7 +24,7 @@ def solve_prb_standalone(task: TaskGen,\
                         on_failure = "\n Failed to solve problem!! \n'", 
                         on_success = "\n Converged to an optimal solution!! \n",
                         is_second_level_opt = False, 
-                        q_codes_first_level = None):
+                        q_codes_l1 = None):
 
     # standard routine for solving the problem
         
@@ -36,12 +36,12 @@ def solve_prb_standalone(task: TaskGen,\
     
     else: # second level optimization
         
-        if q_codes_first_level is None:
+        if q_codes_l1 is None:
 
             raise Exception("solve_prb_standalone: if running the second level optimization you must provide \
                             an initialization for the codesign vars.")
 
-        task.q_codes_ref.assign(q_codes_first_level) # assign design variables from first level optimization
+        task.q_codes_ref.assign(q_codes_l1) # assign design variables from first level optimization
 
     t = time.time()
 

@@ -22,6 +22,9 @@ if __name__ == '__main__':
     # first level specific arguments
     parser.add_argument('--multistart_n_l1', '-msn_l1', type = int,\
                         help = '', default = 2592)
+    parser.add_argument('--max_trials_factor_l1', '-mtfl1', type=int,\
+                        help = 'for each multistart node, at best max_trials_factor new solutions will be tried to obtain an optimal solution',
+                        default = 10)
     parser.add_argument('--ig_seed_l1', '-ig_l1', type = int,\
                         help = '', default = 1)
     parser.add_argument('--ipopt_verb_lev', '-ipopt_v', type = int,\
@@ -41,11 +44,13 @@ if __name__ == '__main__':
     # second level-specific arguments
     parser.add_argument('--multistart_n_l2', '-msn_l2', type=int,\
                         help = 'number of multistarts (per cluster) to use', default = 108)
-    parser.add_argument('--max_trials_factor', '-mtf', type=int,\
-                        help = 'for each multistart node, at best max_trials_factor new solutions will be tried to obtain an optimal solution', default = 15)
+    parser.add_argument('--max_trials_factor_l2', '-mtfl2', type=int,\
+                        help = 'for each multistart node, at best max_trials_factor new solutions will be tried to obtain an optimal solution',
+                        default = 30)
     parser.add_argument('--n_clust_l2', '-nc_l2', type=int,\
                         help = 'number of clusters to be generated', default = 30)
-
+    parser.add_argument("--ig_seed_l2", '-ig_l2', type = int,\
+                        help = '', default = 28)
     args = parser.parse_args()
 
 
@@ -75,8 +80,10 @@ if __name__ == '__main__':
 
         # run first level (blocking --> we have to wait for data to be dumped to file)
         first_level_proc = subprocess.check_call(["./run_first_level_opt_on_workstation.py", \
-                                    "-msn", \
+                                    "-mst", \
                                     str(args.multistart_n_l1), \
+                                    "-mtf", \
+                                    str(args.max_trials_factor_l1), \
                                     "-igs", \
                                     str(args.ig_seed_l1),  \
                                     "-fnn", \
@@ -108,28 +115,36 @@ if __name__ == '__main__':
         print(colored('\n An exception occurred while running the first level of the codesign pipeline. Muy malo!!! \n', "red"))
     
 
-    print(colored("\n--> STARTING SECOND LEVEL OPTIMIZATION....\n", "blue"))
+    try:
 
-    #run first level (blocking --> we have to wait for data to be dumped to file)
-    second_level_proc = subprocess.check_call(["./run_second_level_opt_on_workstation.py", \
-                                "-d", \
-                                res_dir_full_name, \
-                                "-dfn", \
-                                l2_dump_folder_name,
-                                "-rdbs", \
-                                res_dir_basename, \
-                                "-ldn", \
-                                l1_dump_folder_name, \
-                                "-ipopt_v", \
-                                str(args.ipopt_verb_lev), \
-                                "-nc",\
-                                str(args.n_clust_l2), 
-                                "-ma57", \
-                                str(args.use_ma57), 
-                                "-igs", \
-                                str(args.ig_seed_l1),
-                                "-mtf", \
-                                str(args.max_trials_factor), \
-                                "-mst",
-                                str(args.multistart_n_l2)
-                                ])
+        print(colored("\n--> STARTING SECOND LEVEL OPTIMIZATION....\n", "blue"))
+
+        #run first level (blocking --> we have to wait for data to be dumped to file)
+        second_level_proc = subprocess.check_call(["./run_second_level_opt_on_workstation.py", \
+                                    "-d", \
+                                    res_dir_full_name, \
+                                    "-dfn", \
+                                    l2_dump_folder_name,
+                                    "-rdbs", \
+                                    res_dir_basename, \
+                                    "-ldn", \
+                                    l1_dump_folder_name, \
+                                    "-ipopt_v", \
+                                    str(args.ipopt_verb_lev), \
+                                    "-nc",\
+                                    str(args.n_clust_l2), 
+                                    "-ma57", \
+                                    str(args.use_ma57), 
+                                    "-igs", \
+                                    str(args.ig_seed_l2),
+                                    "-mtf", \
+                                    str(args.max_trials_factor_l2), \
+                                    "-mst",
+                                    str(args.multistart_n_l2)
+                                    ])
+
+        print(colored("\n--> SECOND LEVEL OPTIMIZATION FINISHED SUCCESSFULLY. \n", "blue"))
+
+    except:
+
+        print(colored('\n An exception occurred while running the second level of the codesign pipeline. Muy malo!!! \n', "red"))

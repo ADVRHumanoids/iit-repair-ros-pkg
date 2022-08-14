@@ -28,6 +28,26 @@ from codesign_pyutils.load_utils import LoadSols
 
 from termcolor import colored
 
+def add_l1_codes2ig(q_codes_l1, q_ig):
+
+    # adding q_codes to the initial guess
+    design_var_map = get_design_map()
+
+    design_indeces = [design_var_map["mount_h"],\
+        design_var_map["should_w_l"],\
+        design_var_map["should_roll_l"],\
+        design_var_map["wrist_off_l"],\
+        design_var_map["should_w_r"],\
+        design_var_map["should_roll_r"],\
+        design_var_map["wrist_off_r"]]
+
+    q_codes_l1_extended = np.concatenate((q_codes_l1, q_codes_l1[1:]), axis=0)
+
+    # print(np.tile(q_codes_first_level_extended, len(q_ig[0][0, :])))
+    for i in range(len(q_ig)):
+
+        q_ig[i][design_indeces, :] = np.transpose(np.tile(q_codes_l1_extended, (len(q_ig[0][0, :]), 1)))
+
 def gen_task_copies(weight_global_manip, weight_class_manip, 
                     filling_n_nodes, 
                     n_y_samples, y_sampl_ub, 
@@ -91,7 +111,7 @@ def solve(multistart_nodes,\
             solutions,\
             sol_costs, cnstr_opt,\
             solve_failed_array, 
-            q_codes_first_level, 
+            q_codes_l1, 
             cluster_id, 
             trial_idxs, 
             n_multistarts, 
@@ -118,7 +138,7 @@ def solve(multistart_nodes,\
                                 q_ig[multistart_nodes[sol_index] + n_multistarts * trial_index],\
                                 q_dot_ig[multistart_nodes[sol_index] + n_multistarts * trial_index], \
                                 is_second_level_opt= True, \
-                                q_codes_first_level=q_codes_first_level)
+                                q_codes_l1=q_codes_l1)
             
             if trial_index < max_retry_n: # not reached maximum retry number
 
@@ -129,7 +149,7 @@ def solve(multistart_nodes,\
                     print(colored("Solution of node " + str(multistart_nodes[sol_index]) + \
                         "- in-process index: "  + str(sol_index + 1) + "/" + str(len(multistart_nodes)) + \
                         "\n (cluster n." + str(cluster_id) + ")\n" + \
-                        "failed --> starting trial n." + str(trial_index), "yellow"))
+                        " failed --> starting trial n." + str(trial_index), "yellow"))
                 
                 else:
 
@@ -144,12 +164,13 @@ def solve(multistart_nodes,\
 
         solutions[sol_index] = slvr.getSolutionDict() # get the first available optimal solution
 
+        print_color = "magenta" if not solve_failed else "yellow"
         print(colored("COMLETED SOLUTION PROCEDURE OF MULTISTART NODE:" + str(multistart_nodes[sol_index]) + \
             ".\nCluster n." + str(cluster_id) + \
             ".\nProcess n." + str(process_id) + \
             ".\nIn-process index: " + str(sol_index + 1) + \
             "/" + str(len(multistart_nodes)) + \
-            ".\nOpt. cost: " + str(solutions[sol_index]["opt_cost"]), "magenta"))
+            ".\nOpt. cost: " + str(solutions[sol_index]["opt_cost"]), print_color))
 
         sol_costs[sol_index] = solutions[sol_index]["opt_cost"]
         cnstr_opt[sol_index] = slvr.getConstraintSolutionDict()
@@ -163,11 +184,11 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
         process_id,
         cluster_id,
         first_lev_sol_id, 
-        q_codes_first_level, 
+        q_codes_l1, 
         n_multistarts, 
         max_retry_n):
     
-    n_multistarts_main = len(multistart_nodes)
+    n_multistarts_main = len(multistart_nodes) # number of multistarts assigned to this main instance
 
     # some initializations before entering the solution loop
     solve_failed_array = [True] * n_multistarts_main
@@ -177,22 +198,7 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
     trial_idxs = [-1] * n_multistarts_main
 
     # adding q_codes to the initial guess
-    design_var_map = get_design_map()
-
-    design_indeces = [design_var_map["mount_h"],\
-        design_var_map["should_w_l"],\
-        design_var_map["should_roll_l"],\
-        design_var_map["wrist_off_l"],\
-        design_var_map["should_w_r"],\
-        design_var_map["should_roll_r"],\
-        design_var_map["wrist_off_r"]]
-
-    q_codes_first_level_extended = np.concatenate((q_codes_first_level, q_codes_first_level[1:]), axis=0)
-
-    # print(np.tile(q_codes_first_level_extended, len(q_ig[0][0, :])))
-    for i in range(len(q_ig)):
-
-        q_ig[i][design_indeces, :] = np.transpose(np.tile(q_codes_first_level_extended, (len(q_ig[0][0, :]), 1)))
+    add_l1_codes2ig(q_codes_l1, q_ig)
 
     solution_time = solve(multistart_nodes,\
             task, slvr,\
@@ -200,7 +206,7 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
             solutions,\
             sol_costs, cnstr_opt,\
             solve_failed_array, 
-            q_codes_first_level, 
+            q_codes_l1, 
             cluster_id, 
             trial_idxs, 
             n_multistarts, 
@@ -231,6 +237,7 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
                             "_id" + str(first_lev_sol_id) + \
                             "_cl" + str(cluster_id) + \
                             "_p" + str(process_id) + \
+                            "_r" + str(trial_idxs[sol_index]) + \
                             "_n" + str(multistart_nodes[sol_index]) + \
                             "_t" + \
                              id_unique, False)
@@ -241,6 +248,7 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
                             "_id" + str(first_lev_sol_id) + \
                             "_cl" + str(cluster_id) + \
                             "_p" + str(process_id) + \
+                            "_r" + str(trial_idxs[sol_index]) + \
                             "_n" + str(multistart_nodes[sol_index]) + \
                             "_t" + \
                              id_unique, False)
@@ -259,7 +267,8 @@ if __name__ == '__main__':
     parser.add_argument('--n_msrt_trgt', '-mst', type=int,\
                         help = 'number of multistarts (per cluster) to use', default = 2)
     parser.add_argument('--max_trials_factor', '-mtf', type=int,\
-                        help = 'for each multistart node, at best max_trials_factor new solutions will be tried to obtain an optimal solution', default = 15)
+                        help = 'for each multistart node, at best max_trials_factor new solutions will be tried to obtain an optimal solution',
+                        default = 15)
     parser.add_argument('--ig_seed', '-igs', type=int,\
                         help = 'seed for random initialization generation', default = 1)                      
     parser.add_argument('--use_ma57', '-ma57', type=str2bool,\
@@ -532,7 +541,7 @@ if __name__ == '__main__':
                                                                 real_first_level_cand_inds[cl],\
                                                                 first_level_q_design_opt[:, cl], \
                                                                 n_msrt_trgt, 
-                                                                max_retry_n))
+                                                                max_retry_n,))
             proc_list[p].start()
         
         for p in range(len(proc_sol_divs)):
