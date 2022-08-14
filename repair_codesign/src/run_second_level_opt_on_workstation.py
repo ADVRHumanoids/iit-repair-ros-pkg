@@ -460,6 +460,8 @@ if __name__ == '__main__':
 
     for p in range(len(proc_sol_divs)):
         
+        print(colored("Generating task copy for process n." + str(p), "magenta"))
+        
         task_copies[p], slvr_copies[p] = gen_task_copies(weight_global_manip, 
                                                         weight_class_manip, 
                                                         filling_n_nodes, 
