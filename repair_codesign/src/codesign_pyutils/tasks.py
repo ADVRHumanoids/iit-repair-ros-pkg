@@ -813,21 +813,26 @@ class TaskGen:
                                             self.coll_yaml_path,\
                                             tcp_contact_nodes = self.tcp_contact_nodes)
     
-    def add_tasks(self, y_sampling: np.ndarray, right_arm_picks: list):
+    def add_tasks(self, y_sampling: np.ndarray, right_arm_picks: list, 
+                    is_in_place_flip = True, is_bimanual_pick = False):
 
         next_node = 0 # used to place the next task on the right problem nodes
         # # in place flip task
-        for i in range(len(y_sampling)):
+        if is_in_place_flip:
 
-            next_node = self.add_in_place_flip_task(init_node = next_node,\
-                            object_pos_wrt_ws = np.array([0.0, y_sampling[i], 0.0]), \
-                            right_arm_picks = bool(right_arm_picks[i]))
+            for i in range(len(y_sampling)):
+
+                next_node = self.add_in_place_flip_task(init_node = next_node,\
+                                object_pos_wrt_ws = np.array([0.0, y_sampling[i], 0.0]), \
+                                right_arm_picks = bool(right_arm_picks[i]))
         # bimanual task
-        # for j in range(len(y_sampling)):
+        if is_bimanual_pick:
             
-        #     next_node = self.add_bimanual_task(init_node = next_node,\
-        #                     object_pos_wrt_ws = np.array([0.0, y_sampling[j], 0.0]), \
-        #                     right_arm_picks = right_arm_picks[j])
+            for j in range(len(y_sampling)):
+                
+                next_node = self.add_bimanual_pick_task(init_node = next_node,\
+                                object_pos_wrt_ws = np.array([0.0, y_sampling[j], 0.0]), \
+                                right_arm_picks = right_arm_picks[j])
 
     def build_tasks(self, is_soft_pose_cnstr = False, epsi = epsi_default):
         
@@ -937,7 +942,7 @@ class TaskGen:
 
         return next_task_node
 
-    def add_bimanual_task(self, init_node: int,\
+    def add_bimanual_pick_task(self, init_node: int,\
                                 right_arm_picks = True,\
                                 object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]),\
                                 object_q_wrt_ws = np.array([1, 0, 0, 0]),\

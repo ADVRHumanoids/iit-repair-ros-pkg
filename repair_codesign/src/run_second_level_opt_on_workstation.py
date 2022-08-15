@@ -329,6 +329,10 @@ if __name__ == '__main__':
     n_y_samples = sol_loader.task_info_data["n_y_samples"][0][0]
     y_sampl_ub = sol_loader.task_info_data["y_sampl_ub"][0][0]
 
+    # chosen task
+    is_in_place_flip = bool(sol_loader.task_info_data["is_in_place_flip"][0][0])
+    is_biman_pick = bool(sol_loader.task_info_data["is_biman_pick"][0][0])
+
     # number of solution tries with different (random) initializations
     n_msrt_trgt = args.n_msrt_trgt
 
@@ -414,7 +418,9 @@ if __name__ == '__main__':
                                         use_classical_man,
                                         is_sliding_wrist,
                                         coll_yaml_path,
-                                        is_second_lev_opt)
+                                        is_second_lev_opt, 
+                                        is_in_place_flip, 
+                                        is_biman_pick)
         
         slvr_copies[p] = gen_slvr_copies(task_copies[p],
                             solver_type,
@@ -443,6 +449,8 @@ if __name__ == '__main__':
     other_stuff = {"dt": task_copies[0].dt, "filling_nodes": task_copies[0].filling_n_nodes, 
                     "task_base_nnodes": task_copies[0].task_base_n_nodes_dict,
                     "right_arm_picks": task_copies[0].rght_arm_picks, 
+                    "rot_error_epsi": rot_error_epsi,
+                    "t_exec_task": t_exec_task,
                     "w_man_base": weight_global_manip, 
                     "w_clman_base": weight_class_manip,
                     "w_man_actual": task_copies[0].weight_glob_man, 
@@ -463,10 +471,13 @@ if __name__ == '__main__':
                     "proc_sol_divs": np.array(proc_sol_divs, dtype=object),
                     "unique_id": unique_id,
                     "n_clust": n_clust,
-                    "first_lev_cand_inds": np.array(real_first_level_cand_inds), 
-                    "first_lev_best_candidates": first_level_q_design_opt,
-                    "first_lev_opt_costs": fist_lev_cand_opt_costs, 
-                    "fist_lev_cand_man_measure": fist_lev_cand_man_measure}
+                    "is_in_place_flip": args.is_in_place_flip, 
+                    "is_biman_pick": args.is_biman_pick,
+                    "l2_cl_cand_inds": np.array(real_first_level_cand_inds), 
+                    "l2_cl_best_candidates": first_level_q_design_opt,
+                    "l2_cl_opt_costs": fist_lev_cand_opt_costs, 
+                    "l2_cl_cand_man_measure": fist_lev_cand_man_measure
+                    }
 
     task_info_dumper.add_storer(other_stuff, dump_basepath,\
                             "second_level_info_t" + unique_id,\

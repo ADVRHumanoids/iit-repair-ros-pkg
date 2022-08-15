@@ -202,6 +202,11 @@ if __name__ == '__main__':
     parser.add_argument('--use_classical_man', '-ucm', type=str2bool,\
                         help = 'whether to use the classical manipulability index', default = False)
 
+    parser.add_argument('--is_in_place_flip', '-iplf', type=str2bool,\
+                        help = 'whether to use in place flip task', default = True)
+    parser.add_argument('--is_biman_pick', '-ucm', type=str2bool,\
+                        help = 'whether to use bimanual pick task', default = False)
+
     parser.add_argument('--n_msrt_trgt', '-mst', type=int,\
                         help = 'number of  target optimal solutions the script will try to find',
                         default = 10)
@@ -393,7 +398,9 @@ if __name__ == '__main__':
                                         args.use_classical_man,
                                         is_sliding_wrist,
                                         coll_yaml_path,
-                                        is_second_lev_opt)
+                                        is_second_lev_opt, 
+                                        args.is_in_place_flip, 
+                                        args.is_biman_pick)
         
         slvr_copies[p] = gen_slvr_copies(task_copies[p],
                             solver_type,
@@ -437,7 +444,8 @@ if __name__ == '__main__':
                     "unique_id": unique_id, 
                     "rot_error_epsi": rot_error_epsi, 
                     "t_exec_task": t_exec_task, 
-                    }
+                    "is_in_place_flip": args.is_in_place_flip, 
+                    "is_biman_pick": args.is_biman_pick}
     
     task_info_dumper.add_storer(other_stuff, results_path,\
                             "employed_task_info_t" + unique_id,\
