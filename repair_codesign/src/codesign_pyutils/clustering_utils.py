@@ -22,7 +22,7 @@ class Clusterer():
               algo_name="minikmeans"):
 
     self.base_options = {
-    "n_neighbors": 3,
+    # "n_neighbors": 3,
     "n_clusters": n_clusters,
     "min_samples": 32,
     "metric": "euclidean", 
@@ -42,11 +42,11 @@ class Clusterer():
 
     self.mark_dim = mark_dim
 
-    self.connectivity = kneighbors_graph(
-        self.X, n_neighbors=self.base_options["n_neighbors"], include_self=False
-    )
+    # self.connectivity = kneighbors_graph(
+    #     self.X, n_neighbors=self.base_options["n_neighbors"], include_self=False
+    # )
 
-    self.connectivity_mat = 0.5 * (self.connectivity + self.connectivity.T)
+    # self.connectivity_mat = 0.5 * (self.connectivity + self.connectivity.T)
 
     self.algo_dict = {}
 
