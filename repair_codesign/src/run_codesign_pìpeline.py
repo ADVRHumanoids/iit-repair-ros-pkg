@@ -25,6 +25,12 @@ if __name__ == '__main__':
     parser.add_argument('--max_trials_factor_l1', '-mtfl1', type=int,\
                         help = 'for each multistart node, at best max_trials_factor new solutions will be tried to obtain an optimal solution',
                         default = 5)
+
+    parser.add_argument('--is_in_place_flip', '-iplf', type=str2bool,\
+                        help = 'whether to use in place flip task', default = True)
+    parser.add_argument('--is_biman_pick', '-ibp', type=str2bool,\
+                        help = 'whether to use bimanual pick task', default = False)
+
     parser.add_argument('--ig_seed_l1', '-ig_l1', type = int,\
                         help = '', default = 1)
     parser.add_argument('--ipopt_verb_lev', '-ipopt_v', type = int,\
@@ -112,7 +118,10 @@ if __name__ == '__main__':
                                     l1_dump_folder_name, \
                                     "-rdbs", \
                                     res_dir_basename, \
-                                    ])
+                                    "-iplf", \
+                                    str(args.is_in_place_flip), 
+                                    "-ibp", \
+                                    str(args.is_biman_pick)])
 
         print(colored("\n--> FIRST LEVEL OPTIMIZATION FINISHED SUCCESSFULLY. \n", "blue"))
 

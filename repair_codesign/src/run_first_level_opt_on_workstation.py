@@ -204,7 +204,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--is_in_place_flip', '-iplf', type=str2bool,\
                         help = 'whether to use in place flip task', default = True)
-    parser.add_argument('--is_biman_pick', '-ucm', type=str2bool,\
+    parser.add_argument('--is_biman_pick', '-ibp', type=str2bool,\
                         help = 'whether to use bimanual pick task', default = False)
 
     parser.add_argument('--n_msrt_trgt', '-mst', type=int,\
