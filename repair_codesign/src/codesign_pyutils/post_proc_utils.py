@@ -17,6 +17,8 @@ import numpy as np
 
 import rospkg
 
+import subprocess
+
 def compute_man_cost(task_node_list: list, 
                     q_dot: list, man_weight = None):
 
@@ -44,7 +46,6 @@ def compute_man_cost(task_node_list: list,
 
   return man_cost
 
-
 class PostProcL1:
 
     def __init__(self, load_path, 
@@ -62,6 +63,7 @@ class PostProcL1:
         urdfs_path = rospackage.get_path("repair_urdf") + "/urdf"
         urdf_name = "repair_full"
         self._urdf_full_path = urdfs_path + "/" + urdf_name + ".urdf"
+        self._xacro_full_path = urdfs_path + "/" + urdf_name + ".urdf.xacro"
         coll_yaml_name = "arm_coll.yaml"
         self._coll_yaml_path = rospackage.get_path("repair_urdf") + "/config/" + coll_yaml_name
 
@@ -202,7 +204,8 @@ class PostProcL1:
         self._ms_trgt = self._prb_info_data["n_msrt_trgt"][0][0]
         self._ny_sampl = self._prb_info_data["n_y_samples"][0][0]
         self._y_sampl_ub = self._prb_info_data["y_sampl_ub"][0][0]
-        self._nodes_list = self._prb_info_data["nodes_list"]
+        self._nodes_list = self.__correct_node_list(self._prb_info_data["nodes_list"])
+
         self._proc_sol_divs = self._prb_info_data["proc_sol_divs"]
         self._rot_error_epsi = self._prb_info_data["rot_error_epsi"][0][0]
         self._slvr_opts = self._prb_info_data["slvr_opts"]
@@ -257,8 +260,8 @@ class PostProcL1:
         self._min_opt_costs = np.min(np.array(self._opt_costs))
         self._rmse_opt_costs = self.__rmse(self._avrg_opt_costs, self._opt_costs)
 
+        self.__gen_urdf()
         print(colored("\nGenerating task copy...\n", "magenta"))
-        
         self._task_copy = gen_task_copies(self._man_w_base, self._class_man_w_base,
                                         self._filling_nnodes, 
                                         self._wrist_off,
@@ -272,9 +275,48 @@ class PostProcL1:
                                         self._coll_yaml_path, 
                                         is_second_lev_opt=False)
 
-        _1, _2 = compute_ms_cl_man(self._q[0], self._nodes_list, self._task_copy)
+        self._man_llist, self._man_rlist = self.__get_cl_man_list()
+                
+    def __gen_urdf(self):
+
+        sliding_wrist_command = "is_sliding_wrist:=" + "true"
+        show_softhand_command = "show_softhand:=" + "true"
+        show_coll_command = "show_coll:=" + "true"
+
+        try:
         
-        print(_1, _2)
+            # print(sliding_wrist_command)
+            xacro_gen = subprocess.check_call(["xacro",\
+                                            self._xacro_full_path, \
+                                            sliding_wrist_command, \
+                                            show_softhand_command, \
+                                            show_coll_command, \
+                                            "-o", 
+                                            self._urdf_full_path])
+
+        except:
+
+            print(colored('Failed to generate URDF.', "red"))
+            
+    def __correct_node_list(self, input_node_list: np.ndarray):
+
+        input_node_list = input_node_list.tolist()
+
+        output_node_list = []
+
+        # applying ugly corrections
+        if type(input_node_list[0][0]) == np.ndarray: # probably here we have read a multitask solution
+            # which will have different number of nodes.
+            reduced_list = input_node_list[0]
+            for i in range(len(reduced_list)):
+
+                output_node_list.append(reduced_list[i].tolist()[0])
+
+        else:
+
+            output_node_list = input_node_list
+
+        return output_node_list                    
 
     def __rmse(self, ref, vals):
         
@@ -300,6 +342,20 @@ class PostProcL1:
         man_cost = [man_cost_raw[i] for i in range(len(man_cost_raw))] # correction for scalar data
 
         return man_cost
+
+    def __get_cl_man_list(self):
+
+        cl_man_llist = []
+        cl_man_rlist = []
+
+        for ms in range(len(self._q)):
+
+            cl_man_lft, cl_man_rght  = compute_ms_cl_man(self._q[ms], self._nodes_list, self._task_copy)
+
+            cl_man_llist.append(cl_man_lft)
+            cl_man_rlist.append(cl_man_rght)
+
+        return cl_man_llist, cl_man_rlist
 
     def __array2double_correction(self, input_data):
 
@@ -497,7 +553,7 @@ class PostProcL1:
 
         return True
 
-    def __dump_data2file(self):
+    def dump_data2file(self):
 
         attr_dict = self.__dict__
 

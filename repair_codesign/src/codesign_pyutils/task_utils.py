@@ -100,15 +100,12 @@ def compute_node_cl_man(task: TaskGen, q: np.ndarray):
 
 def compute_ms_cl_man(q: np.ndarray, nodes_list: list, task: TaskGen):
     
-    print(type(nodes_list))
-    exit()
-
     ms_cl_man_lft = np.zeros((2, nodes_list[-1][-1] + 1))
     ms_cl_man_rght = np.zeros((2, nodes_list[-1][-1] + 1))
 
     for task_idx in range(len(nodes_list)):
-        
-        for node_idx in len(nodes_list[task_idx]):
+    
+        for node_idx in range(len(nodes_list[task_idx])):
             
             cl_man_ltrasl, cl_man_lrot, _1, \
                 cl_man_rtrasl, cl_man_rrot, _2 = compute_node_cl_man(task, q[:, node_idx])
