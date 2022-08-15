@@ -148,16 +148,6 @@ def extract_q_design(input_data: list):
 
     return design_data
 
-def compute_man_measure(opt_costs: list, n_int: int):
-
-    man_measure = np.zeros((len(opt_costs), 1)).flatten()
-
-    for i in range(len(opt_costs)): 
-
-        man_measure[i] = np.sqrt(opt_costs[i] / n_int) # --> discretized root mean squared joint velocities over the opt interval 
-
-    return man_measure
-
 def gen_y_sampling(n_y_samples, y_sampl_ub):
 
     y_sampl_lb = - y_sampl_ub
@@ -241,7 +231,7 @@ def scatter3Dcodesign(opt_costs: list,
     n_selection = len(opt_costs_sorted)
     n_opt_sol = len(opt_costs)
 
-    man_measure_original = compute_man_measure(opt_costs, n_int_prb)
+    man_measure_original = compute_man_index(opt_costs, n_int_prb)
 
     vmin_colorbar = None
     vmax_colorbar = None
@@ -249,7 +239,7 @@ def scatter3Dcodesign(opt_costs: list,
       vmin_colorbar = min(man_measure_original)
       vmax_colorbar = max(man_measure_original)
 
-    man_measure_sorted = compute_man_measure(opt_costs_sorted, n_int_prb) # scaling opt costs to make them more interpretable
+    man_measure_sorted = compute_man_index(opt_costs_sorted, n_int_prb) # scaling opt costs to make them more interpretable
 
     fig = plt.figure()
     ax = plt.axes(projection ="3d")
@@ -296,6 +286,64 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
     if iteration == total: 
         print()
 
+def compute_man_cost(q_dot: list, man_weight = None):
+
+  if man_weight is None:
+
+    man_weight = 1.0
+
+  if type(q_dot[0]) != np.ndarray:
+
+    raise Exception("compute_man_cost: q_dot should be a list of ndarrays!")
+
+  man_cost = [0.0] * len(q_dot)
+
+  for ms_idx in range(len(q_dot)):
+
+    for node in range(q_dot[ms_idx].shape[1]):
+
+      man_cost[ms_idx] = man_cost[ms_idx] + man_weight * np.sum(np.square(q_dot[ms_idx][:, node]))
+
+  return man_cost
+
+def compute_man_index(man_cost: list, n_int: int):
+
+    man_measure = np.zeros((len(man_cost), 1)).flatten()
+
+    for i in range(len(man_cost)): 
+
+        man_measure[i] = np.sqrt(man_cost[i] / n_int) # --> discretized root mean squared joint velocities over the opt interval 
+
+    return man_measure
+
+def compute_cl_man(task):
+
+  Jl = task.larm_tcp_jacobian
+  Jr = task.rarm_tcp_jacobian
+
+# def compute_cl_man_cost(q: list, man_weight = None):
+
+#   if man_weight is None:
+
+#     man_weight = 1.0
+
+#   if type(q[0]) != np.ndarray:
+
+#     raise Exception("compute_cl_man_cost: q should be a list of ndarrays!")
+
+#   cl_man_cost_tr = [0.0] * len(q)
+#   cl_man_cost_rot = [0.0] * len(q)
+
+#   for ms_idx in range(len(q)):
+
+#     for node in range(q[ms_idx].shape[1]):
+
+#       cl_man_cost_tr[ms_idx] =  man_weight * 
+
+#   return cl_man_cost_tr, cl_man_cost_rot
+
+# def compute_cl_man_index(cl_man_cost: list, n_int: int):
+
 class Clusterer():
 
   def __init__(self, X: np.ndarray, opt_costs: list,
@@ -317,7 +365,7 @@ class Clusterer():
     self.X = X
     self.opt_costs = opt_costs
     self.n_int = n_int
-    self.man_measure = compute_man_measure(self.opt_costs, self.n_int)
+    self.man_measure = compute_man_index(self.opt_costs, self.n_int)
 
     self.vmin_colorbar = min(self.man_measure)
     self.vmax_colorbar = max(self.man_measure)
@@ -446,7 +494,7 @@ class Clusterer():
 
       cluster_selector = np.where(self.data_clust_array == y_un[cl])[0]
       self.clusts_opt_costs[cl] = [self.opt_costs[i] for i in cluster_selector]
-      self.clusts_man_meas[cl] = compute_man_measure(self.clusts_opt_costs[cl],
+      self.clusts_man_meas[cl] = compute_man_index(self.clusts_opt_costs[cl],
                                                       self.n_int)
   def clusterize(self, algo_name="minikmeans"):
 

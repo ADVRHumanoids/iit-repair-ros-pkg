@@ -20,11 +20,13 @@ from codesign_pyutils.tasks import TaskGen
 
 import multiprocessing as mp
 
-from codesign_pyutils.miscell_utils import extract_q_design, compute_man_measure,\
+from codesign_pyutils.miscell_utils import extract_q_design, compute_man_index,\
                                              compute_solution_divs, gen_y_sampling
 from codesign_pyutils.miscell_utils import Clusterer
 from codesign_pyutils.misc_definitions import get_design_map
 from codesign_pyutils.load_utils import LoadSols
+
+from codesign_pyutils.task_utils import gen_task_copies, gen_slvr_copies
 
 from termcolor import colored
 
@@ -46,63 +48,6 @@ def add_l1_codes2ig(q_codes_l1, q_ig):
     for i in range(len(q_ig)):
 
         q_ig[i][design_indeces, :] = np.transpose(np.tile(q_codes_l1_extended, (len(q_ig[0][0, :]), 1)))
-
-def gen_task_copies(weight_global_manip, weight_class_manip, 
-                    filling_n_nodes, 
-                    n_y_samples, y_sampl_ub, 
-                    use_classical_man = False, 
-                    coll_yaml_path = ""):
-
-    
-    y_sampling = gen_y_sampling(n_y_samples, y_sampl_ub)
-
-    right_arm_picks = np.array([True] * len(y_sampling))
-    for i in range(len(y_sampling)):
-        
-        if y_sampling[i] <= 0 : # on the right
-            
-            right_arm_picks[i] = True
-        
-        else:
-
-            right_arm_picks[i] = False
-
-    # initialize problem task
-    task = TaskGen(filling_n_nodes = filling_n_nodes, 
-                    coll_yaml_path = coll_yaml_path)
-
-    task.add_tasks(y_sampling, right_arm_picks)
-
-    # initialize problem
-    task.init_prb(urdf_full_path,
-                    weight_glob_man = weight_global_manip, weight_class_man = weight_class_manip,\
-                    tf_single_task = t_exec_task)
-
-    print(colored("Task node list: " + str(task.nodes_list), "magenta"))
-    print(colored("Task list: " + str(task.task_list), "magenta"))
-    print(colored("Task names: " + str(task.task_names), "magenta"))
-    print(colored("Task dict: " + str( task.task_dict), "magenta"))
-    print(colored("Total employed nodes: " + str(task.total_nnodes), "magenta"))
-    print(colored("Number of added subtasks:" + str(task.n_of_tasks) + "\n", "magenta"))
-
-    # set constraints and costs
-    task.setup_prb(rot_error_epsi, is_classical_man = use_classical_man, 
-                    is_second_lev_opt = True)
-
-    if solver_type != "ilqr":
-
-        Transcriptor.make_method(transcription_method,\
-                                task.prb,\
-                                transcription_opts)
-    
-    ## Creating the solver
-    slvr = solver.Solver.make_solver(solver_type, task.prb, slvr_opt)
-
-    if solver_type == "ilqr":
-
-        slvr.set_iteration_callback()
-    
-    return task, slvr
 
 def solve(multistart_nodes,\
             task, slvr,\
@@ -297,6 +242,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    is_second_lev_opt = True
 
     # number of parallel processes on which to run optimization
     # set to number of cpu counts to saturate
@@ -368,7 +314,7 @@ if __name__ == '__main__':
     opt_sol_index = sol_loader.opt_data[opt_index]["multistart_index"][0][0] # [0][0] because MatStorer loads matrices by default
 
     n_int = len(opt_full_q_dot[0][0, :]) # getting number of intervals of a single optimization task
-    man_measure = compute_man_measure(opt_costs, n_int) # scaling opt costs to make them more interpretable
+    man_measure = compute_man_index(opt_costs, n_int) # scaling opt costs to make them more interpretable
 
     clusterer = Clusterer(opt_q_design.T, opt_costs, n_int, n_clusters = args.n_clust)
 
@@ -462,12 +408,24 @@ if __name__ == '__main__':
         
         print(colored("Generating task copy for process n." + str(p), "magenta"))
 
-        task_copies[p], slvr_copies[p] = gen_task_copies(weight_global_manip, 
-                                                        weight_class_manip, 
-                                                        filling_n_nodes, 
-                                                        n_y_samples, y_sampl_ub, 
-                                                        use_classical_man, 
-                                                        coll_yaml_path)
+        task_copies[p] = gen_task_copies(weight_global_manip,
+                                        weight_class_manip,
+                                        filling_n_nodes,
+                                        sliding_wrist_offset, 
+                                        n_y_samples, y_sampl_ub,
+                                        urdf_full_path,
+                                        t_exec_task,
+                                        rot_error_epsi,
+                                        False,
+                                        False,
+                                        coll_yaml_path,
+                                        is_second_lev_opt)
+        
+        slvr_copies[p] = gen_slvr_copies(task_copies[p],
+                            solver_type,
+                            transcription_method, 
+                            transcription_opts, 
+                            slvr_opt)
 
     # generating initial guesses, based on the script arguments
     q_ig, q_dot_ig =  generate_ig(args, full_file_paths,\
@@ -515,13 +473,6 @@ if __name__ == '__main__':
                     "fist_lev_cand_man_measure": fist_lev_cand_man_measure}
 
     task_info_dumper.add_storer(other_stuff, dump_basepath,\
-                            "second_level_info_t" + unique_id,\
-                            False)
-    # dumping copies in each cluster folder (this is so that the same SolLoader class can be used for post-proc. of second lev. solutions)
-    
-    for i in range(n_clust):
-
-        task_info_dumper.add_storer(other_stuff, clust_path[i],\
                             "second_level_info_t" + unique_id,\
                             False)
 

@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
 from horizon.ros.replay_trajectory import *
-from horizon.transcriptions.transcriptor import Transcriptor
 
-from horizon.solvers import solver
 import os, argparse
 
 import numpy as np
@@ -12,8 +10,8 @@ import subprocess
 
 import rospkg
 
-from codesign_pyutils.miscell_utils import str2bool, compute_solution_divs,\
-                                            gen_y_sampling
+from codesign_pyutils.miscell_utils import str2bool, compute_solution_divs
+
 from codesign_pyutils.dump_utils import SolDumper
 from codesign_pyutils.task_utils import solve_prb_standalone, \
                                         generate_ig              
@@ -27,6 +25,8 @@ from datetime import date
 from termcolor import colored
 
 from codesign_pyutils.misc_definitions import get_design_map
+
+from codesign_pyutils.task_utils import gen_task_copies, gen_slvr_copies
 
 def enforce_codes_cnstr_on_ig(q_ig):
 
@@ -53,62 +53,6 @@ def enforce_codes_cnstr_on_ig(q_ig):
         q_codes_extended = np.concatenate((q_codes_ig, q_codes_ig[1:]), axis=0)
 
         q_ig[i][design_indeces, :] = np.transpose(np.tile(q_codes_extended, (len(q_ig[0][0, :]), 1)))
-
-def gen_task_copies(filling_n_nodes, sliding_wrist_offset, 
-                    n_y_samples, y_sampl_ub, 
-                    coll_yaml_path = ""):
-
-    
-    y_sampling = gen_y_sampling(n_y_samples, y_sampl_ub)
-
-    right_arm_picks = np.array([True] * len(y_sampling))
-    for i in range(len(y_sampling)):
-        
-        if y_sampling[i] <= 0 : # on the right
-            
-            right_arm_picks[i] = True
-        
-        else:
-
-            right_arm_picks[i] = False
-
-    # initialize problem task
-    task = TaskGen(filling_n_nodes = filling_n_nodes, \
-                                    sliding_wrist_offset = sliding_wrist_offset,\
-                                    coll_yaml_path = coll_yaml_path)
-
-    task.add_tasks(y_sampling, right_arm_picks)
-
-    # initialize problem
-    task.init_prb(urdf_full_path,
-                    weight_glob_man = args.weight_global_manip, weight_class_man = args.weight_class_manip,\
-                    tf_single_task = t_exec_task)
-
-    print(colored("Task node list: " + str(task.nodes_list), "magenta"))
-    print(colored("Task list: " + str(task.task_list), "magenta"))
-    print(colored("Task names: " + str(task.task_names), "magenta"))
-    print(colored("Task dict: " + str( task.task_dict), "magenta"))
-    print(colored("Total employed nodes: " + str(task.total_nnodes), "magenta"))
-    print(colored("Number of added subtasks:" + str(task.n_of_tasks) + "\n", "magenta"))
-
-    # set constraints and costs
-    task.setup_prb(rot_error_epsi, is_classical_man = args.use_classical_man)
-
-    if solver_type != "ilqr":
-
-        Transcriptor.make_method(transcription_method,\
-                                task.prb,\
-                                transcription_opts)
-    
-    ## Creating the solver
-    slvr = solver.Solver.make_solver(solver_type, task.prb, slvr_opt)
-
-    if solver_type == "ilqr":
-
-        slvr.set_iteration_callback()
-
-
-    return task, slvr
 
 def solve(multistart_nodes,\
             task, slvr,\
@@ -313,8 +257,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     
-    unique_id = ""
+    is_second_lev_opt = False
 
+    unique_id = ""
     if args.run_externally:
 
         unique_id = args.unique_id
@@ -434,10 +379,24 @@ if __name__ == '__main__':
         
         print(colored("Generating task copy for process n." + str(p), "magenta"))
 
-        task_copies[p], slvr_copies[p] = gen_task_copies(filling_n_nodes,
-                                                sliding_wrist_offset, 
-                                                n_y_samples, y_sampl_ub, 
-                                                coll_yaml_path)
+        task_copies[p] = gen_task_copies(args.weight_global_manip,
+                                        args.weight_class_manip,
+                                        filling_n_nodes,
+                                        sliding_wrist_offset, 
+                                        n_y_samples, y_sampl_ub,
+                                        urdf_full_path,
+                                        t_exec_task,
+                                        rot_error_epsi,
+                                        False,
+                                        False,
+                                        coll_yaml_path,
+                                        is_second_lev_opt)
+        
+        slvr_copies[p] = gen_slvr_copies(task_copies[p],
+                            solver_type,
+                            transcription_method, 
+                            transcription_opts, 
+                            slvr_opt)
 
     # generating initial guesses, based on the script arguments
     q_ig, q_dot_ig =  generate_ig(args, full_file_paths,\
