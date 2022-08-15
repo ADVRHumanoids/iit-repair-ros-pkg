@@ -262,7 +262,7 @@ class PostProcL1:
 
     def __get_man_cost(self):
 
-        man_cost_raw = compute_man_cost(self._q_dot, self._man_w_a)
+        man_cost_raw = compute_man_cost(self._nodes_list, self._q_dot, self._man_w_a)
 
         man_cost = [man_cost_raw[i] for i in range(len(man_cost_raw))] # correction for scalar data
 
@@ -338,6 +338,8 @@ class PostProcL1:
 
         print(colored(" coll_yaml_path:", "white"), self._coll_yaml_path)
 
+        print(colored(" ms_trgt:", "white"), self._ms_trgt)
+
         print(colored(" filling_nnodes:", "white"), self._filling_nnodes)
         
         print(colored(" task_dt:", "white"), self._task_dt)
@@ -358,7 +360,9 @@ class PostProcL1:
 
         print(colored(" is_class_man:", "white"), self._is_class_man)
 
-        print(colored(" t_exec_task:", "white"), self._t_exec_task)
+        print(colored(" is_sliding_wrist:", "white"), self._is_sliding_wrist)
+
+        print(colored(" wrist_off:", "white"), self._wrist_off)
 
         print("\n")
 
