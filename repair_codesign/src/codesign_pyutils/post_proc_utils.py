@@ -5,7 +5,7 @@ from codesign_pyutils.load_utils import LoadSols
 
 from codesign_pyutils.math_utils import compute_man_index
 
-from codesign_pyutils.task_utils import gen_task_copies, compute_cl_man_list
+from codesign_pyutils.task_utils import gen_task_copies, compute_ms_cl_man
 
 from horizon.utils import mat_storer
 
@@ -43,6 +43,7 @@ def compute_man_cost(task_node_list: list,
           man_cost[ms_idx] = man_cost[ms_idx] + man_weight * np.sum(np.square(q_dot[ms_idx][:, node]))
 
   return man_cost
+
 
 class PostProcL1:
 
@@ -258,7 +259,7 @@ class PostProcL1:
 
         print(colored("\nGenerating task copy...\n", "magenta"))
         
-        self.task_copy = gen_task_copies(self._man_w_base, self._class_man_w_base,
+        self._task_copy = gen_task_copies(self._man_w_base, self._class_man_w_base,
                                         self._filling_nnodes, 
                                         self._wrist_off,
                                         self._ny_sampl,
@@ -271,9 +272,9 @@ class PostProcL1:
                                         self._coll_yaml_path, 
                                         is_second_lev_opt=False)
 
-        _1, _2, _3, _4, _5, _6 = compute_cl_man_list(self.task_copy, self._q[-1][:, 12])
+        _1, _2 = compute_ms_cl_man(self._q[0], self._nodes_list, self._task_copy)
         
-        print(_1, _2, _3, _4,  _5, _6)
+        print(_1, _2)
 
     def __rmse(self, ref, vals):
         

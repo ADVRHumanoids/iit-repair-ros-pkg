@@ -20,7 +20,9 @@ def gen_task_copies(weight_global_manip: np.double, weight_class_manip: np.doubl
                     use_classical_man = False,
                     sliding_wrist = False, 
                     coll_path = "", 
-                    is_second_lev_opt = False):
+                    is_second_lev_opt = False, 
+                    is_in_place_flip = True, 
+                    is_bimanual_pick = False):
 
     
     y_sampling = gen_y_sampling(y_samples, y_ub)
@@ -43,7 +45,9 @@ def gen_task_copies(weight_global_manip: np.double, weight_class_manip: np.doubl
                     sliding_wrist_offset = wrist_offset,\
                     coll_yaml_path = coll_path)
 
-    task.add_tasks(y_sampling, right_arm_picks)
+    task.add_tasks(y_sampling, right_arm_picks, 
+                    is_in_place_flip = is_in_place_flip, 
+                    is_bimanual_pick = is_bimanual_pick)
 
     # initialize problem
     task.init_prb(urdf_path,
@@ -84,7 +88,7 @@ def gen_slvr_copies(task: TaskGen,
 
     return slvr
 
-def compute_cl_man_list(task: TaskGen, q: np.ndarray):
+def compute_node_cl_man(task: TaskGen, q: np.ndarray):
 
     Jl = task.jac_arm_l( q = q )["J"]
     Jr = task.jac_arm_r( q = q)["J"]
@@ -93,3 +97,26 @@ def compute_cl_man_list(task: TaskGen, q: np.ndarray):
 
     return cl_man_ltrasl, cl_man_lrot, cl_man_ltot, \
             cl_man_rtrasl, cl_man_rrot, cl_man_rtot   
+
+def compute_ms_cl_man(q: np.ndarray, nodes_list: list, task: TaskGen):
+    
+    print(type(nodes_list))
+    exit()
+
+    ms_cl_man_lft = np.zeros((2, nodes_list[-1][-1] + 1))
+    ms_cl_man_rght = np.zeros((2, nodes_list[-1][-1] + 1))
+
+    for task_idx in range(len(nodes_list)):
+        
+        for node_idx in len(nodes_list[task_idx]):
+            
+            cl_man_ltrasl, cl_man_lrot, _1, \
+                cl_man_rtrasl, cl_man_rrot, _2 = compute_node_cl_man(task, q[:, node_idx])
+
+            ms_cl_man_lft[0, nodes_list[task_idx][node_idx]] = cl_man_ltrasl
+            ms_cl_man_lft[1, nodes_list[task_idx][node_idx]] = cl_man_lrot
+            ms_cl_man_rght[0, nodes_list[task_idx][node_idx]] = cl_man_rtrasl
+            ms_cl_man_rght[1, nodes_list[task_idx][node_idx]] = cl_man_rrot
+    
+    return ms_cl_man_lft, ms_cl_man_rght
+        
