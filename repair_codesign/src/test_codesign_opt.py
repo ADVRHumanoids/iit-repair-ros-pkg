@@ -88,7 +88,7 @@ transcription_opts = dict(integrator='RK4')
 
 sliding_wrist_offset = 0.0
 
-solution_index_name = "solution_index"
+solution_index_name = "multistart_index"
 
 def main(args):
 
@@ -364,7 +364,7 @@ def main(args):
                 full_solution = {**(solutions[i]),
                                 **(cnstr_opt[i]),
                                 **{"q_ig": q_ig_main[i], "q_dot_ig": q_dot_ig_main[i]}, \
-                                **{"solution_index": i}}
+                                **{"multistart_index": i}}
 
                 if not solve_failed_array[i]:
 

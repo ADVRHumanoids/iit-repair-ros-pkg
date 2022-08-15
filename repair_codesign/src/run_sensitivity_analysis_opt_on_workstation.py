@@ -20,7 +20,7 @@ from codesign_pyutils.tasks import TaskGen
 
 import multiprocessing as mp
 
-from codesign_pyutils.miscell_utils import extract_q_design, compute_man_measure,\
+from codesign_pyutils.miscell_utils import extract_q_design, compute_man_index,\
                                              compute_solution_divs, gen_y_sampling
 from codesign_pyutils.miscell_utils import Clusterer
 from codesign_pyutils.misc_definitions import get_design_map
@@ -186,7 +186,7 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
         full_solution = {**(solutions[sol_index]),
                         **(cnstr_opt[sol_index]),
                         **{"q_ig": q_ig[sol_index], "q_dot_ig": q_dot_ig[sol_index]}, \
-                        **{"solution_index": node}, 
+                        **{"multistart_index": node}, 
                         "solution_time": solution_time, 
                         "cluster_id": cluster_id, 
                         "first_lev_sol_id": first_lev_sol_id, 
@@ -296,7 +296,7 @@ if __name__ == '__main__':
         opt_full_q[i] = sol_loader.opt_data[i]["q"]
         opt_full_q_dot[i] = sol_loader.opt_data[i]["q_dot"]
         opt_costs[i] = sol_loader.opt_data[i]["opt_cost"][0][0] # [0][0] because MatStorer loads matrices by default
-        real_sol_index[i] = sol_loader.opt_data[i]["solution_index"][0][0] # unique solution index (LoadSols loads solutions with random order)
+        real_sol_index[i] = sol_loader.opt_data[i]["multistart_index"][0][0] # unique solution index (LoadSols loads solutions with random order)
         # so a unique identifier is necessary --> using the index saved when solutions are dumped
 
     opt_q_design = extract_q_design(opt_full_q)
@@ -307,10 +307,10 @@ if __name__ == '__main__':
     design_var_names = list(design_var_map.keys())
     
     opt_index = np.argwhere(np.array(opt_costs) == min(np.array(opt_costs)))[0][0]
-    opt_sol_index = sol_loader.opt_data[opt_index]["solution_index"][0][0] # [0][0] because MatStorer loads matrices by default
+    opt_sol_index = sol_loader.opt_data[opt_index]["multistart_index"][0][0] # [0][0] because MatStorer loads matrices by default
 
     n_int = len(opt_full_q_dot[0][0, :]) # getting number of intervals of a single optimization task
-    man_measure = compute_man_measure(opt_costs, n_int) # scaling opt costs to make them more interpretable
+    man_measure = compute_man_index(opt_costs, n_int) # scaling opt costs to make them more interpretable
 
     clusterer = Clusterer(opt_q_design.T, opt_costs, n_int, n_clusters = args.n_clust)
 

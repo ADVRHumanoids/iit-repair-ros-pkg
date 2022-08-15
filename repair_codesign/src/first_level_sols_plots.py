@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
-from codesign_pyutils.miscell_utils import extract_q_design, compute_man_measure, scatter3Dcodesign, select_best_sols
+from codesign_pyutils.miscell_utils import extract_q_design, compute_man_index, scatter3Dcodesign, select_best_sols
 
 from codesign_pyutils.miscell_utils import Clusterer
 
@@ -84,10 +84,10 @@ def main(args):
     design_var_names = list(design_var_map.keys())
     
     opt_index = np.argwhere(np.array(opt_costs) == min(np.array(opt_costs)))[0][0]
-    opt_sol_index = sol_loader.opt_data[opt_index]["solution_index"][0][0] # [0][0] because MatStorer loads matrices by default
+    opt_sol_index = sol_loader.opt_data[opt_index]["multistart_index"][0][0] # [0][0] because MatStorer loads matrices by default
 
     n_int = len(opt_full_q_dot[0][0, :]) # getting number of intervals of a single optimization task
-    man_measure = compute_man_measure(opt_costs, n_int) # scaling opt costs to make them more interpretable
+    man_measure = compute_man_index(opt_costs, n_int) # scaling opt costs to make them more interpretable
 
     # # scatter plots
     # for i in range(n_d_variables):
