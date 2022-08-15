@@ -1,4 +1,4 @@
-from asyncio import tasks
+from asyncio import Task, tasks
 from horizon.utils import mat_storer
 from horizon.solvers import Solver
 
@@ -186,8 +186,8 @@ def do_one_solve_pass(arguments: argparse.Namespace,\
     return init_sol_failed, solve_failed
 
 def generate_ig(arguments: argparse.Namespace,\
-                abs_paths, task,\
-                n_sol_tries, seed,\
+                abs_paths: str, task: TaskGen,\
+                n_sol_tries: int, seed: int,\
                 verbose = False):
 
     q_ig = [None] * n_sol_tries
@@ -249,13 +249,13 @@ def generate_ig(arguments: argparse.Namespace,\
                                             
     return q_ig, q_dot_ig
 
-def gen_task_copies(weight_global_manip, weight_class_manip, 
-                    filling_nodes,
-                    wrist_offset, 
-                    y_samples, y_ub, 
-                    urdf_path,
-                    t_exec,
-                    rot_err_epsi,
+def gen_task_copies(weight_global_manip: np.double, weight_class_manip: np.double, 
+                    filling_nodes: int,
+                    wrist_offset: np.double, 
+                    y_samples: int, y_ub: np.double, 
+                    urdf_path: str,
+                    t_exec: np.double,
+                    rot_err_epsi: np.double,
                     use_classical_man = False,
                     sliding_wrist = False, 
                     coll_path = "", 
@@ -264,7 +264,8 @@ def gen_task_copies(weight_global_manip, weight_class_manip,
     
     y_sampling = gen_y_sampling(y_samples, y_ub)
 
-    right_arm_picks = np.array([True] * len(y_sampling))
+    right_arm_picks = [True] * len(y_sampling)
+
     for i in range(len(y_sampling)):
         
         if y_sampling[i] <= 0 : # on the right
@@ -274,7 +275,7 @@ def gen_task_copies(weight_global_manip, weight_class_manip,
         else:
 
             right_arm_picks[i] = False
-
+            
     # initialize problem task
     task = TaskGen(filling_n_nodes = filling_nodes, \
                     is_sliding_wrist = sliding_wrist,\
@@ -301,11 +302,11 @@ def gen_task_copies(weight_global_manip, weight_class_manip,
 
     return task
 
-def gen_slvr_copies(task,
-                    solver_type,
-                    transcription_method, 
-                    transcription_opts, 
-                    slvr_opt):
+def gen_slvr_copies(task: TaskGen,
+                    solver_type: str,
+                    transcription_method: str, 
+                    transcription_opts: dict, 
+                    slvr_opt: dict):
 
     if solver_type != "ilqr":
 
@@ -322,3 +323,27 @@ def gen_slvr_copies(task,
 
     return slvr
 
+# def compute_cl_man_list(q: list, cl_man_weight = None, task: TaskGen):
+
+#   if cl_man_weight is None:
+
+#     cl_man_weight = 1.0
+
+#   if type(q[0]) != np.ndarray:
+
+#     raise Exception("compute_cl_man_cost: q should be a list of ndarrays!")
+
+#   cl_man_cost_tr = [0.0] * len(q)
+#   cl_man_cost_rot = [0.0] * len(q)
+
+#   for ms_idx in range(len(q)):
+
+#     for node in range(q[ms_idx].shape[1]):
+        
+#         cl_man_ltrasl, cl_man_lrot = task.compute_cl_man(task.larm_tcp_jacobian.)
+#         cl_man_rtrasl, cl_man_rrot = task.compute_cl_man(task.rarm_tcp_jacobian.)
+
+#         cl_man_cost_tr[ms_idx] = cl_man_cost_tr[ms_idx] + 
+
+#   return cl_man_ltrasl, cl_man_lrot,\
+#         cl_man_rtrasl, cl_man_rrot    

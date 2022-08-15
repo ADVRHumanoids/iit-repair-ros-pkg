@@ -215,6 +215,8 @@ if __name__ == '__main__':
     parser.add_argument('--use_ma57', '-ma57', type=str2bool,\
                         help = 'whether to use ma57 linear solver or not', default = True)
 
+    parser.add_argument('--is_sliding_wrist', '-isw', type = str2bool,\
+                        help = 'if wrist off. is to be used as an additional codes variable', default = False)
     parser.add_argument('--sliding_wrist_offset', '-wo', type = np.double,\
                         help = 'sliding_wrist_offset', default = 0.0)
 
@@ -361,6 +363,7 @@ if __name__ == '__main__':
     transcription_opts = dict(integrator = intgrtr)
 
     sliding_wrist_offset = args.sliding_wrist_offset
+    is_sliding_wrist = args.is_sliding_wrist
 
     max_retry_n = args.max_trials_factor - 1
     max_ig_trials = n_msrt_trgt * args.max_trials_factor
@@ -387,8 +390,8 @@ if __name__ == '__main__':
                                         urdf_full_path,
                                         t_exec_task,
                                         rot_error_epsi,
-                                        False,
-                                        False,
+                                        args.use_classical_man,
+                                        is_sliding_wrist,
                                         coll_yaml_path,
                                         is_second_lev_opt)
         
@@ -409,7 +412,7 @@ if __name__ == '__main__':
     # inizialize a dumper object for post-processing
 
     task_info_dumper = SolDumper()
-
+    
     other_stuff = {"dt": task_copies[0].dt, "filling_nodes": task_copies[0].filling_n_nodes,
                     "task_base_nnodes": task_copies[0].task_base_n_nodes_dict,
                     "right_arm_picks": task_copies[0].rght_arm_picks, 
@@ -427,13 +430,13 @@ if __name__ == '__main__':
                     "transcription_method": transcription_method, 
                     "integrator": intgrtr, 
                     "sliding_wrist_offset": sliding_wrist_offset, 
+                    "is_sliding_wrist": is_sliding_wrist,
                     "n_msrt_trgt": n_msrt_trgt,
                     "max_retry_n": max_retry_n,  
                     "proc_sol_divs": np.array(proc_sol_divs, dtype=object), 
                     "unique_id": unique_id, 
                     "rot_error_epsi": rot_error_epsi, 
                     "t_exec_task": t_exec_task, 
-                    "sliding_wrist_offset": sliding_wrist_offset
                     }
     
     task_info_dumper.add_storer(other_stuff, results_path,\

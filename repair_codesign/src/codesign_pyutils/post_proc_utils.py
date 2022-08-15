@@ -5,6 +5,8 @@ from codesign_pyutils.load_utils import LoadSols
 
 from codesign_pyutils.miscell_utils import compute_man_cost, compute_man_index
 
+from codesign_pyutils.task_utils import gen_task_copies
+
 from horizon.utils import mat_storer
 
 import os
@@ -13,6 +15,7 @@ from termcolor import colored
 
 import numpy as np
 
+import rospkg
 class PostProcL1:
 
     def __init__(self, load_path, 
@@ -24,6 +27,14 @@ class PostProcL1:
 
         self._load_path = load_path + "/" + l1_dirname + "/"
         self._dump_path = load_path + "/" + dump_dirname
+
+        # useful paths
+        rospackage = rospkg.RosPack() # Only for taking the path to the leg package
+        urdfs_path = rospackage.get_path("repair_urdf") + "/urdf"
+        urdf_name = "repair_full"
+        self._urdf_full_path = urdfs_path + "/" + urdf_name + ".urdf"
+        coll_yaml_name = "arm_coll.yaml"
+        self._coll_yaml_path = rospackage.get_path("repair_urdf") + "/config/" + coll_yaml_name
 
         print(colored("\n--->Initializing first level postprocess object from folder \"" + 
                         self._load_path + "\n", 
@@ -178,6 +189,8 @@ class PostProcL1:
         self._class_man_w_a = self._prb_info_data["w_clman_actual"][0][0]
         self._man_w_base = self._prb_info_data["w_man_base"][0][0]
         self._man_w_a = self._prb_info_data["w_man_actual"][0][0]
+        self._wrist_off = self._prb_info_data["sliding_wrist_offset"][0][0]
+        self._is_sliding_wrist = bool(self._prb_info_data["is_sliding_wrist"][0][0])
 
         self._man_cost = self.__get_man_cost()
         self._man_index = self.__get_man_index(self._man_cost)
@@ -214,6 +227,21 @@ class PostProcL1:
         self._max_opt_costs = np.max(np.array(self._opt_costs))
         self._min_opt_costs = np.min(np.array(self._opt_costs))
         self._rmse_opt_costs = self.__rmse(self._avrg_opt_costs, self._opt_costs)
+
+        print(colored("\nGenerating task copy...\n", "magenta"))
+        
+        self.task_copy = gen_task_copies(self._man_w_base, self._class_man_w_base,
+                                        self._filling_nnodes, 
+                                        self._wrist_off,
+                                        self._ny_sampl,
+                                        self._y_sampl_ub, 
+                                        self._urdf_full_path, 
+                                        self._t_exec_task, 
+                                        self._rot_error_epsi, 
+                                        self._is_class_man, 
+                                        self._is_sliding_wrist, 
+                                        self._coll_yaml_path, 
+                                        is_second_lev_opt=False)
 
     def __rmse(self, ref, vals):
         
@@ -305,6 +333,10 @@ class PostProcL1:
         print(colored(" TASK INFO:", "white"))
 
         print("\n")
+
+        print(colored(" urdf_full_path:", "white"), self._urdf_full_path)
+
+        print(colored(" coll_yaml_path:", "white"), self._coll_yaml_path)
 
         print(colored(" filling_nnodes:", "white"), self._filling_nnodes)
         

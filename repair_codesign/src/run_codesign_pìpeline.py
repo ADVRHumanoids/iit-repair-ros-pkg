@@ -35,6 +35,8 @@ if __name__ == '__main__':
                         help = 'whether to use ma57 linear solver or not', default = False)
     parser.add_argument('--wrist_offset', '-wo', type = np.double,\
                         help = 'sliding_wrist_offset', default = 0.0)
+    parser.add_argument('--is_sliding_wrist', '-isw', type = bool,\
+                        help = 'is wrist off. is to be used as an additional codes variable', default = False)
 
     parser.add_argument('--n_y_samples', '-nys', type = int,\
                         help = 'number of y-axis samples on which tasks are placed', default = 4)
@@ -100,6 +102,8 @@ if __name__ == '__main__':
                                     str(args.use_ma57), \
                                     "-wo", \
                                     str(args.wrist_offset), \
+                                    "-isw", \
+                                    str(args.is_sliding_wrist), \
                                     "-nys",
                                     str(args.n_y_samples),\
                                     "-yub", 

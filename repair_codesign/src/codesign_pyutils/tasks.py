@@ -526,7 +526,7 @@ class TaskGen:
         # avoidance constraint
 
 
-    def get_main_nodes_offset(self, total_task_nnodes, task_base_n_nodes):
+    def get_main_nodes_offset(self, total_task_nnodes: int, task_base_n_nodes: int):
     
         # simple method to get the offset of the main nodes of a single flipping task
     
@@ -535,7 +535,7 @@ class TaskGen:
 
         return main_nodes_offset
 
-    def compute_nodes(self, init_node, filling_n_nodes, task_name):
+    def compute_nodes(self, init_node: int, filling_n_nodes: int, task_name: str):
 
         # HOW THE PROBLEM IS BUILT:
         #                    
@@ -580,14 +580,26 @@ class TaskGen:
 
             self.q_dot.setInitialGuess(q_dot_ig)
 
+    def compute_cl_man(self, J):
+
+        J_trasl = J[0:3, :]
+        J_rot = J[3:(J[:,0].shape[0]), :]
+    
+        cl_man_trasl= cs.det(J_trasl @ J_trasl.T)
+        cl_man_rot= cs.det(J_rot @ J_rot.T)
+
+        return cl_man_trasl, cl_man_rot
+
     def add_manip_cost(self, is_classical_man = False):
-                
+        
+
         n_of_tasks = len(self.nodes_list)
         
         epsi = 1 # used to make classical man cost robust wrt singularity
 
-        if n_of_tasks != 1: # the cost has to be removed from the final node of each task
+        if n_of_tasks != 1: # the global man cost has to be removed from the final node of each task
             # so that the transition nodes between them do not influence the optimization
+            # This is not needed for the classical man cost because it does not involve joint velocity
 
             for i in range(n_of_tasks): # iterate through each task
                 
@@ -605,10 +617,24 @@ class TaskGen:
                     Jl = self.larm_tcp_jacobian
                     Jr = self.rarm_tcp_jacobian
 
-                    # min inputs 
-                    self.prb.createIntermediateCost("max_classical_manipulability" + str(i),\
-                                    self.weight_classical_man / ( cs.det(Jl @ Jl.T)**2 + cs.det(Jr @ Jr.T)**2 + epsi),\
-                                    nodes = range(start_node, last_node))
+                    man_l_trasl, man_l_rot = self.compute_cl_man(Jl)
+                    man_r_trasl, man_r_rot = self.compute_cl_man(Jr)
+
+                    # max cl. manipulability (can be defined on all task nodes without problems)
+
+                    self.prb.createIntermediateCost("max_clman_l_trasl" + str(i),\
+                                    self.weight_classical_man / (man_l_trasl)**2,\
+                                    nodes = range(start_node, last_node + 1))
+                    self.prb.createIntermediateCost("max_clman_l_rot" + str(i),\
+                                    self.weight_classical_man / (man_l_rot)**2,\
+                                    nodes = range(start_node, last_node + 1))
+
+                    self.prb.createIntermediateCost("max_clman_r_trasl" + str(i),\
+                                    self.weight_classical_man / (man_r_trasl)**2,\
+                                    nodes = range(start_node, last_node + 1))
+                    self.prb.createIntermediateCost("max_clman_r_rot" + str(i),\
+                                    self.weight_classical_man / (man_r_rot)**2,\
+                                    nodes = range(start_node, last_node + 1))
 
 
         else: # only one task --> the cost can be added to all nodes without problems
@@ -628,7 +654,7 @@ class TaskGen:
                 self.prb.createIntermediateCost("max_classical_manipulability" + str(0),\
                                     self.weight_classical_man / ( cs.det(Jl @ Jl.T)**2 + cs.det(Jr @ Jr.T)**2 + epsi))
 
-    def init_prb(self, urdf_full_path, weight_pos = 0.001, weight_rot = 0.001,\
+    def init_prb(self, urdf_full_path: str, weight_pos = 0.001, weight_rot = 0.001,\
                 weight_glob_man = 0.0001, weight_class_man = 0.0001,\
                 is_soft_pose_cnstr = False,\
                 tf_single_task = 10):
@@ -792,7 +818,7 @@ class TaskGen:
                                             self.coll_yaml_path,\
                                             tcp_contact_nodes = self.tcp_contact_nodes)
     
-    def add_tasks(self, y_sampling, right_arm_picks):
+    def add_tasks(self, y_sampling: np.ndarray, right_arm_picks: list):
 
         next_node = 0 # used to place the next task on the right problem nodes
         # # in place flip task
@@ -800,7 +826,7 @@ class TaskGen:
 
             next_node = self.add_in_place_flip_task(init_node = next_node,\
                             object_pos_wrt_ws = np.array([0.0, y_sampling[i], 0.0]), \
-                            right_arm_picks = right_arm_picks[i])
+                            right_arm_picks = bool(right_arm_picks[i]))
         # bimanual task
         # for j in range(len(y_sampling)):
             
@@ -876,7 +902,7 @@ class TaskGen:
 
                 base_nnodes_previous[i + 1] = base_nnodes
 
-    def add_in_place_flip_task(self, init_node,\
+    def add_in_place_flip_task(self, init_node: int,\
                                right_arm_picks = True,\
                                object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]),\
                                object_q_wrt_ws = np.array([1, 0, 0, 0]),\
@@ -916,7 +942,7 @@ class TaskGen:
 
         return next_task_node
 
-    def add_bimanual_task(self, init_node,\
+    def add_bimanual_task(self, init_node: int,\
                                 right_arm_picks = True,\
                                 object_pos_wrt_ws = np.array([0.0, 0.0, 0.0]),\
                                 object_q_wrt_ws = np.array([1, 0, 0, 0]),\
@@ -961,7 +987,7 @@ class TaskGen:
 
         return next_task_node
 
-    def add_pick_and_place_task(self, init_node,\
+    def add_pick_and_place_task(self, init_node: int,\
                             right_arm_picks = True,\
                             object_pos_lft_wrt_ws = np.array([0, 0.18, 0.04]),\
                             object_q_lft_wrt_ws = np.array([0.0, 1.0, 0.0, 0.0]),\
@@ -1004,9 +1030,9 @@ class TaskGen:
 
         return final_node
 
-    def build_in_place_flip_task(self, i, j,\
-                                cnstrnt_node_index,\
-                                cnstrnt_id_rght, cnstrnt_id_lft,\
+    def build_in_place_flip_task(self, i: int, j: int,\
+                                cnstrnt_node_index: int,\
+                                cnstrnt_id_rght: int, cnstrnt_id_lft: int,\
                                 is_soft_pose_cnstr = True, epsi = epsi_default):
         
         if j == 0: # ARM 1: waiting | ARM 2: waiting (starting from a reference height)
@@ -1276,9 +1302,9 @@ class TaskGen:
                                 weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                 is_soft = is_soft_pose_cnstr, epsi = epsi)
     
-    def build_bimanual_task(self, i, j,\
-                                cnstrnt_node_index,\
-                                cnstrnt_id_rght, cnstrnt_id_lft,\
+    def build_bimanual_task(self, i: int, j: int,\
+                                cnstrnt_node_index: int,\
+                                cnstrnt_id_rght: int, cnstrnt_id_lft: int,\
                                 is_soft_pose_cnstr = True, epsi = epsi_default):
         
         if j == 0: # ARM 1: waiting pose | ARM 2: waiting pose

@@ -363,6 +363,7 @@ if __name__ == '__main__':
     transcription_opts = dict(integrator = intgrtr)
 
     sliding_wrist_offset = sol_loader.task_info_data["sliding_wrist_offset"][0][0]
+    is_sliding_wrist = sol_loader.task_info_data["is_sliding_wrist"][0][0]
 
     max_retry_n = args.max_trials_factor - 1
     max_ig_trials = n_msrt_trgt * args.max_trials_factor
@@ -416,8 +417,8 @@ if __name__ == '__main__':
                                         urdf_full_path,
                                         t_exec_task,
                                         rot_error_epsi,
-                                        False,
-                                        False,
+                                        use_classical_man,
+                                        is_sliding_wrist,
                                         coll_yaml_path,
                                         is_second_lev_opt)
         
@@ -462,6 +463,7 @@ if __name__ == '__main__':
                     "transcription_method": transcription_method, 
                     "integrator": intgrtr, 
                     "sliding_wrist_offset": sliding_wrist_offset,
+                    "is_sliding_wrist": is_sliding_wrist,
                     "n_msrt_trgt": n_msrt_trgt,
                     "max_retry_n": max_retry_n, 
                     "proc_sol_divs": np.array(proc_sol_divs, dtype=object),

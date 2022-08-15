@@ -1,6 +1,4 @@
 
-from re import X
-from turtle import right
 import numpy as np
 
 import os
@@ -8,14 +6,9 @@ import os
 from codesign_pyutils.misc_definitions import get_design_map
 
 import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
 
-from sklearn import cluster, datasets, mixture
+from sklearn import cluster
 from sklearn.neighbors import kneighbors_graph
-from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import AgglomerativeClustering
-
-import time 
 
 import matplotlib.pyplot as plt
 from matplotlib import colors
@@ -24,7 +17,7 @@ from pylab import cm
 
 from collections import Counter
 
-def str2bool(v):
+def str2bool(v: str):
   #susendberg's function
   return v.lower() in ("yes", "true", "t", "1")
 
@@ -70,13 +63,13 @@ def check_str_list(comp_list = ["x", "y", "z"], input = []):
 
   return np.where(presence_array)[0]
   
-def rot_error_axis_sel_not_supp(axis_selector, rot_error_approach):
+def rot_error_axis_sel_not_supp(axis_selector: np.ndarray, rot_error_approach: str):
 
   if len(axis_selector) != 3:
   
     raise Exception("\nSelecting the constrained axis when using \"" + rot_error_approach + "\" orientation error is not supported yet.\n")
 
-def get_min_cost_index(costs, solve_failed_array):
+def get_min_cost_index(costs: list, solve_failed_array: list):
 
     # to not solved probelms negative numbers are assignes
 
@@ -105,7 +98,7 @@ def get_min_cost_index(costs, solve_failed_array):
 
     return best_index
 
-def get_full_abs_paths_sol(init_opt_results_path, init_failed_results_path):
+def get_full_abs_paths_sol(init_opt_results_path: str, init_failed_results_path: str):
 
   file_list_opt = os.listdir(init_opt_results_path)
   file_list_failed = os.listdir(init_failed_results_path)
@@ -148,7 +141,7 @@ def extract_q_design(input_data: list):
 
     return design_data
 
-def gen_y_sampling(n_y_samples, y_sampl_ub):
+def gen_y_sampling(n_y_samples: int, y_sampl_ub: np.double):
 
     y_sampl_lb = - y_sampl_ub
     if n_y_samples == 1:
@@ -157,6 +150,7 @@ def gen_y_sampling(n_y_samples, y_sampl_ub):
         dy = (y_sampl_ub - y_sampl_lb) / (n_y_samples - 1)
 
     y_sampling = np.array( [0.0] * n_y_samples)
+    
     for i in range(n_y_samples):
         
         y_sampling[i] = y_sampl_lb + dy * i
@@ -265,27 +259,6 @@ def scatter3Dcodesign(opt_costs: list,
 
     return True
 
-def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
-    """
-    Call in a loop to create terminal progress bar
-    @params:
-        iteration   - Required  : current iteration (Int)
-        total       - Required  : total iterations (Int)
-        prefix      - Optional  : prefix string (Str)
-        suffix      - Optional  : suffix string (Str)
-        decimals    - Optional  : positive number of decimals in percent complete (Int)
-        length      - Optional  : character length of bar (Int)
-        fill        - Optional  : bar fill character (Str)
-        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
-    """
-    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-    filledLength = int(length * iteration // total)
-    bar = fill * filledLength + '-' * (length - filledLength)
-    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
-    # Print New Line on Complete
-    if iteration == total: 
-        print()
-
 def compute_man_cost(q_dot: list, man_weight = None):
 
   if man_weight is None:
@@ -315,32 +288,6 @@ def compute_man_index(man_cost: list, n_int: int):
         man_measure[i] = np.sqrt(man_cost[i] / n_int) # --> discretized root mean squared joint velocities over the opt interval 
 
     return man_measure
-
-def compute_cl_man(task):
-
-  Jl = task.larm_tcp_jacobian
-  Jr = task.rarm_tcp_jacobian
-
-# def compute_cl_man_cost(q: list, man_weight = None):
-
-#   if man_weight is None:
-
-#     man_weight = 1.0
-
-#   if type(q[0]) != np.ndarray:
-
-#     raise Exception("compute_cl_man_cost: q should be a list of ndarrays!")
-
-#   cl_man_cost_tr = [0.0] * len(q)
-#   cl_man_cost_rot = [0.0] * len(q)
-
-#   for ms_idx in range(len(q)):
-
-#     for node in range(q[ms_idx].shape[1]):
-
-#       cl_man_cost_tr[ms_idx] =  man_weight * 
-
-#   return cl_man_cost_tr, cl_man_cost_rot
 
 # def compute_cl_man_index(cl_man_cost: list, n_int: int):
 

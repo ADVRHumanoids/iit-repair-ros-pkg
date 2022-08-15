@@ -12,8 +12,16 @@ from codesign_pyutils.misc_definitions import epsi_default
 
 import yaml
 
+from horizon import problem
 
-def add_pose_cnstrnt(unique_id, prb, nodes, pos = None, rot = None, pos_ref = None, rot_ref = None,\
+from horizon import variables
+
+from typing import Union
+
+from casadi_kin_dyn import pycasadi_kin_dyn as cas_kin_dyn
+
+def add_pose_cnstrnt(unique_id: int, prb: problem, nodes: Union[int, list],\
+                     pos = None, rot = None, pos_ref = None, rot_ref = None,\
                      pos_selection = ["x", "y", "z"], rot_selection = ["x", "y", "z"],\
                      weight_pos = 1.0, weight_rot = 1.0, is_soft = False, epsi = epsi_default):
 
@@ -148,10 +156,10 @@ def add_pose_cnstrnt(unique_id, prb, nodes, pos = None, rot = None, pos_ref = No
 class SimpleCollHandler:
 
     def __init__(self,
-                kindyn,
-                q_p, 
-                prb,
-                yaml_path,
+                kindyn: cas_kin_dyn.CasadiKinDyn,
+                q_p: variables.StateVariable, 
+                prb: problem,
+                yaml_path: str,
                 nodes = None,
                 tcp_contact_nodes = None, 
                 link_names = [["arm_1_link1_coll", "arm_1_link2_coll", "arm_1_link3_coll",\
