@@ -204,7 +204,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--n_msrt_trgt', '-mst', type=int,\
                         help = 'number of  target optimal solutions the script will try to find',
-                        default = 200)
+                        default = 10)
     parser.add_argument('--max_trials_factor', '-mtf', type=int,\
                         help = 'for each multistart node, at best max_trials_factor new solutions will be tried to obtain an optimal solution',
                         default = 15)
@@ -221,7 +221,7 @@ if __name__ == '__main__':
                         help = 'sliding_wrist_offset', default = 0.0)
 
     parser.add_argument('--filling_nnodes', '-fnn', type = int,\
-                        help = 'filling nodes between base task nodes', default = 5)
+                        help = 'filling nodes between base task nodes', default = 0)
     parser.add_argument('--n_y_samples', '-nys', type = int,\
                         help = 'number of y-axis samples on which tasks are placed', default = 4)
     parser.add_argument('--y_sampl_ub', '-yub', type = np.double,\
@@ -245,7 +245,7 @@ if __name__ == '__main__':
     parser.add_argument('--run_externally', '-run_ext', type=str2bool,\
                         help = 'whether this script is run from the higher level pipeline script', default = False)
     parser.add_argument('--unique_id', '-id', type=str,\
-                        help = 'unique id passed from higherl level script (only used if run_externally == True)',
+                        help = 'unique id passed from higher level script (only used if run_externally == True)',
                         default = "")
     parser.add_argument('--dump_folder_name', '-dfn', type=str,\
                     help = 'dump directory name',
