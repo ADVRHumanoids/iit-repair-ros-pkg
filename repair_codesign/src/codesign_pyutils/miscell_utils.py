@@ -259,7 +259,8 @@ def scatter3Dcodesign(opt_costs: list,
 
     return True
 
-def compute_man_cost(q_dot: list, man_weight = None):
+def compute_man_cost(task_node_list: list, 
+                    q_dot: list, man_weight = None):
 
   if man_weight is None:
 
@@ -273,9 +274,13 @@ def compute_man_cost(q_dot: list, man_weight = None):
 
   for ms_idx in range(len(q_dot)):
 
-    for node in range(q_dot[ms_idx].shape[1]):
+    for task in range(len(task_node_list)):
 
-      man_cost[ms_idx] = man_cost[ms_idx] + man_weight * np.sum(np.square(q_dot[ms_idx][:, node]))
+      for node in task_node_list[task]:
+      
+        if node != task_node_list[task][-1]: # transition between tasks is not considered (tasks are optimizer for in parallel)
+          
+          man_cost[ms_idx] = man_cost[ms_idx] + man_weight * np.sum(np.square(q_dot[ms_idx][:, node]))
 
   return man_cost
 
