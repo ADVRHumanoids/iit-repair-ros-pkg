@@ -620,7 +620,8 @@ class TaskGen:
                     man_l_trasl, man_l_rot = self.compute_cl_man(Jl)
                     man_r_trasl, man_r_rot = self.compute_cl_man(Jr)
 
-                    # max cl. manipulability (can be defined on all task nodes without problems)
+                    # max cl. manipulability (can be defined on all task nodes without problems,
+                    # because it involves q and not q_dot)
 
                     self.prb.createIntermediateCost("max_clman_l_trasl" + str(i),\
                                     self.weight_classical_man / (man_l_trasl)**2,\
