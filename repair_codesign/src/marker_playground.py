@@ -22,7 +22,7 @@ from codesign_pyutils.ros_utils import ReplaySol
 from codesign_pyutils.miscell_utils import str2bool,\
                                         get_min_cost_index
 
-from codesign_pyutils.task_utils import generate_ig     
+from codesign_pyutils.solution_utils import generate_ig     
 
 from codesign_pyutils.tasks import DoubleArmCartTask
 

@@ -81,7 +81,7 @@ if __name__ == '__main__':
     try:
 
         print(colored("\n--> STARTING FIRST LEVEL OPTIMIZATION....\n", "blue"))
-
+        reset_term = subprocess.check_call(["reset"])
         # run first level (blocking --> we have to wait for data to be dumped to file)
         first_level_proc = subprocess.check_call(["./run_first_level_opt_on_workstation.py", \
                                     "-mst", \

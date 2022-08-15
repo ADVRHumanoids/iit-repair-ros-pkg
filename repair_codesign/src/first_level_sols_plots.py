@@ -13,9 +13,11 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
-from codesign_pyutils.miscell_utils import extract_q_design, compute_man_index, scatter3Dcodesign, select_best_sols
+from codesign_pyutils.miscell_utils import extract_q_design, compute_man_index, select_best_sols
 
-from codesign_pyutils.miscell_utils import Clusterer
+from codesign_pyutils.plot_utils import scatter3Dcodesign
+
+from codesign_pyutils.clustering_utils import Clusterer
 
 import functools
 

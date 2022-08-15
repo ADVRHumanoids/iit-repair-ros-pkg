@@ -4,6 +4,9 @@ import casadi as cs
 
 epsi_default = 0.000001
 
+rot2trasl_man_scl_fact = 5.0 # man_trasl * rot2trasl_man_scl_fact will scale 
+# man_trasl so that man_rot and man_trasl have comparable magnitude 
+
 def get_design_map():
 
     # THIS DEFINITIONS CAN CHANGE IF THE URDF CHANGES --> MIND THE URDF!!!
@@ -21,7 +24,6 @@ def get_design_map():
         d_var_map["wrist_off_l"] + (arm_dofs + 3)
 
     return d_var_map
-
 
 def get_crossed_handover_local_rot():
     

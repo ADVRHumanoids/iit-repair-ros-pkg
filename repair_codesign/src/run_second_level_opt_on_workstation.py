@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-from horizon.ros.replay_trajectory import *
-from horizon.transcriptions.transcriptor import Transcriptor
-
-from horizon.solvers import solver
 import os, argparse
 
 import numpy as np
@@ -12,17 +8,16 @@ import subprocess
 
 import rospkg
 
-from codesign_pyutils.miscell_utils import str2bool
 from codesign_pyutils.dump_utils import SolDumper
-from codesign_pyutils.task_utils import solve_prb_standalone, \
+from codesign_pyutils.solution_utils import solve_prb_standalone, \
                                         generate_ig              
-from codesign_pyutils.tasks import TaskGen
 
 import multiprocessing as mp
 
-from codesign_pyutils.miscell_utils import extract_q_design, compute_man_index,\
-                                             compute_solution_divs, gen_y_sampling
-from codesign_pyutils.miscell_utils import Clusterer
+from codesign_pyutils.miscell_utils import str2bool, \
+                                            extract_q_design,\
+                                            compute_solution_divs
+from codesign_pyutils.clustering_utils import Clusterer
 from codesign_pyutils.misc_definitions import get_design_map
 from codesign_pyutils.load_utils import LoadSols
 
@@ -314,7 +309,6 @@ if __name__ == '__main__':
     opt_sol_index = sol_loader.opt_data[opt_index]["multistart_index"][0][0] # [0][0] because MatStorer loads matrices by default
 
     n_int = len(opt_full_q_dot[0][0, :]) # getting number of intervals of a single optimization task
-    man_measure = compute_man_index(opt_costs, n_int) # scaling opt costs to make them more interpretable
 
     clusterer = Clusterer(opt_q_design.T, opt_costs, n_int, n_clusters = args.n_clust)
 

@@ -3,9 +3,9 @@ from codesign_pyutils.dump_utils import SolDumper
 
 from codesign_pyutils.load_utils import LoadSols
 
-from codesign_pyutils.miscell_utils import compute_man_cost, compute_man_index
+from codesign_pyutils.math_utils import compute_man_index
 
-from codesign_pyutils.task_utils import gen_task_copies
+from codesign_pyutils.task_utils import gen_task_copies, compute_cl_man_list
 
 from horizon.utils import mat_storer
 
@@ -16,6 +16,34 @@ from termcolor import colored
 import numpy as np
 
 import rospkg
+
+def compute_man_cost(task_node_list: list, 
+                    q_dot: list, man_weight = None):
+
+  # costs are computed by Horizon summing costs over each problem node
+
+  if man_weight is None:
+
+    man_weight = 1.0
+
+  if type(q_dot[0]) != np.ndarray:
+
+    raise Exception("compute_man_cost: q_dot should be a list of ndarrays!")
+
+  man_cost = [0.0] * len(q_dot)
+
+  for ms_idx in range(len(q_dot)):
+
+    for task in range(len(task_node_list)):
+
+      for node in task_node_list[task]:
+      
+        if node != task_node_list[task][-1]: # transition between tasks is not considered (tasks are optimizer for in parallel)
+          
+          man_cost[ms_idx] = man_cost[ms_idx] + man_weight * np.sum(np.square(q_dot[ms_idx][:, node]))
+
+  return man_cost
+
 class PostProcL1:
 
     def __init__(self, load_path, 
@@ -243,6 +271,10 @@ class PostProcL1:
                                         self._coll_yaml_path, 
                                         is_second_lev_opt=False)
 
+        _1, _2, _3, _4, _5, _6 = compute_cl_man_list(self.task_copy, self._q[-1][:, 12])
+        
+        print(_1, _2, _3, _4,  _5, _6)
+
     def __rmse(self, ref, vals):
         
         rmse = 0.0
@@ -420,6 +452,16 @@ class PostProcL1:
 
         print("\n")
 
+        print(colored(" avrg_opt_costs:", "white"), np.round(self._avrg_opt_costs, 8))
+
+        print(colored(" max_opt_costs:", "white"), np.round(self._max_opt_costs, 8))
+
+        print(colored(" min_opt_cost:", "white"), np.round(self._min_opt_costs, 8))
+
+        print(colored(" rmse_opt_costs:", "white"), np.round(self._rmse_opt_costs, 8))
+
+        print("\n")
+
         print(colored(" avrg_man_cost:", "white"), np.round(self._avrg_man_cost, 8))
 
         print(colored(" max_man_cost:", "white"), np.round(self._max_man_cost, 8))
@@ -437,16 +479,6 @@ class PostProcL1:
         print(colored(" min_man_index:", "white"), np.round(self._min_man_index, 8))
 
         print(colored(" rmse_man_index:", "white"), np.round(self._rmse_man_index, 8))
-
-        print("\n")
-
-        print(colored(" avrg_opt_costs:", "white"), np.round(self._avrg_opt_costs, 8))
-
-        print(colored(" max_opt_costs:", "white"), np.round(self._max_opt_costs, 8))
-
-        print(colored(" min_opt_cost:", "white"), np.round(self._min_opt_costs, 8))
-
-        print(colored(" rmse_opt_costs:", "white"), np.round(self._rmse_opt_costs, 8))
 
         print("\n")
 
@@ -475,8 +507,6 @@ class PostProcL1:
             if "_" not in attr:
 
                 self._dump_vars[attr] = attr_dict[attr]
-
-
 
 class PostProcL2:
 

@@ -2,7 +2,7 @@ import os
 
 from horizon.utils import mat_storer
 
-from codesign_pyutils.miscell_utils import compute_man_index
+from codesign_pyutils.math_utils import compute_man_index
 
 import numpy as np
 

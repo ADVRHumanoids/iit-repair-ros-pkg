@@ -1,7 +1,8 @@
 
 from codesign_pyutils.math_utils import quat2rot
 
-from codesign_pyutils.misc_definitions import epsi_default, get_bimanual_frame_rot, get_crossed_handover_local_rot
+from codesign_pyutils.misc_definitions import epsi_default, get_bimanual_frame_rot,\
+                                              rot2trasl_man_scl_fact, get_crossed_handover_local_rot
 
 from codesign_pyutils.horizon_utils import add_pose_cnstrnt, SimpleCollHandler
 
@@ -511,8 +512,10 @@ class TaskGen:
         self.rght_tcp_pos_wrt_lft_tcp = None
         self.rght_tcp_rot_wrt_lft_tcp = None
 
-        self.rarm_tcp_jacobian = None
-        self.larm_tcp_jacobian = None
+        self.jac_arm_r = None
+        self.jac_arm_l = None
+        self.rarm_tcp_jacobian_sym = None
+        self.larm_tcp_jacobian_sym = None
 
         self.handover_rot_loc = get_crossed_handover_local_rot()
         # constant matrix to define the relative orientation between hand frames when 
@@ -525,6 +528,7 @@ class TaskGen:
         self.tcp_contact_nodes = [] # used to let the collision handler know when to relax tcp collision 
         # avoidance constraint
 
+        self.rot2trasl_man_scl_fact = rot2trasl_man_scl_fact
 
     def get_main_nodes_offset(self, total_task_nnodes: int, task_base_n_nodes: int):
     
@@ -585,75 +589,65 @@ class TaskGen:
         J_trasl = J[0:3, :]
         J_rot = J[3:(J[:,0].shape[0]), :]
     
-        cl_man_trasl= cs.det(J_trasl @ J_trasl.T)
-        cl_man_rot= cs.det(J_rot @ J_rot.T)
+        cl_man_trasl = cs.det(J_trasl @ J_trasl.T)
+        cl_man_rot = cs.det(J_rot @ J_rot.T)
+        cl_man_tot = cs.det(J @ J.T)
 
-        return cl_man_trasl, cl_man_rot
+        return cl_man_trasl, cl_man_rot, cl_man_tot
+
+    def compute_man(self, weight, q_dot):
+
+        node_man = weight * cs.sumsqr(q_dot)
+
+        return node_man
+
+    def add_cl_man_cost(self, Jl, Jr):
+
+        Jl = self.larm_tcp_jacobian_sym
+        Jr = self.rarm_tcp_jacobian_sym
+
+        man_l_trasl, man_l_rot, _1 = self.compute_cl_man(Jl)
+        man_r_trasl, man_r_rot, _2 = self.compute_cl_man(Jr)
+
+        # max cl. manipulability (can be defined on all task nodes without problems,
+        # because it involves q and not q_dot)
+
+        self.prb.createIntermediateCost("max_clman_l_trasl",\
+                        self.weight_classical_man / (man_l_trasl)**2)
+        self.prb.createIntermediateCost("max_clman_l_rot",\
+                        self.weight_classical_man / (man_l_rot)**2)
+
+        self.prb.createIntermediateCost("max_clman_r_trasl",\
+                        self.weight_classical_man / (man_r_trasl)**2)
+        self.prb.createIntermediateCost("max_clman_r_rot",\
+                        self.weight_classical_man / (man_r_rot)**2)
 
     def add_manip_cost(self, is_classical_man = False):
         
-
         n_of_tasks = len(self.nodes_list)
         
         epsi = 1 # used to make classical man cost robust wrt singularity
 
-        if n_of_tasks != 1: # the global man cost has to be removed from the final node of each task
+        if not is_classical_man:
+
+            # the global man cost has to be removed from the final node of each task
             # so that the transition nodes between them do not influence the optimization
             # This is not needed for the classical man cost because it does not involve joint velocity
 
             for i in range(n_of_tasks): # iterate through each task
                 
-                start_node = self.nodes_list[i][0] # first node of task i
-                last_node = self.nodes_list[i][-1] # last node of task i
+                start_node_idx = self.nodes_list[i][0] # first node index of task i
+                last_node_idx = self.nodes_list[i][-1] # last node index of task i
                 
-                if not is_classical_man: # use global manipulability measure
-
-                    # min inputs 
-                    self.prb.createIntermediateCost("max_global_manipulability" + str(i),\
-                                    self.weight_glob_man * cs.sumsqr(self.q_dot), nodes = range(start_node, last_node))
-
-                else: # use classical manipulability measure
-                    
-                    Jl = self.larm_tcp_jacobian
-                    Jr = self.rarm_tcp_jacobian
-
-                    man_l_trasl, man_l_rot = self.compute_cl_man(Jl)
-                    man_r_trasl, man_r_rot = self.compute_cl_man(Jr)
-
-                    # max cl. manipulability (can be defined on all task nodes without problems,
-                    # because it involves q and not q_dot)
-
-                    self.prb.createIntermediateCost("max_clman_l_trasl" + str(i),\
-                                    self.weight_classical_man / (man_l_trasl)**2,\
-                                    nodes = range(start_node, last_node + 1))
-                    self.prb.createIntermediateCost("max_clman_l_rot" + str(i),\
-                                    self.weight_classical_man / (man_l_rot)**2,\
-                                    nodes = range(start_node, last_node + 1))
-
-                    self.prb.createIntermediateCost("max_clman_r_trasl" + str(i),\
-                                    self.weight_classical_man / (man_r_trasl)**2,\
-                                    nodes = range(start_node, last_node + 1))
-                    self.prb.createIntermediateCost("max_clman_r_rot" + str(i),\
-                                    self.weight_classical_man / (man_r_rot)**2,\
-                                    nodes = range(start_node, last_node + 1))
-
-
-        else: # only one task --> the cost can be added to all nodes without problems
-            
-            if not is_classical_man:
-
                 # min inputs 
-                self.prb.createIntermediateCost("max_global_manipulability",\
-                                self.weight_glob_man * cs.sumsqr(self.q_dot))
-            
-            else: # use classical manipulability measure
-                
-                Jl = self.larm_tcp_jacobian
-                Jr = self.rarm_tcp_jacobian
+                self.prb.createIntermediateCost("max_global_manipulability" + str(i),\
+                                self.compute_man(self.weight_glob_man, self.q_dot),
+                                nodes = range(start_node_idx, last_node_idx)) 
 
-                # min inputs 
-                self.prb.createIntermediateCost("max_classical_manipulability" + str(0),\
-                                    self.weight_classical_man / ( cs.det(Jl @ Jl.T)**2 + cs.det(Jr @ Jr.T)**2 + epsi))
+        else:
+
+            self.add_cl_man_cost(self)           
+            
 
     def init_prb(self, urdf_full_path: str, weight_pos = 0.001, weight_rot = 0.001,\
                 weight_glob_man = 0.0001, weight_class_man = 0.0001,\
@@ -716,24 +710,24 @@ class TaskGen:
         fk_ws = cs.Function.deserialize(self.kindyn.fk("working_surface_link"))
         ws_link_pos = fk_ws(q = np.zeros((self.nq, 1)).flatten())["ee_pos"] # w.r.t. world
         ws_link_rot = fk_ws(q = np.zeros((self.nq, 1)).flatten())["ee_rot"] # w.r.t. world (3x3 rot matrix)
-
+        
         fk_arm_r = cs.Function.deserialize(self.kindyn.fk("arm_1_tcp")) 
         rarm_tcp_pos = fk_arm_r(q = self.q)["ee_pos"] # w.r.t. world
         rarm_tcp_rot = fk_arm_r(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
         self.rarm_tcp_pos_rel_ws = rarm_tcp_pos - ws_link_pos # pos vector relative to working surface in world frame (w.r.t. world)
         
-        jac_arm_r = cs.Function.deserialize(self.kindyn.jacobian("arm_1_tcp",\
+        self.jac_arm_r = cs.Function.deserialize(self.kindyn.jacobian("arm_1_tcp",\
                         cas_kin_dyn.CasadiKinDyn.LOCAL_WORLD_ALIGNED))
-        self.rarm_tcp_jacobian = jac_arm_r(q = self.q)["J"]
+        self.rarm_tcp_jacobian_sym = self.jac_arm_r(q = self.q)["J"]
 
         fk_arm_l = cs.Function.deserialize(self.kindyn.fk("arm_2_tcp"))  
         larm_tcp_pos = fk_arm_l(q = self.q)["ee_pos"] # w.r.t. world
         larm_tcp_rot = fk_arm_l(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
         self.larm_tcp_pos_rel_ws = larm_tcp_pos - ws_link_pos # pos vector relative to working surface in world frame (w.r.t. world)
 
-        jac_arm_l = cs.Function.deserialize(self.kindyn.jacobian("arm_2_tcp",\
+        self.jac_arm_l = cs.Function.deserialize(self.kindyn.jacobian("arm_2_tcp",\
                         cas_kin_dyn.CasadiKinDyn.LOCAL_WORLD_ALIGNED))
-        self.larm_tcp_jacobian = jac_arm_l(q = self.q)["J"]
+        self.larm_tcp_jacobian_sym = self.jac_arm_l(q = self.q)["J"]
 
         self.rght_tcp_rot_wrt_ws = ws_link_rot.T @ rarm_tcp_rot
         self.rght_tcp_pos_wrt_ws = ws_link_rot.T @ (rarm_tcp_pos - ws_link_pos)

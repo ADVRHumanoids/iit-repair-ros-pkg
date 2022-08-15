@@ -86,6 +86,12 @@ def rot_error3(R_trgt, R_actual, epsi = 0.0):
 
     return err
 
-def compute_man_index(solution_dictionary):
-    
-    return true
+def compute_man_index(man_cost: list, n_int: int):
+
+    man_measure = np.zeros((len(man_cost), 1)).flatten()
+
+    for i in range(len(man_cost)): 
+
+        man_measure[i] = np.sqrt(man_cost[i] / n_int) # --> discretized root mean squared joint velocities over the opt interval 
+
+    return man_measure
