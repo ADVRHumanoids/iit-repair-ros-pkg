@@ -11,11 +11,15 @@ import time
 
 from codesign_pyutils.tasks import TaskGen
 
-from codesign_pyutils.miscell_utils import wait_for_confirmation
+from codesign_pyutils.miscell_utils import wait_for_confirmation, gen_y_sampling
 
 import argparse
 
 from termcolor import colored
+
+from horizon.transcriptions.transcriptor import Transcriptor
+
+from horizon.solvers import solver
 
 def solve_prb_standalone(task: TaskGen,\
                         slvr: Solver,\
@@ -244,4 +248,77 @@ def generate_ig(arguments: argparse.Namespace,\
             
                                             
     return q_ig, q_dot_ig
+
+def gen_task_copies(weight_global_manip, weight_class_manip, 
+                    filling_nodes,
+                    wrist_offset, 
+                    y_samples, y_ub, 
+                    urdf_path,
+                    t_exec,
+                    rot_err_epsi,
+                    use_classical_man = False,
+                    sliding_wrist = False, 
+                    coll_path = "", 
+                    is_second_lev_opt = False):
+
     
+    y_sampling = gen_y_sampling(y_samples, y_ub)
+
+    right_arm_picks = np.array([True] * len(y_sampling))
+    for i in range(len(y_sampling)):
+        
+        if y_sampling[i] <= 0 : # on the right
+            
+            right_arm_picks[i] = True
+        
+        else:
+
+            right_arm_picks[i] = False
+
+    # initialize problem task
+    task = TaskGen(filling_n_nodes = filling_nodes, \
+                    is_sliding_wrist = sliding_wrist,\
+                    sliding_wrist_offset = wrist_offset,\
+                    coll_yaml_path = coll_path)
+
+    task.add_tasks(y_sampling, right_arm_picks)
+
+    # initialize problem
+    task.init_prb(urdf_path,
+                    weight_glob_man = weight_global_manip, weight_class_man = weight_class_manip,\
+                    tf_single_task = t_exec)
+
+    print(colored("Task node list: " + str(task.nodes_list), "magenta"))
+    print(colored("Task list: " + str(task.task_list), "magenta"))
+    print(colored("Task names: " + str(task.task_names), "magenta"))
+    print(colored("Task dict: " + str( task.task_dict), "magenta"))
+    print(colored("Total employed nodes: " + str(task.total_nnodes), "magenta"))
+    print(colored("Number of added subtasks:" + str(task.n_of_tasks) + "\n", "magenta"))
+
+    # set constraints and costs
+    task.setup_prb(rot_err_epsi, is_classical_man = use_classical_man,
+                    is_second_lev_opt=is_second_lev_opt)
+
+    return task
+
+def gen_slvr_copies(task,
+                    solver_type,
+                    transcription_method, 
+                    transcription_opts, 
+                    slvr_opt):
+
+    if solver_type != "ilqr":
+
+        Transcriptor.make_method(transcription_method,\
+                                task.prb,\
+                                transcription_opts)
+    
+    ## Creating the solver
+    slvr = solver.Solver.make_solver(solver_type, task.prb, slvr_opt)
+
+    if solver_type == "ilqr":
+
+        slvr.set_iteration_callback()
+
+    return slvr
+
