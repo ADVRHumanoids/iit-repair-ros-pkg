@@ -13,7 +13,7 @@ from horizon.solvers import solver
 def gen_task_copies(weight_global_manip: np.double, weight_class_manip: np.double, 
                     filling_nodes: int,
                     wrist_offset: np.double, 
-                    y_samples: int, y_ub: np.double, 
+                    y_samples: list, y_ub: list, 
                     urdf_path: str,
                     t_exec: np.double,
                     rot_err_epsi: np.double,
@@ -24,21 +24,23 @@ def gen_task_copies(weight_global_manip: np.double, weight_class_manip: np.doubl
                     is_in_place_flip = True, 
                     is_bimanual_pick = False):
 
-    
-    y_sampling = gen_y_sampling(y_samples, y_ub)
+    y_sampling = [None] * 2
 
-    right_arm_picks = [True] * len(y_sampling)
+    y_sampling[0] = gen_y_sampling(y_samples[0], y_ub[0])
+    y_sampling[1] = gen_y_sampling(y_samples[1], y_ub[1])
 
-    for i in range(len(y_sampling)):
+    right_arm_picks = [True] * len(y_sampling[0])
+
+    for i in range(len(y_sampling[0])): # only necessary for the pick and place task
         
-        if y_sampling[i] <= 0 : # on the right
+        if y_sampling[0][i] <= 0 : # on the right
             
             right_arm_picks[i] = True
         
         else:
 
             right_arm_picks[i] = False
-            
+
     # initialize problem task
     task = TaskGen(filling_n_nodes = filling_nodes, \
                     is_sliding_wrist = sliding_wrist,\
