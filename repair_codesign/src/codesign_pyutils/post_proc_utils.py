@@ -8,6 +8,8 @@ from codesign_pyutils.math_utils import compute_man_index
 
 from codesign_pyutils.task_utils import gen_task_copies, compute_ms_cl_man
 
+from codesign_pyutils.miscell_utils import correct_list
+
 from horizon.utils import mat_storer
 
 import os
@@ -200,10 +202,10 @@ class PostProcL1:
         self._ig_seed = self._prb_info_data["ig_seed"][0][0]
         self._max_retry_n = self._prb_info_data["max_retry_n"][0][0]
         self._ms_trgt = self._prb_info_data["n_msrt_trgt"][0][0]
-        self._ny_sampl = self._prb_info_data["n_y_samples"][0][0]
-        self._y_sampl_ub = self._prb_info_data["y_sampl_ub"][0][0]
-        self._nodes_list = self.__correct_list(self._prb_info_data["nodes_list"])
-        self._proc_sol_divs = self.__correct_list(self._prb_info_data["proc_sol_divs"])
+        self._ny_sampl = self._prb_info_data["n_y_samples"][0]
+        self._y_sampl_ub = self._prb_info_data["y_sampl_ub"][0]
+        self._nodes_list = correct_list(self._prb_info_data["nodes_list"])
+        self._proc_sol_divs = correct_list(self._prb_info_data["proc_sol_divs"])
         self._rot_error_epsi = self._prb_info_data["rot_error_epsi"][0][0]
 
         self._slvr_opts_tol = self._prb_info_data["slvr_opts"]["ipopt.tol"][0][0][0][0]
@@ -302,27 +304,7 @@ class PostProcL1:
 
         except:
 
-            print(colored('Failed to generate URDF.', "red"))
-            
-    def __correct_list(self, input_node_list: np.ndarray):
-
-        input_node_list = input_node_list.tolist()
-
-        output_node_list = []
-
-        # applying ugly corrections
-        if type(input_node_list[0][0]) == np.ndarray: # probably here we have read a multitask solution
-            # which will have different number of nodes.
-            reduced_list = input_node_list[0]
-            for i in range(len(reduced_list)):
-
-                output_node_list.append(reduced_list[i].tolist()[0])
-
-        else:
-
-            output_node_list = input_node_list
-
-        return output_node_list                    
+            print(colored('Failed to generate URDF.', "red"))                             
 
     def __rmse(self, ref, vals):
         
@@ -493,6 +475,9 @@ class PostProcL1:
 
         print(colored(" rmse_sol_time:", "white"), np.round(self._rmse_sol_time, 8))
 
+        print(colored(" global solution confidence coefficient:", "white"),\
+                                    np.round(len(self._opt_costs)/self._ms_trgt, 8))
+
         print("\n")
 
         print(colored(" tot_niters2sol:", "white"), np.round(self._tot_niters2sol, 8))
@@ -551,8 +536,8 @@ class PostProcL1:
 
         print(colored("\n########################################################\n", "blue"))
 
-    def make_plots(self):
-        
+    def make_solver_stat_plots(self):
+
         green_diamond = dict(markerfacecolor='g', marker='D')
 
         # sol time
@@ -635,6 +620,10 @@ class PostProcL1:
         ax_retr_box.set_title(r"Number of solution retries per ms node", fontdict=None, loc='center')
         ax_retr_box.grid()
 
+    def make_cost_stat_plots(self):
+
+        green_diamond = dict(markerfacecolor='g', marker='D')
+
         # opt cost
         leg_title = "average: " + str(round(self._avrg_opt_costs, 5)) + "\n" + \
                     "RMSE: " + str(round(self._rmse_opt_costs, 5)) + "\n" + \
@@ -715,6 +704,12 @@ class PostProcL1:
         ax_opt_mi_box.set_xlabel(r"man. index")
         ax_opt_mi_box.set_title(r"Man. index", fontdict=None, loc='center')
         ax_opt_mi_box.grid()
+
+    def make_plots(self):
+        
+        self.make_solver_stat_plots()
+
+        self.make_cost_stat_plots()
 
         # cl. man measure
 
