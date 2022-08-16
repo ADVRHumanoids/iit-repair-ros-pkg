@@ -227,10 +227,16 @@ if __name__ == '__main__':
 
     parser.add_argument('--filling_nnodes', '-fnn', type = int,\
                         help = 'filling nodes between base task nodes', default = 0)
-    parser.add_argument('--n_y_samples', '-nys', type = int,\
-                        help = 'number of y-axis samples on which tasks are placed', default = 4)
-    parser.add_argument('--y_sampl_ub', '-yub', type = np.double,\
-                        help = 'upper bound of the y sampling', default = 0.4)
+
+    parser.add_argument('--n_y_samples_flip', '-nysf', type = int,\
+                        help = 'number of y-axis samples on which tasks(flipping task) are placed', default = 4)
+    parser.add_argument('--y_sampl_ub_flip', '-yubf', type = np.double,\
+                        help = 'upper bound of the y sampling (flipping task)', default = 0.4)
+    parser.add_argument('--n_y_samples_biman', '-nysb', type = int,\
+                        help = 'number of y-axis samples on which tasks(bimanual task) are placed', default = 2)
+    parser.add_argument('--y_sampl_ub_biman', '-yubb', type = np.double,\
+                        help = 'upper bound of the y sampling (bimanual task)', default = 0.2)
+
     parser.add_argument('--rot_error_epsi', '-rot_ep', type = np.double,\
                         help = 'rotation error tolerance', default = 0.0000001)
     parser.add_argument('--t_exec_task', '-t_exec', type = np.double,\
@@ -241,7 +247,7 @@ if __name__ == '__main__':
     parser.add_argument('--ipopt_tol', '-ipopt_tol', type = np.double,\
                         help = 'IPOPT tolerance', default = 0.0000001)
     parser.add_argument('--ipopt_max_iter', '-max_iter', type = int,\
-                        help = 'IPOPT max iterations', default = 300)
+                        help = 'IPOPT max iterations', default = 350)
     parser.add_argument('--ipopt_cnstr_tol', '-ipopt_cnstr', type = np.double,\
                         help = 'IPOPT constraint violation tolerance', default = 0.000001)
     parser.add_argument('--ipopt_verbose', '-ipopt_v', type = int,\
@@ -325,8 +331,8 @@ if __name__ == '__main__':
     rot_error_epsi = args.rot_error_epsi
 
     # samples
-    n_y_samples = args.n_y_samples
-    y_sampl_ub = args.y_sampl_ub
+    n_y_samples = [args.n_y_samples_flip, args.n_y_samples_biman]
+    y_sampl_ub = [args.y_sampl_ub_flip, args.y_sampl_ub_biman]
 
     # number of solution tries with different (random) initializations
     n_msrt_trgt = args.n_msrt_trgt

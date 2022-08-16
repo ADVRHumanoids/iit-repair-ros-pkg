@@ -17,6 +17,7 @@ import multiprocessing as mp
 from codesign_pyutils.miscell_utils import str2bool, \
                                             extract_q_design,\
                                             compute_solution_divs
+
 from codesign_pyutils.clustering_utils import Clusterer
 from codesign_pyutils.misc_definitions import get_design_map
 from codesign_pyutils.load_utils import LoadSols
@@ -326,9 +327,9 @@ if __name__ == '__main__':
     filling_n_nodes = sol_loader.task_info_data["filling_nodes"][0][0]
     rot_error_epsi = sol_loader.task_info_data["rot_error_epsi"][0][0]
     # samples
-    n_y_samples = sol_loader.task_info_data["n_y_samples"][0][0]
-    y_sampl_ub = sol_loader.task_info_data["y_sampl_ub"][0][0]
-
+    n_y_samples = sol_loader.task_info_data["n_y_samples"][0]
+    y_sampl_ub = sol_loader.task_info_data["y_sampl_ub"][0]
+    
     # chosen task
     is_in_place_flip = bool(sol_loader.task_info_data["is_in_place_flip"][0][0])
     is_biman_pick = bool(sol_loader.task_info_data["is_biman_pick"][0][0])

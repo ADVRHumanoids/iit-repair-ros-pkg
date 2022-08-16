@@ -44,10 +44,14 @@ if __name__ == '__main__':
     parser.add_argument('--is_sliding_wrist', '-isw', type = bool,\
                         help = 'is wrist off. is to be used as an additional codes variable', default = False)
 
-    parser.add_argument('--n_y_samples', '-nys', type = int,\
-                        help = 'number of y-axis samples on which tasks are placed', default = 4)
-    parser.add_argument('--y_sampl_ub', '-yub', type = np.double,\
-                        help = 'upper bound of the y sampling', default = 0.4)       
+    parser.add_argument('--n_y_samples_flip', '-nysf', type = int,\
+                        help = 'number of y-axis samples on which tasks (flipping task) are placed', default = 4)
+    parser.add_argument('--y_sampl_ub_flip', '-yubf', type = np.double,\
+                        help = 'upper bound of the y sampling (bimanual task)', default = 0.4)
+    parser.add_argument('--n_y_samples_biman', '-nysb', type = int,\
+                        help = 'number of y-axis samples on which tasks(flipping task) are placed', default = 3)
+    parser.add_argument('--y_sampl_ub_biman', '-yubb', type = np.double,\
+                        help = 'upper bound of the y sampling (bimanual task)', default = 0.2)
                         
     # second level-specific arguments
     parser.add_argument('--multistart_n_l2', '-msn_l2', type=int,\
@@ -110,16 +114,20 @@ if __name__ == '__main__':
                                     str(args.wrist_offset), \
                                     "-isw", \
                                     str(args.is_sliding_wrist), \
-                                    "-nys",
-                                    str(args.n_y_samples),\
-                                    "-yub", 
-                                    str(args.y_sampl_ub), 
+                                    "-nysf", \
+                                    str(args.n_y_samples_flip),\
+                                    "-nysb", \
+                                    str(args.n_y_samples_biman),\
+                                    "-yubf", \
+                                    str(args.y_sampl_ub_flip), \
+                                    "-yubb", \
+                                    str(args.y_sampl_ub_biman), \
                                     "-dfn", \
                                     l1_dump_folder_name, \
                                     "-rdbs", \
                                     res_dir_basename, \
                                     "-iplf", \
-                                    str(args.is_in_place_flip), 
+                                    str(args.is_in_place_flip), \
                                     "-ibp", \
                                     str(args.is_biman_pick)])
 
