@@ -448,7 +448,7 @@ if __name__ == '__main__':
                     "is_biman_pick": args.is_biman_pick}
     
     task_info_dumper.add_storer(other_stuff, results_path,\
-                            "employed_task_info_t" + unique_id,\
+                            "first_level_info_t" + unique_id,\
                             False)
 
     task_info_dumper.dump()

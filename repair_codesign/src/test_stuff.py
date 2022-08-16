@@ -16,4 +16,6 @@ import numpy as np
 
 postprl1 = PostProcL1("/home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/load_dir", 
                         )
-# postprl1.print_sol_run_info()
+postprl1.print_sol_run_info()
+postprl1.make_plots()
+postprl1.show_plots()
