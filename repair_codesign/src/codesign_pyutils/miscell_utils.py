@@ -209,6 +209,24 @@ def select_best_sols(perc: float, opt_costs: list, opt_q_design: np.ndarray):
 
   return opt_q_design_selections, opt_costs_sorted
 
+def correct_list(input_node_list: np.ndarray):
 
+    input_node_list = input_node_list.tolist()
 
-        
+    output_node_list = []
+
+    # applying ugly corrections
+    if type(input_node_list[0][0]) == np.ndarray: # probably here we have read a multitask solution
+        # which will have different number of nodes.
+        reduced_list = input_node_list[0]
+        for i in range(len(reduced_list)):
+
+            output_node_list.append(reduced_list[i].tolist()[0])
+
+    else:
+
+        output_node_list = input_node_list
+
+    return output_node_list  
+
+    
