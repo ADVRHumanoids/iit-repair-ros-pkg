@@ -1,4 +1,5 @@
 
+from turtle import title
 from codesign_pyutils.dump_utils import SolDumper
 
 from codesign_pyutils.load_utils import LoadSols
@@ -18,6 +19,8 @@ import numpy as np
 import rospkg
 
 import subprocess
+
+import matplotlib.pyplot as plt
 
 def compute_man_cost(task_node_list: list, 
                     q_dot: list, man_weight = None):
@@ -101,11 +104,6 @@ class PostProcL1:
 
         self._ws_lim_cnstrnt_data = [{}] * len(self._opt_data)
         self.__get_data_matching("keep", self._ws_lim_cnstrnt_data, 
-                                self._opt_data,
-                                is_dict = True)
-
-        self._codes_simmetry_cnstrt = [{}] * len(self._opt_data)
-        self.__get_data_matching("same", self._codes_simmetry_cnstrt, 
                                 self._opt_data,
                                 is_dict = True)
 
@@ -204,19 +202,26 @@ class PostProcL1:
         self._ms_trgt = self._prb_info_data["n_msrt_trgt"][0][0]
         self._ny_sampl = self._prb_info_data["n_y_samples"][0][0]
         self._y_sampl_ub = self._prb_info_data["y_sampl_ub"][0][0]
-        self._nodes_list = self.__correct_node_list(self._prb_info_data["nodes_list"])
-
-        self._proc_sol_divs = self._prb_info_data["proc_sol_divs"]
+        self._nodes_list = self.__correct_list(self._prb_info_data["nodes_list"])
+        self._proc_sol_divs = self.__correct_list(self._prb_info_data["proc_sol_divs"])
         self._rot_error_epsi = self._prb_info_data["rot_error_epsi"][0][0]
-        self._slvr_opts = self._prb_info_data["slvr_opts"]
+
+        self._slvr_opts_tol = self._prb_info_data["slvr_opts"]["ipopt.tol"][0][0][0][0]
+        self._slvr_opts_maxiter = self._prb_info_data["slvr_opts"]["ipopt.max_iter"][0][0][0][0]
+        self._slvr_opts_cnstr_viol = self._prb_info_data["slvr_opts"]["ipopt.constr_viol_tol"][0][0][0][0]
+        self._slvr_opts_print_l = self._prb_info_data["slvr_opts"]["ipopt.print_level"][0][0][0][0]
+        self._slvr_opts_lin_solv = self._prb_info_data["slvr_opts"]["ipopt.linear_solver"][0][0][0]
         self._solver_type = self._prb_info_data["solver_type"][0]
+
+        self._is_biman_pick = bool(self._prb_info_data["is_biman_pick"][0][0])
+        self._is_in_place_flip = bool(self._prb_info_data["is_in_place_flip"][0][0])
         self._t_exec_task = self._prb_info_data["t_exec_task"][0][0]
         self._task_base_nnodes = self._prb_info_data["task_base_nnodes"]
         self._task_dict = self._prb_info_data["tasks_dict"]
         self._tasks_list = self._prb_info_data["tasks_list"]
         self._transcription_method = self._prb_info_data["transcription_method"][0]
         self._run_id = self._prb_info_data["unique_id"][0]
-        self._is_class_man = self._prb_info_data["use_classical_man"][0][0]
+        self._is_class_man = bool(self._prb_info_data["use_classical_man"][0][0])
         self._class_man_w_base = self._prb_info_data["w_clman_base"][0][0]
         self._class_man_w_a = self._prb_info_data["w_clman_actual"][0][0]
         self._man_w_base = self._prb_info_data["w_man_base"][0][0]
@@ -275,8 +280,9 @@ class PostProcL1:
                                         self._coll_yaml_path, 
                                         is_second_lev_opt=False)
 
-        self._man_llist, self._man_rlist = self.__get_cl_man_list()
-                
+        # self._man_llist, self._man_rlist = self.__get_cl_man_list()
+        #COMPUTE MAN STATISTICS
+
     def __gen_urdf(self):
 
         sliding_wrist_command = "is_sliding_wrist:=" + "true"
@@ -298,7 +304,7 @@ class PostProcL1:
 
             print(colored('Failed to generate URDF.', "red"))
             
-    def __correct_node_list(self, input_node_list: np.ndarray):
+    def __correct_list(self, input_node_list: np.ndarray):
 
         input_node_list = input_node_list.tolist()
 
@@ -415,19 +421,19 @@ class PostProcL1:
     
     def print_sol_run_info(self):
         
-        print(colored("\n######################################################\n", "blue"))
+        print(colored("############ SOLUTION RUN " + self._run_id + " ############\n", "blue"))
 
-        print(colored("-->SOLUTION RUN " + self._run_id + " INFORMATION:\n", "blue"))
-
-        print(colored(" TASK INFO:", "white"))
-
-        print("\n")
+        print(colored(" TASK INFO:\n", "white"))
 
         print(colored(" urdf_full_path:", "white"), self._urdf_full_path)
 
         print(colored(" coll_yaml_path:", "white"), self._coll_yaml_path)
 
         print(colored(" ms_trgt:", "white"), self._ms_trgt)
+
+        print(colored(" is_biman_pick:", "white"), self._is_biman_pick)
+
+        print(colored(" is_in_place_flip:", "white"), self._is_in_place_flip)
 
         print(colored(" filling_nnodes:", "white"), self._filling_nnodes)
         
@@ -455,23 +461,27 @@ class PostProcL1:
 
         print("\n")
 
-        print(colored(" SOLVER INFO:", "white"))
+        print(colored(" SOLVER INFO:\n", "white"))
         
-        print("\n")
-
         print(colored(" integrator:", "white"), self._integrator)
         
-        print(colored(" slvr_opts:", "white"), self._slvr_opts)
+        print(colored(" tol:", "white"), self._slvr_opts_tol)
 
-        print(colored(" solver_type:", "white"), self._solver_type)
+        print(colored(" max_iter:", "white"), self._slvr_opts_maxiter)
 
-        print(colored(" transcription_method:", "white"), self._transcription_method)
+        print(colored(" constraint violation:", "white"), self._slvr_opts_cnstr_viol)
+        
+        print(colored(" verbosity level:", "white"), self._slvr_opts_print_l)
+        
+        print(colored(" lin. solver:", "white"), self._slvr_opts_lin_solv)
+
+        print(colored(" solver type:", "white"), self._solver_type)
+
+        print(colored(" transcription method:", "white"), self._transcription_method)
 
         print("\n")
 
-        print(colored(" SOLUTION INFO:", "white"))
-
-        print("\n")
+        print(colored(" SOLUTION STATISTICS:\n", "white"))
         
         print(colored(" tot_sol_time:", "white"), np.round(self._tot_sol_time, 8))
 
@@ -539,13 +549,178 @@ class PostProcL1:
 
         print("\n")
 
-        print(colored("\n######################################################\n", "blue"))
+        print(colored("\n########################################################\n", "blue"))
 
-    def make_plots():
+    def make_plots(self):
+        
+        green_diamond = dict(markerfacecolor='g', marker='D')
 
-        return True
+        # sol time
+        leg_title = "average: " + str(round(self._avrg_sol_time, 2)) + "\n" + \
+                    "RMSE: " + str(round(self._rmse_sol_time, 2)) + "\n" + \
+                    "max: " + str(round(self._max_sol_time, 2)) + "\n" + \
+                    "min: " + str(round(self._min_sol_time, 2)) + "\n" 
 
-    def show_plots():
+        _, ax_sol_t = plt.subplots(1)
+        ax_sol_t.hist(self._sol_times, bins = int(len(self._sol_times)/20.0))
+        leg_t = ax_sol_t.legend(loc="upper right", 
+            title = leg_title)
+        leg_t.set_draggable(True)
+        ax_sol_t.set_xlabel(r"sol_t[s]")
+        ax_sol_t.set_ylabel(r"N samples")
+        ax_sol_t.set_title(r"Solution time", fontdict=None, loc='center')
+        ax_sol_t.grid()
+        
+        _, ax_sol_t_box = plt.subplots(1)
+        ax_sol_t_box.boxplot(self._sol_times, flierprops = green_diamond, vert=True, 
+                        # whis = (0, 100),
+                        autorange = True)
+        leg_box_t = ax_sol_t_box.legend(loc="upper right", 
+            title = leg_title)
+        leg_box_t.set_draggable(True)                
+        ax_sol_t_box.set_ylabel("sol. time[s]")
+        ax_sol_t_box.set_title(r"Solution time", fontdict=None, loc='center')
+        ax_sol_t_box.grid()
+
+        # n.iterations to solution
+        leg_title = "average: " + str(round(self._avrg_niters2sol, 2)) + "\n" + \
+                    "RMSE: " + str(round(self._rmse_niters2sol, 2)) + "\n" + \
+                    "max: " + str(round(self._max_niters2sol, 2)) + "\n" + \
+                    "min: " + str(round(self._min_niters2sol, 2)) + "\n" 
+
+        _, ax_hist_niter = plt.subplots(1)
+        ax_hist_niter.hist(self._niters2sol, bins = int(len(self._niters2sol)/20.0))
+        leg_niter = ax_hist_niter.legend(loc="upper right", 
+            title = leg_title)
+        leg_niter.set_draggable(True)
+        ax_hist_niter.set_xlabel(r"n. iterations")
+        ax_hist_niter.set_ylabel(r"N samples")
+        ax_hist_niter.set_title(r"Number of iterations to solution", fontdict=None, loc='center')
+        ax_hist_niter.grid()
+        
+        _, ax_niter_box = plt.subplots(1)
+        ax_niter_box.boxplot(self._niters2sol, flierprops = green_diamond, vert=True, 
+                        # whis = (0, 100),
+                        autorange = True)
+        leg_niter_box = ax_niter_box.legend(loc="upper right", 
+            title = leg_title)
+        leg_niter_box.set_draggable(True)
+        ax_niter_box.set_ylabel("n. iterations")
+        ax_niter_box.set_title(r"Number of iterations to solution", fontdict=None, loc='center')
+        ax_niter_box.grid()
+
+        # n. of solution retries
+        leg_title = "average: " + str(round(self._avrg_trial_idxs, 2)) + "\n" + \
+                    "RMSE: " + str(round(self._rmse_trial_idxs, 2)) + "\n" + \
+                    "max: " + str(round(self._max_trial_idxs, 2)) + "\n" + \
+                    "min: " + str(round(self._min_trial_idxs, 2)) + "\n" 
+        _, ax_retr_sc = plt.subplots(1)
+        ax_retr_sc.scatter(self._ms_index, self._trial_idxs)
+        leg_retries = ax_retr_sc.legend(loc="upper right", 
+            title = leg_title)
+        leg_retries.set_draggable(True)
+        ax_retr_sc.set_xlabel(r"multistart node index")
+        ax_retr_sc.set_ylabel(r"retry number")
+        ax_retr_sc.set_title(r"Number of solution retries per ms node", fontdict=None, loc='center')
+        ax_retr_sc.grid()
+        
+        _, ax_retr_box = plt.subplots(1)
+        ax_retr_box.boxplot(self._trial_idxs, flierprops = green_diamond, vert=True, 
+                        # whis = (0, 100),
+                        autorange = True)
+        leg_retries_box = ax_retr_box.legend(loc="upper right", 
+            title = leg_title)
+        leg_retries_box.set_draggable(True)
+        ax_retr_box.set_ylabel(r"retry number")
+        ax_retr_box.set_title(r"Number of solution retries per ms node", fontdict=None, loc='center')
+        ax_retr_box.grid()
+
+        # opt cost
+        leg_title = "average: " + str(round(self._avrg_opt_costs, 5)) + "\n" + \
+                    "RMSE: " + str(round(self._rmse_opt_costs, 5)) + "\n" + \
+                    "max: " + str(round(self._max_opt_costs, 5)) + "\n" + \
+                    "min: " + str(round(self._min_opt_costs, 5)) + "\n" 
+
+        _, ax_opt_c_hist = plt.subplots(1)
+        ax_opt_c_hist.hist(self._opt_costs, bins = int(len(self._opt_costs)/20.0))
+        leg_opt_c = ax_opt_c_hist.legend(loc="upper right", 
+            title = leg_title)
+        leg_opt_c.set_draggable(True)
+        ax_opt_c_hist.set_xlabel(r"opt cost")
+        ax_opt_c_hist.set_ylabel(r"N samples")
+        ax_opt_c_hist.set_title(r"Opt. cost", fontdict=None, loc='center')
+        ax_opt_c_hist.grid()
+        
+        _, ax_opt_c_box = plt.subplots(1)
+        ax_opt_c_box.boxplot(self._opt_costs, flierprops = green_diamond, vert=True, 
+                        # whis = (0, 100),
+                        autorange = True)
+        leg_opt_c_box = ax_opt_c_box.legend(loc="upper right", 
+            title = leg_title)
+        leg_opt_c_box.set_draggable(True)
+        ax_opt_c_box.set_ylabel(r"opt cost")
+        ax_opt_c_box.set_title(r"Opt. cost", fontdict=None, loc='center')
+        ax_opt_c_box.grid()
+
+        # man. cost
+        leg_title = "average: " + str(round(self._avrg_man_cost, 5)) + "\n" + \
+                    "RMSE: " + str(round(self._rmse_man_cost, 5)) + "\n" + \
+                    "max: " + str(round(self._max_man_cost, 5)) + "\n" + \
+                    "min: " + str(round(self._min_man_cost, 5)) + "\n" 
+
+        _, ax_opt_m_hist = plt.subplots(1)
+        ax_opt_m_hist.hist(self._man_cost, bins = int(len(self._man_cost)/20.0))
+        leg_opt_m = ax_opt_m_hist.legend(loc="upper right", 
+            title = leg_title)
+        leg_opt_m.set_draggable(True)
+        ax_opt_m_hist.set_xlabel(r"man. cost")
+        ax_opt_m_hist.set_ylabel(r"N samples")
+        ax_opt_m_hist.set_title(r"Man. cost", fontdict=None, loc='center')
+        ax_opt_m_hist.grid()
+        
+        _, ax_opt_c_box = plt.subplots(1)
+        ax_opt_c_box.boxplot(self._man_cost, flierprops = green_diamond, vert=True, 
+                        # whis = (0, 100),
+                        autorange = True)
+        leg_opt_m_box = ax_opt_c_box.legend(loc="upper right", 
+            title = leg_title)
+        leg_opt_m_box.set_draggable(True)
+        ax_opt_c_box.set_ylabel(r"man. cost")
+        ax_opt_c_box.set_title(r"Man. cost", fontdict=None, loc='center')
+        ax_opt_c_box.grid()
+
+        # man. index
+        leg_title = "average: " + str(round(self._avrg_man_index, 5)) + "\n" + \
+                    "RMSE: " + str(round(self._rmse_man_index, 5)) + "\n" + \
+                    "max: " + str(round(self._max_man_index, 5)) + "\n" + \
+                    "min: " + str(round(self._min_man_index, 5)) + "\n" 
+
+        _, ax_opt_mi_hist = plt.subplots(1)
+        ax_opt_mi_hist.hist(self._man_index, bins = int(len(self._man_index)/20.0))
+        leg_opt_m = ax_opt_mi_hist.legend(loc="upper right", 
+            title = leg_title)
+        leg_opt_m.set_draggable(True)
+        ax_opt_mi_hist.set_xlabel(r"man. index")
+        ax_opt_mi_hist.set_ylabel(r"N samples")
+        ax_opt_mi_hist.set_title(r"Man. index", fontdict=None, loc='center')
+        ax_opt_mi_hist.grid()
+        
+        _, ax_opt_mi_box = plt.subplots(1)
+        ax_opt_mi_box.boxplot(self._man_index, flierprops = green_diamond, vert=True, 
+                        # whis = (0, 100),
+                        autorange = True)
+        leg_opt_m_box = ax_opt_mi_box.legend(loc="upper right", 
+            title = leg_title)
+        leg_opt_m_box.set_draggable(True)
+        ax_opt_mi_box.set_xlabel(r"man. index")
+        ax_opt_mi_box.set_title(r"Man. index", fontdict=None, loc='center')
+        ax_opt_mi_box.grid()
+
+        # cl. man measure
+
+    def show_plots(self):
+
+        plt.show()
 
         return True
 
