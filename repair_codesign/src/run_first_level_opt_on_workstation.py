@@ -202,6 +202,11 @@ if __name__ == '__main__':
     parser.add_argument('--use_classical_man', '-ucm', type=str2bool,\
                         help = 'whether to use the classical manipulability index', default = False)
 
+    parser.add_argument('--urdf_full_path', '-urdf', type=str,\
+                        help = 'full path to URDF', default = "")
+    parser.add_argument('--coll_yaml_path', '-coll', type=str,\
+                        help = 'full path to collision YAML', default = "")
+    
     parser.add_argument('--is_in_place_flip', '-iplf', type=str2bool,\
                         help = 'whether to use in place flip task', default = True)
     parser.add_argument('--is_biman_pick', '-ibp', type=str2bool,\
@@ -288,43 +293,18 @@ if __name__ == '__main__':
     processes_n = mp.cpu_count()
 
     # useful paths
-    dump_folder_name = args.dump_folder_name
     rospackage = rospkg.RosPack() # Only for taking the path to the leg package
-    urdfs_path = rospackage.get_path("repair_urdf") + "/urdf"
-    urdf_name = "repair_full"
-    urdf_full_path = urdfs_path + "/" + urdf_name + ".urdf"
-    xacro_full_path = urdfs_path + "/" + urdf_name + ".urdf.xacro"
+    urdf_full_path = args.urdf_full_path
     codesign_path = rospackage.get_path("repair_codesign")
+
+    dump_folder_name = args.dump_folder_name
     results_path = codesign_path + "/" + args.res_dir_basename + "/" + args.res_dir_basename + "_" +\
                 unique_id + "/" + dump_folder_name
+
     opt_results_path = results_path + "/opt" 
     failed_results_path = results_path + "/failed"
-
-    coll_yaml_name = "arm_coll.yaml"
-    coll_yaml_path = rospackage.get_path("repair_urdf") + "/config/" + coll_yaml_name
-    
+    coll_yaml_path = args.coll_yaml_path
     solution_base_name = args.solution_base_name
-
-    sliding_wrist_command = "is_sliding_wrist:=" + "true"
-    show_softhand_command = "show_softhand:=" + "true"
-    show_coll_command = "show_coll:=" + "true"
-    # preliminary ops
-
-    try:
-
-        
-        # print(sliding_wrist_command)
-        xacro_gen = subprocess.check_call(["xacro",\
-                                        xacro_full_path, \
-                                        sliding_wrist_command, \
-                                        show_softhand_command, \
-                                        show_coll_command, \
-                                        "-o", 
-                                        urdf_full_path])
-
-    except:
-
-        print(colored('Failed to generate URDF.', "red"))
 
     # task-specific options
     filling_n_nodes = args.filling_nnodes

@@ -86,6 +86,36 @@ if __name__ == '__main__':
     l1_results_path = codesign_path + "/" + res_dir_basename + "/" + res_dir_full_name + "/" + l1_dump_folder_name
     l2_results_path = codesign_path + "/" + res_dir_basename + "/" + res_dir_full_name + "/" + l2_dump_folder_name
 
+    #generating urdf
+    urdfs_path = rospackage.get_path("repair_urdf") + "/urdf"
+    urdf_name = "repair_full"
+    urdf_full_path = urdfs_path + "/" + urdf_name + ".urdf"
+    xacro_full_path = urdfs_path + "/" + urdf_name + ".urdf.xacro"
+    sliding_wrist_command = "is_sliding_wrist:=" + "true"
+    show_softhand_command = "show_softhand:=" + "true"
+    show_coll_command = "show_coll:=" + "true"
+
+    coll_yaml_name = "arm_coll.yaml"
+    coll_yaml_path = rospackage.get_path("repair_urdf") + "/config/" + coll_yaml_name
+
+    try:
+
+        print(colored("\n--> GENERATING URDF...\n", "blue"))
+        xacro_gen = subprocess.check_call(["xacro",\
+                                        xacro_full_path, \
+                                        sliding_wrist_command, \
+                                        show_softhand_command, \
+                                        show_coll_command, \
+                                        "-o", 
+                                        urdf_full_path])
+
+        print(colored("\n--> URDF GENERATED SUCCESSFULLY. \n", "blue"))
+
+    except:
+
+        print(colored('FAILED TO GENERATE URDF.', "red"))
+
+
     os.chdir(exec_path) # change current path, so that executable can be run with check_call
 
     try:
@@ -129,7 +159,11 @@ if __name__ == '__main__':
                                     "-iplf", \
                                     str(args.is_in_place_flip), \
                                     "-ibp", \
-                                    str(args.is_biman_pick)])
+                                    str(args.is_biman_pick), \
+                                    "-urdf", \
+                                    urdf_full_path, \
+                                    "-coll", \
+                                    coll_yaml_path])
 
         print(colored("\n--> FIRST LEVEL OPTIMIZATION FINISHED SUCCESSFULLY. \n", "blue"))
 
@@ -163,8 +197,11 @@ if __name__ == '__main__':
                                     "-mtf", \
                                     str(args.max_trials_factor_l2), \
                                     "-mst",
-                                    str(args.multistart_n_l2)
-                                    ])
+                                    str(args.multistart_n_l2), \
+                                    "-urdf", \
+                                    urdf_full_path, \
+                                    "-coll", \
+                                    coll_yaml_path])
 
         print(colored("\n--> SECOND LEVEL OPTIMIZATION FINISHED SUCCESSFULLY. \n", "blue"))
 

@@ -26,13 +26,13 @@
 <xacro:property name="link3_coll_offset_y" value="0.0" />
 <xacro:property name="link3_coll_offset_z" value="0.22" />
 
-<xacro:property name="link4_coll_offset_x" value="0.08" />
+<xacro:property name="link4_coll_offset_x" value="0.1" />
 <xacro:property name="link4_coll_offset_y" value="0.0" />
 <xacro:property name="link4_coll_offset_z" value="0.0" />
 
-<xacro:property name="link5_coll_offset_x" value="-0.065" />
+<xacro:property name="link5_coll_offset_x" value="-0.075" />
 <xacro:property name="link5_coll_offset_y" value="0.0" />
-<xacro:property name="link5_coll_offset_z" value="0.22" />
+<xacro:property name="link5_coll_offset_z" value="0.3" />
 
 <xacro:property name="link6_coll_offset_x" value="0.0" />
 <xacro:property name="link6_coll_offset_y" value="0.0" />

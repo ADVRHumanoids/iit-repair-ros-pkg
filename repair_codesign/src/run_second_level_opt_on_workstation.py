@@ -221,6 +221,11 @@ if __name__ == '__main__':
     parser.add_argument('--ipopt_verbose', '-ipopt_v', type = int,\
                         help = 'IPOPT verbose flag', default = 2)
     
+    parser.add_argument('--urdf_full_path', '-urdf', type=str,\
+                        help = 'full path to URDF', default = "")
+    parser.add_argument('--coll_yaml_path', '-coll', type=str,\
+                        help = 'full path to collision YAML', default = "")
+
     parser.add_argument('--dump_dir_name', '-dfn', type=str,\
                     help = 'dump directory name',
                     default = "second_level")
@@ -247,40 +252,15 @@ if __name__ == '__main__':
     # useful paths
     dump_folder_name = args.dump_dir_name
     rospackage = rospkg.RosPack() # Only for taking the path to the leg package
-    urdfs_path = rospackage.get_path("repair_urdf") + "/urdf"
-    urdf_name = "repair_full"
-    urdf_full_path = urdfs_path + "/" + urdf_name + ".urdf"
-    xacro_full_path = urdfs_path + "/" + urdf_name + ".urdf.xacro"
+
+    urdf_full_path = args.urdf_full_path
     codesign_path = rospackage.get_path("repair_codesign")
 
     load_path = codesign_path + "/" + args.res_dir_basename + "/" + args.res_dirname + "/" + args.load_dir_name
     dump_basepath = codesign_path + "/" + args.res_dir_basename + "/" + args.res_dirname + "/" + dump_folder_name
 
-    coll_yaml_name = "arm_coll.yaml"
-    coll_yaml_path = rospackage.get_path("repair_urdf") + "/config/" + coll_yaml_name
-
+    coll_yaml_path = args.coll_yaml_path
     solution_base_name = args.solution_base_name
-
-    sliding_wrist_command = "is_sliding_wrist:=" + "true"
-    show_softhand_command = "show_softhand:=" + "true"
-    show_coll_command = "show_coll:=" + "true"
-    # preliminary ops
-
-    try:
-
-        
-        # print(sliding_wrist_command)
-        xacro_gen = subprocess.check_call(["xacro",\
-                                        xacro_full_path, \
-                                        sliding_wrist_command, \
-                                        show_softhand_command, \
-                                        show_coll_command, \
-                                        "-o", 
-                                        urdf_full_path])
-
-    except:
-
-        print(colored('Failed to generate URDF.', "red"))
 
     # loading solution and extracting data
     sol_loader = LoadSols(load_path)
