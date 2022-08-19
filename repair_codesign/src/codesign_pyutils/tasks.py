@@ -589,9 +589,9 @@ class TaskGen:
         J_trasl = J[0:3, :]
         J_rot = J[3:(J[:,0].shape[0]), :]
     
-        cl_man_trasl = cs.det(J_trasl @ J_trasl.T)
-        cl_man_rot = cs.det(J_rot @ J_rot.T)
-        cl_man_tot = cs.det(J @ J.T)
+        cl_man_trasl = cs.sqrt(cs.det(J_trasl @ J_trasl.T))
+        cl_man_rot = cs.sqrt(cs.det(J_rot @ J_rot.T))
+        cl_man_tot = cs.sqrt(cs.det(J @ J.T))
 
         return cl_man_trasl, cl_man_rot, cl_man_tot
 
@@ -834,7 +834,7 @@ class TaskGen:
                 next_node = self.add_bimanual_pick_task(init_node = next_node,\
                                 object_pos_wrt_ws = np.array([0.0, y_sampling[1][j], 0.0]))
 
-    def build_tasks(self, is_soft_pose_cnstr = False, epsi = epsi_default):
+    def build_tasks(self, is_soft_pose_cnstr = False, epsi = epsi_default):\
         
         base_nnodes = 0
         base_nnodes_previous = [0] * (len(self.nodes_list)) # auxiliary variable
