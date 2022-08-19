@@ -42,6 +42,8 @@ class Clusterer():
 
     self.mark_dim = mark_dim
 
+    self.algo_name = algo_name
+
     # self.connectivity = kneighbors_graph(
     #     self.X, n_neighbors=self.base_options["n_neighbors"], include_self=False
     # )
@@ -84,7 +86,7 @@ class Clusterer():
                                               min_samples = self.base_options["min_samples"], 
                                               metric = self.base_options["metric"], 
                                               )
-    self.clusterize()
+    self.clusterize(self.algo_name)
 
     self.separate_clust_man_measure()
 
@@ -98,7 +100,7 @@ class Clusterer():
  
   def get_cluster_selector(self, cl_index: int):
 
-    cluster_selector = np.where(self.data_clust_array == cl_index)[0]
+    cluster_selector = np.where(self.data_clust_indxs == cl_index)[0]
 
     return cluster_selector
 
@@ -118,30 +120,34 @@ class Clusterer():
 
     return X_sel
 
-  def compute_first_level_candidates(self):
+  def get_l1_cl_cands_idx(self):
 
-    opt_index_abs = [-1] * self.n_clust
+    # gets the index of the candidate of each cluster wrt to the loaded solution
+    # (note that these indeces are NOT the absolute indeces contained in the opt data;
+    # they only are internal indices
+    # (i.e. the absolute ms index))
+  
+    opt_indxs = [-1] * self.n_clust
 
     for i in range(self.n_clust):
 
       cl_costs_i = self.get_clust_costs(i)
       cl_selector_i = self.get_cluster_selector(i)
-      self.man_measure
 
       opt_index = np.argwhere(cl_costs_i == np.min(cl_costs_i))[0][0]
-      opt_index_abs[i] = cl_selector_i[opt_index]
+      opt_indxs[i] = cl_selector_i[opt_index]
 
-    return opt_index_abs
+    return opt_indxs
 
-  def get_fist_lev_candidate_man_measure(self):
+  def get_l1_cl_cands_man_measure(self):
 
-    opt_index_abs = self.compute_first_level_candidates()
+    l1_cl_cands_indxs = self.get_l1_cl_cands_idx()
 
-    return self.man_measure[opt_index_abs]
+    return self.man_measure[l1_cl_cands_indxs]
 
-  def get_fist_lev_candidate_opt_cost(self):
+  def get_l1_cl_cands_opt_cost(self):
 
-    opt_index_abs = self.compute_first_level_candidates()
+    opt_index_abs = self.get_l1_cl_cands_idx()
 
     return np.array(self.opt_costs)[opt_index_abs]
 
@@ -155,27 +161,27 @@ class Clusterer():
 
   def separate_clust_man_measure(self):
 
-    y_un = np.unique(self.data_clust_array)
+    y_un = np.unique(self.data_clust_indxs)
 
     self.clusts_man_meas = [-1.0] * self.n_clust
     self.clusts_opt_costs = [-1.0] * self.n_clust
 
     for cl in range(self.n_clust):
 
-      cluster_selector = np.where(self.data_clust_array == y_un[cl])[0]
+      cluster_selector = np.where(self.data_clust_indxs == y_un[cl])[0]
       self.clusts_opt_costs[cl] = [self.opt_costs[i] for i in cluster_selector]
       self.clusts_man_meas[cl] = compute_man_index(self.clusts_opt_costs[cl],
                                                       self.n_int)
                                                       
   def clusterize(self, algo_name="minikmeans"):
 
-    self.data_clust_array = self.compute_clust(algo_name)
+    self.data_clust_indxs = self.compute_clust(algo_name)
 
-    self.clust_ids,  self.cl_size_vect = self.get_cluster_sizes(self.data_clust_array)
+    self.clust_ids,  self.cl_size_vect = self.get_cluster_sizes(self.data_clust_indxs)
 
     self.n_clust = len(self.clust_ids)
 
-    self.compute_first_level_candidates()
+    self.l1_cl_cand_idxs = self.get_l1_cl_cands_idx()
 
   def compute_clust(self, method_name="minikmeans"):
     
@@ -229,10 +235,10 @@ class Clusterer():
                           plt_red_factor = 1,
                           show_leg = True):
     
-    y_un = np.unique(self.data_clust_array)
+    y_un = np.unique(self.data_clust_indxs)
     clust_plt_ind = list(range(0, int(len(y_un)/plt_red_factor)))
 
-    rgb_colors = self.get_rbg(self.data_clust_array)
+    rgb_colors = self.get_rbg(self.data_clust_indxs)
 
     plt.figure()
 
@@ -243,13 +249,13 @@ class Clusterer():
 
     for i in clust_plt_ind:
 
-      cluster_selector = np.where(self.data_clust_array == y_un[i])[0]
+      cluster_selector = np.where(self.data_clust_indxs == y_un[i])[0]
 
       ax.scatter3D(self.X[cluster_selector, 0],\
                     self.X[cluster_selector, 1],\
                     self.X[cluster_selector, 2],\
                     alpha = 0.8,
-                    c = rgb_colors[self.data_clust_array[i]],
+                    c = rgb_colors[self.data_clust_indxs[i]],
                     marker ='o', 
                     s = self.mark_dim, 
                     label="cluster n." + str(y_un[i]))
@@ -279,8 +285,8 @@ class Clusterer():
         
         fig = plt.figure()
       
-        cluster_selector = np.where(self.data_clust_array == y_un[i])[0]
-        rest_of_points_selector = np.where(self.data_clust_array != y_un[i])[0]
+        cluster_selector = np.where(self.data_clust_indxs == y_un[i])[0]
+        rest_of_points_selector = np.where(self.data_clust_indxs != y_un[i])[0]
 
         ax = plt.axes(projection ="3d")
         ax.set_xlim3d(np.min(self.X[:, 0]), np.max(self.X[:, 0]))

@@ -7,22 +7,20 @@ import numpy as np
 import subprocess
 
 import rospkg
-
-from codesign_pyutils.dump_utils import SolDumper
-from codesign_pyutils.solution_utils import solve_prb_standalone, \
-                                        generate_ig              
-
+  
 import multiprocessing as mp
 
 from codesign_pyutils.miscell_utils import str2bool, \
                                             extract_q_design,\
                                             compute_solution_divs
-
 from codesign_pyutils.clustering_utils import Clusterer
 from codesign_pyutils.misc_definitions import get_design_map
 from codesign_pyutils.load_utils import LoadSols
-
 from codesign_pyutils.task_utils import gen_task_copies, gen_slvr_copies
+from codesign_pyutils.dump_utils import SolDumper
+from codesign_pyutils.solution_utils import solve_prb_standalone, \
+                                        generate_ig            
+from codesign_pyutils.post_proc_utils import PostProcL1
 
 from termcolor import colored
 
@@ -256,77 +254,48 @@ if __name__ == '__main__':
     urdf_full_path = args.urdf_full_path
     codesign_path = rospackage.get_path("repair_codesign")
 
-    load_path = codesign_path + "/" + args.res_dir_basename + "/" + args.res_dirname + "/" + args.load_dir_name
+    load_path = codesign_path + "/" + args.res_dir_basename + "/" + args.res_dirname 
     dump_basepath = codesign_path + "/" + args.res_dir_basename + "/" + args.res_dirname + "/" + dump_folder_name
 
     coll_yaml_path = args.coll_yaml_path
     solution_base_name = args.solution_base_name
 
     # loading solution and extracting data
-    sol_loader = LoadSols(load_path)
-    n_opt_sol = len(sol_loader.opt_data)
+    postprl1 = PostProcL1(load_path, l1_dirname=args.load_dir_name)
+    postprl1.clusterize(args.n_clust)
 
-    opt_costs = [1e6] * n_opt_sol
-    opt_full_q = [None] * n_opt_sol
-    opt_full_q_dot = [None] * n_opt_sol
-    real_sol_index = [None] * n_opt_sol
-
-    for i in range(n_opt_sol):
-
-        opt_full_q[i] = sol_loader.opt_data[i]["q"]
-        opt_full_q_dot[i] = sol_loader.opt_data[i]["q_dot"]
-        opt_costs[i] = sol_loader.opt_data[i]["opt_cost"][0][0] # [0][0] because MatStorer loads matrices by default
-        real_sol_index[i] = sol_loader.opt_data[i]["multistart_index"][0][0] # unique solution index (LoadSols loads solutions with random order)
-        # so a unique identifier is necessary --> using the index saved when solutions are dumped
-
-    opt_q_design = extract_q_design(opt_full_q)
-
-    n_d_variables = np.shape(opt_q_design)[0]
-
-    design_var_map = get_design_map()
-    design_var_names = list(design_var_map.keys())
-    
-    opt_index = np.argwhere(np.array(opt_costs) == min(np.array(opt_costs)))[0][0]
-    opt_sol_index = sol_loader.opt_data[opt_index]["multistart_index"][0][0] # [0][0] because MatStorer loads matrices by default
-
-    n_int = len(opt_full_q_dot[0][0, :]) # getting number of intervals of a single optimization task
-
-    clusterer = Clusterer(opt_q_design.T, opt_costs, n_int, n_clusters = args.n_clust)
-
-    first_lev_cand_inds = clusterer.compute_first_level_candidates()
-    fist_lev_cand_man_measure = clusterer.get_fist_lev_candidate_man_measure()
-    fist_lev_cand_opt_costs = clusterer.get_fist_lev_candidate_opt_cost()
-
-    n_clust = clusterer.get_n_clust()
-
+    n_opt_sol = postprl1._n_opt_sols
+    n_int = postprl1._n_int 
+    first_lev_cand_inds = postprl1.clusterer.get_l1_cl_cands_idx()
+    fist_lev_cand_man_measure = postprl1.clusterer.get_l1_cl_cands_man_measure()
+    fist_lev_cand_opt_costs = postprl1.clusterer.get_l1_cl_cands_opt_cost()
+    n_clust = postprl1.clusterer.get_n_clust()
     # unique id used for generation of results
-    unique_id = sol_loader.task_info_data["unique_id"][0]
-
+    unique_id = postprl1._unique_id
     # task-specific options
-    right_arm_picks = sol_loader.task_info_data["right_arm_picks"][0][0]
-    filling_n_nodes = sol_loader.task_info_data["filling_nodes"][0][0]
-    rot_error_epsi = sol_loader.task_info_data["rot_error_epsi"][0][0]
+    right_arm_picks = postprl1._right_arm_picks
+    filling_n_nodes = postprl1._filling_nnodes
+    rot_error_epsi = postprl1._rot_error_epsi
     # samples
-    n_y_samples = sol_loader.task_info_data["n_y_samples"][0]
-    y_sampl_ub = sol_loader.task_info_data["y_sampl_ub"][0]
-    
+    n_y_samples = postprl1._ny_sampl
+    y_sampl_ub = postprl1._y_sampl_ub
     # chosen task
-    is_in_place_flip = bool(sol_loader.task_info_data["is_in_place_flip"][0][0])
-    is_biman_pick = bool(sol_loader.task_info_data["is_biman_pick"][0][0])
+    is_in_place_flip = postprl1._is_in_place_flip
+    is_biman_pick = postprl1._is_biman_pick
 
     # number of solution tries with different (random) initializations
     n_msrt_trgt = args.n_msrt_trgt
 
     # solver options
-    solver_type = sol_loader.task_info_data["solver_type"][0]
+    solver_type = postprl1._solver_type
 
     slvr_opt = {
-            "ipopt.tol": sol_loader.task_info_data["slvr_opts"]["ipopt.tol"][0][0][0][0], 
-            "ipopt.max_iter": sol_loader.task_info_data["slvr_opts"]["ipopt.max_iter"][0][0][0][0],
-            "ipopt.constr_viol_tol": sol_loader.task_info_data["slvr_opts"]["ipopt.constr_viol_tol"][0][0][0][0],
-            "ipopt.print_level": args.ipopt_verbose,\
-            "ilqr.verbose": bool(sol_loader.task_info_data["slvr_opts"]["ilqr.verbose"][0][0][0][0]), 
-            "ipopt.linear_solver": sol_loader.task_info_data["slvr_opts"]["ipopt.linear_solver"][0][0][0]}
+            "ipopt.tol": postprl1._slvr_opts_tol, 
+            "ipopt.max_iter": postprl1._slvr_opts_maxiter,
+            "ipopt.constr_viol_tol": postprl1._slvr_opts_cnstr_viol,
+            "ipopt.print_level": postprl1._slvr_opts_print_l,\
+            "ilqr.verbose": True, 
+            "ipopt.linear_solver": postprl1._slvr_opts_lin_solv}
 
     full_file_paths = None # not used
 
@@ -334,15 +303,15 @@ if __name__ == '__main__':
     ig_seed = args.ig_seed
 
     # single task execution time
-    t_exec_task = sol_loader.task_info_data["t_exec_task"][0][0]
+    t_exec_task = postprl1._t_exec_task
 
     # transcription options (if used)
-    transcription_method = sol_loader.task_info_data["transcription_method"][0]
-    intgrtr = sol_loader.task_info_data["integrator"][0]
+    transcription_method = postprl1._transcription_method
+    intgrtr = postprl1._integrator
     transcription_opts = dict(integrator = intgrtr)
 
-    sliding_wrist_offset = sol_loader.task_info_data["sliding_wrist_offset"][0][0]
-    is_sliding_wrist = sol_loader.task_info_data["is_sliding_wrist"][0][0]
+    sliding_wrist_offset = postprl1._wrist_off
+    is_sliding_wrist = postprl1._is_sliding_wrist
 
     max_retry_n = args.max_trials_factor - 1
     max_ig_trials = n_msrt_trgt * args.max_trials_factor
@@ -377,9 +346,9 @@ if __name__ == '__main__':
             os.makedirs(fail_path[i])
 
 
-    use_classical_man = bool(sol_loader.task_info_data["use_classical_man"][0][0])
-    weight_global_manip = sol_loader.task_info_data["w_man_base"][0][0]
-    weight_class_manip = sol_loader.task_info_data["w_clman_base"][0][0]
+    use_classical_man = postprl1._is_class_man
+    weight_global_manip = postprl1._man_w_base
+    weight_class_manip = postprl1._class_man_w_base
 
     task_copies = [None] * len(proc_sol_divs)
     slvr_copies = [None] * len(proc_sol_divs)
@@ -416,12 +385,12 @@ if __name__ == '__main__':
                                     False)
     
     real_first_level_cand_inds = [-1] * n_clust
-    first_level_q_design_opt = np.zeros((len(opt_q_design[:, 0]), n_clust))
+    first_level_q_design_opt = np.zeros((len(postprl1._q_design[:, 0]), n_clust))
 
     for cl in range(n_clust): # for each cluster
 
-        first_level_q_design_opt[:, cl] = opt_q_design[:, first_lev_cand_inds[cl]]
-        real_first_level_cand_inds[cl] = real_sol_index[first_lev_cand_inds[cl]]
+        first_level_q_design_opt[:, cl] = postprl1._q_design[:, first_lev_cand_inds[cl]]
+        real_first_level_cand_inds[cl] = postprl1._ms_indxs[first_lev_cand_inds[cl]]
 
     # inizialize a dumper object for post-processing
 
@@ -457,7 +426,8 @@ if __name__ == '__main__':
                     "l2_cl_cand_inds": np.array(real_first_level_cand_inds), 
                     "l2_cl_best_candidates": first_level_q_design_opt,
                     "l2_cl_opt_costs": fist_lev_cand_opt_costs, 
-                    "l2_cl_cand_man_measure": fist_lev_cand_man_measure
+                    "l2_cl_cand_man_measure": fist_lev_cand_man_measure, 
+                    "n_int": task_copies[0].n_int
                     }
 
     task_info_dumper.add_storer(other_stuff, dump_basepath,\
