@@ -83,6 +83,8 @@ class PostProcL1:
         
         self._opt_data = self._sol_loader.opt_data
         self._fail_data = self._sol_loader.fail_data
+        self._n_opt_sols = self._sol_loader.n_opt_sols
+        self._n_fail_sols = self._sol_loader.n_fail_sols
 
         self._prb_info_data = self._sol_loader.task_info_data
 
@@ -282,7 +284,30 @@ class PostProcL1:
                                         self._coll_yaml_path, 
                                         is_second_lev_opt=False)
 
-        # self._man_llist, self._man_rlist = self.__get_cl_man_list()
+        self._cl_man_llist, self._cl_man_rlist = self.__get_cl_man_list()
+
+        self._avrg_cl_man_llist, self._avrg_cl_man_rlist = self.__compute_avrg_cl_man_list()
+        self._max_cl_man_llist, self._max_cl_man_rlist = self.__compute_max_cl_man_list()
+        self._min_cl_man_llist, self._min_cl_man_rlist = self.__compute_min_cl_man_list()
+        self._rmse_cl_man_llist, self._rmse_cl_man_rlist = self.__compute_rmse_cl_man_list()
+
+        self._2avrg_cl_man_l_trasl = np.sum(np.array(self._avrg_cl_man_llist[0]))/ self._n_opt_sols
+        self._2avrg_cl_man_l_rot =  np.sum(np.array(self._avrg_cl_man_llist[1]))/ self._n_opt_sols
+        self._2avrg_cl_man_r_trasl = np.sum(np.array(self._avrg_cl_man_rlist[0]))/ self._n_opt_sols
+        self._2avrg_cl_man_r_rot = np.sum(np.array(self._avrg_cl_man_rlist[1]))/ self._n_opt_sols
+        self._2max_cl_man_l_trasl = np.max(np.array(self._max_cl_man_llist[0]))
+        self._2max_cl_man_l_rot = np.max(np.array(self._max_cl_man_llist[1]))
+        self._2max_cl_man_r_trasl = np.max(np.array(self._max_cl_man_rlist[0]))
+        self._2max_cl_man_r_rot = np.max(np.array(self._max_cl_man_rlist[1]))
+        self._2min_cl_man_l_trasl = np.min(np.array(self._min_cl_man_llist[0]))
+        self._2min_cl_man_l_rot = np.min(np.array(self._min_cl_man_llist[1]))
+        self._2min_cl_man_r_trasl = np.min(np.array(self._min_cl_man_rlist[0]))
+        self._2min_cl_man_r_rot = np.min(np.array(self._min_cl_man_rlist[1]))
+        self._avrg_rmse_cl_man_l_trasl = np.sum(np.array(self._rmse_cl_man_llist[0]))/ self._n_opt_sols
+        self._avrg_rmse_cl_man_l_rot = np.sum(np.array(self._rmse_cl_man_llist[1]))/ self._n_opt_sols
+        self._avrg_rmse_cl_man_r_trasl = np.sum(np.array(self._rmse_cl_man_rlist[0]))/ self._n_opt_sols
+        self._avrg_rmse_cl_man_r_rot = np.sum(np.array(self._rmse_cl_man_rlist[1]))/ self._n_opt_sols
+
         #COMPUTE MAN STATISTICS
 
     def __gen_urdf(self):
@@ -345,6 +370,94 @@ class PostProcL1:
 
         return cl_man_llist, cl_man_rlist
 
+    def __compute_avrg_cl_man_list(self):
+
+        avrg_cl_man_list_l_trasl = []
+        avrg_cl_man_list_l_rot = []
+        avrg_cl_man_list_r_trasl = []
+        avrg_cl_man_list_r_rot = []
+
+        for ms in range(len(self._q)):
+
+            n_sampl = self._q[ms].shape[1]
+
+            avrg_cl_man_list_l_trasl.append(np.sum(self._cl_man_llist[ms][0, :]) / n_sampl) 
+            avrg_cl_man_list_l_rot.append(np.sum(self._cl_man_llist[ms][1, :]) / n_sampl)
+
+            avrg_cl_man_list_r_trasl.append(np.sum(self._cl_man_rlist[ms][0, :]) / n_sampl) 
+            avrg_cl_man_list_r_rot.append(np.sum(self._cl_man_rlist[ms][1, :]) / n_sampl)
+
+        avrg_cl_man_list_l = [avrg_cl_man_list_l_trasl, avrg_cl_man_list_l_rot]
+        avrg_cl_man_list_r = [avrg_cl_man_list_r_trasl, avrg_cl_man_list_r_rot]
+
+        return avrg_cl_man_list_l, avrg_cl_man_list_r
+
+    def __compute_rmse_cl_man_list(self):
+
+        rmse_cl_man_list_l_trasl = []
+        rmse_cl_man_list_l_rot = []
+        rmse_cl_man_list_r_trasl = []
+        rmse_cl_man_list_r_rot = []
+
+        for ms in range(len(self._q)):
+
+            n_sampl = self._q[ms].shape[1]
+
+            rmse_cl_man_list_l_trasl.append(self.__rmse(self._avrg_cl_man_llist[0][ms], self._cl_man_llist[ms][0, :])) 
+            rmse_cl_man_list_l_rot.append(self.__rmse(self._avrg_cl_man_llist[1][ms], self._cl_man_llist[ms][1, :]))
+
+            rmse_cl_man_list_r_trasl.append(self.__rmse(self._avrg_cl_man_rlist[0][ms], self._cl_man_rlist[ms][0, :])) 
+            rmse_cl_man_list_r_rot.append(self.__rmse(self._avrg_cl_man_rlist[1][ms], self._cl_man_rlist[ms][1, :]))
+
+        rmse_cl_man_list_l = [rmse_cl_man_list_l_trasl, rmse_cl_man_list_l_rot]
+        rmse_cl_man_list_r = [rmse_cl_man_list_r_trasl, rmse_cl_man_list_r_rot]
+
+        return rmse_cl_man_list_l, rmse_cl_man_list_r
+
+    def __compute_max_cl_man_list(self):
+        
+        max_cl_man_list_l_trasl = []
+        max_cl_man_list_l_rot = []
+        max_cl_man_list_r_trasl = []
+        max_cl_man_list_r_rot = []
+
+        for ms in range(len(self._q)):
+
+            n_sampl = self._q[ms].shape[1]
+
+            max_cl_man_list_l_trasl.append(np.max(self._cl_man_llist[ms][0, :])) 
+            max_cl_man_list_l_rot.append(np.max(self._cl_man_llist[ms][1, :]))
+
+            max_cl_man_list_r_trasl.append(np.max(self._cl_man_rlist[ms][0, :]))
+            max_cl_man_list_r_rot.append(np.max(self._cl_man_rlist[ms][1, :]))
+
+        max_cl_man_list_l = [max_cl_man_list_l_trasl, max_cl_man_list_l_rot]
+        max_cl_man_list_r = [max_cl_man_list_r_trasl, max_cl_man_list_r_rot]
+
+        return max_cl_man_list_l, max_cl_man_list_r
+
+    def __compute_min_cl_man_list(self):
+        
+        min_cl_man_list_l_trasl = []
+        min_cl_man_list_l_rot = []
+        min_cl_man_list_r_trasl = []
+        min_cl_man_list_r_rot = []
+
+        for ms in range(len(self._q)):
+
+            n_sampl = self._q[ms].shape[1]
+
+            min_cl_man_list_l_trasl.append(np.min(self._cl_man_llist[ms][0, :])) 
+            min_cl_man_list_l_rot.append(np.min(self._cl_man_llist[ms][1, :]))
+
+            min_cl_man_list_r_trasl.append(np.min(self._cl_man_rlist[ms][0, :]))
+            min_cl_man_list_r_rot.append(np.min(self._cl_man_rlist[ms][1, :]))
+
+        min_cl_man_list_l = [min_cl_man_list_l_trasl, min_cl_man_list_l_rot]
+        min_cl_man_list_r = [min_cl_man_list_r_trasl, min_cl_man_list_r_rot]
+
+        return min_cl_man_list_l, min_cl_man_list_r
+
     def __array2double_correction(self, input_data):
 
         for i in range(len(input_data)):
@@ -401,7 +514,7 @@ class PostProcL1:
                 
                 print(colored("Failed to apply matrix to scalar correction", "yellow"))
     
-    def print_sol_run_info(self):
+    def print_sol_run_info(self, round2 = 8):
         
         print(colored("############ SOLUTION RUN " + self._run_id + " ############\n", "blue"))
 
@@ -424,8 +537,6 @@ class PostProcL1:
         print(colored(" ig_seed:", "white"), self._ig_seed)
 
         print(colored(" max_retry_n:", "white"), self._max_retry_n)
-
-        print(colored(" ms_trgt:", "white"), self._ms_trgt)
 
         print(colored(" ny_sampl:", "white"), self._ny_sampl)
 
@@ -465,89 +576,105 @@ class PostProcL1:
 
         print(colored(" SOLUTION STATISTICS:\n", "white"))
         
-        print(colored(" tot_sol_time:", "white"), np.round(self._tot_sol_time, 8))
+        print(colored(" tot_sol_time:", "white"), np.round(self._tot_sol_time, round2))
 
-        print(colored(" avrg_sol_time:", "white"), np.round(self._avrg_sol_time, 8))
+        print(colored(" avrg_sol_time:", "white"), np.round(self._avrg_sol_time, round2))
 
-        print(colored(" max_sol_time:", "white"), np.round(self._max_sol_time, 8))
+        print(colored(" max_sol_time:", "white"), np.round(self._max_sol_time, round2))
 
-        print(colored(" min_sol_time:", "white"), np.round(self._min_sol_time, 8))
+        print(colored(" min_sol_time:", "white"), np.round(self._min_sol_time, round2))
 
-        print(colored(" rmse_sol_time:", "white"), np.round(self._rmse_sol_time, 8))
+        print(colored(" rmse_sol_time:", "white"), np.round(self._rmse_sol_time, round2))
 
-        print(colored(" global solution confidence coefficient:", "white"),\
-                                    np.round(len(self._opt_costs)/self._ms_trgt, 8))
+        print(colored(" n_opt_sols:", "white"), self._n_opt_sols)
 
-        print("\n")
+        print(colored(" n_opt_sols:", "white"), self._n_fail_sols)
 
-        print(colored(" tot_niters2sol:", "white"), np.round(self._tot_niters2sol, 8))
-
-        print(colored(" avrg_niters2sol:", "white"), np.round(self._avrg_niters2sol, 8))
-
-        print(colored(" max_niters2sol:", "white"), np.round(self._max_niters2sol, 8))
-
-        print(colored(" min_niters2sol:", "white"), np.round(self._min_niters2sol, 8))
-
-        print(colored(" rmse_niters2sol:", "white"), np.round(self._rmse_niters2sol, 8))
+        print(colored(" optimal solutions to multistarts number ratio:", "white"),\
+                                    np.round(self.n_opt_sols/self._ms_trgt, round2))
 
         print("\n")
 
-        print(colored(" tot_trial_idxs:", "white"), np.round(self._tot_trial_idxs, 8))
+        print(colored(" tot_niters2sol:", "white"), np.round(self._tot_niters2sol, round2))
 
-        print(colored(" avrg_trial_idxs:", "white"), np.round(self._avrg_trial_idxs, 8))
+        print(colored(" avrg_niters2sol:", "white"), np.round(self._avrg_niters2sol, round2))
 
-        print(colored(" max_trial_idxs:", "white"), np.round(self._max_trial_idxs, 8))
+        print(colored(" max_niters2sol:", "white"), np.round(self._max_niters2sol, round2))
 
-        print(colored(" min_trial_idxs:", "white"), np.round(self._min_trial_idxs, 8))
+        print(colored(" min_niters2sol:", "white"), np.round(self._min_niters2sol, round2))
 
-        print(colored(" rmse_trial_idxs:", "white"), np.round(self._rmse_trial_idxs, 8))
-
-        print("\n")
-
-        print(colored(" avrg_opt_costs:", "white"), np.round(self._avrg_opt_costs, 8))
-
-        print(colored(" max_opt_costs:", "white"), np.round(self._max_opt_costs, 8))
-
-        print(colored(" min_opt_cost:", "white"), np.round(self._min_opt_costs, 8))
-
-        print(colored(" rmse_opt_costs:", "white"), np.round(self._rmse_opt_costs, 8))
+        print(colored(" rmse_niters2sol:", "white"), np.round(self._rmse_niters2sol, round2))
 
         print("\n")
 
-        print(colored(" avrg_man_cost:", "white"), np.round(self._avrg_man_cost, 8))
+        print(colored(" tot_trial_idxs:", "white"), np.round(self._tot_trial_idxs, round2))
 
-        print(colored(" max_man_cost:", "white"), np.round(self._max_man_cost, 8))
+        print(colored(" avrg_trial_idxs:", "white"), np.round(self._avrg_trial_idxs, round2))
 
-        print(colored(" min_man_cost:", "white"), np.round(self._min_man_cost, 8))
+        print(colored(" max_trial_idxs:", "white"), np.round(self._max_trial_idxs, round2))
 
-        print(colored(" rmse_man_cost:", "white"), np.round(self._rmse_man_cost, 8))
+        print(colored(" min_trial_idxs:", "white"), np.round(self._min_trial_idxs, round2))
+
+        print(colored(" rmse_trial_idxs:", "white"), np.round(self._rmse_trial_idxs, round2))
 
         print("\n")
 
-        print(colored(" avrg_man_index:", "white"), np.round(self._avrg_man_index, 8))
+        print(colored(" avrg_opt_costs:", "white"), np.round(self._avrg_opt_costs, round2))
 
-        print(colored(" max_man_index:", "white"), np.round(self._max_man_index, 8))
+        print(colored(" max_opt_costs:", "white"), np.round(self._max_opt_costs, round2))
 
-        print(colored(" min_man_index:", "white"), np.round(self._min_man_index, 8))
+        print(colored(" min_opt_cost:", "white"), np.round(self._min_opt_costs, round2))
 
-        print(colored(" rmse_man_index:", "white"), np.round(self._rmse_man_index, 8))
+        print(colored(" rmse_opt_costs:", "white"), np.round(self._rmse_opt_costs, round2))
+
+        print("\n")
+
+        print(colored(" avrg_man_cost:", "white"), np.round(self._avrg_man_cost, round2))
+
+        print(colored(" max_man_cost:", "white"), np.round(self._max_man_cost, round2))
+
+        print(colored(" min_man_cost:", "white"), np.round(self._min_man_cost, round2))
+
+        print(colored(" rmse_man_cost:", "white"), np.round(self._rmse_man_cost, round2))
+
+        print("\n")
+
+        print(colored(" avrg_man_index:", "white"), np.round(self._avrg_man_index, round2))
+
+        print(colored(" max_man_index:", "white"), np.round(self._max_man_index, round2))
+
+        print(colored(" min_man_index:", "white"), np.round(self._min_man_index, round2))
+
+        print(colored(" rmse_man_index:", "white"), np.round(self._rmse_man_index, round2))
+
+        print("\n")
+
+        print(colored(" left avrg_cl_man_index:", "white"), np.round(self._avrg_cl_man_llist, round2))
+        print(colored(" left max_cl_man_index:", "white"), np.round(self._max_cl_man_llist, round2))
+        print(colored(" left min_cl_man_index:", "white"), np.round(self._min_cl_man_llist, round2))
+        print(colored(" left rmse_cl_man_index:", "white"), np.round(self._rmse_cl_man_llist, round2))
+
+        print(colored(" right avrg_cl_man_index:", "white"), np.round(self._avrg_cl_man_rlist, round2))
+        print(colored(" right max_cl_man_index:", "white"), np.round(self._max_cl_man_rlist, round2))
+        print(colored(" right min_cl_man_index:", "white"), np.round(self._min_cl_man_rlist, round2))
+        print(colored(" right rmse_cl_man_index:", "white"), np.round(self._rmse_cl_man_rlist, round2))
 
         print("\n")
 
         print(colored("\n########################################################\n", "blue"))
 
-    def make_solver_stat_plots(self):
+    def make_solver_stat_plots(self, bin_scale_factor = 20.0, round2 = 2):
 
         green_diamond = dict(markerfacecolor='g', marker='D')
 
         # sol time
-        leg_title = "average: " + str(round(self._avrg_sol_time, 2)) + "\n" + \
-                    "RMSE: " + str(round(self._rmse_sol_time, 2)) + "\n" + \
-                    "max: " + str(round(self._max_sol_time, 2)) + "\n" + \
-                    "min: " + str(round(self._min_sol_time, 2)) + "\n" 
+        leg_title = "average: " + str(round(self._avrg_sol_time, round2)) + "\n" + \
+                    "RMSE: " + str(round(self._rmse_sol_time, round2)) + "\n" + \
+                    "max: " + str(round(self._max_sol_time, round2)) + "\n" + \
+                    "min: " + str(round(self._min_sol_time, round2)) + "\n" 
 
         _, ax_sol_t = plt.subplots(1)
-        ax_sol_t.hist(self._sol_times, bins = int(len(self._sol_times)/20.0))
+        ax_sol_t.hist(self._sol_times, bins = int(len(self._sol_times)/bin_scale_factor))
         leg_t = ax_sol_t.legend(loc="upper right", 
             title = leg_title)
         leg_t.set_draggable(True)
@@ -568,13 +695,13 @@ class PostProcL1:
         ax_sol_t_box.grid()
 
         # n.iterations to solution
-        leg_title = "average: " + str(round(self._avrg_niters2sol, 2)) + "\n" + \
-                    "RMSE: " + str(round(self._rmse_niters2sol, 2)) + "\n" + \
-                    "max: " + str(round(self._max_niters2sol, 2)) + "\n" + \
-                    "min: " + str(round(self._min_niters2sol, 2)) + "\n" 
+        leg_title = "average: " + str(round(self._avrg_niters2sol, round2)) + "\n" + \
+                    "RMSE: " + str(round(self._rmse_niters2sol, round2)) + "\n" + \
+                    "max: " + str(round(self._max_niters2sol, round2)) + "\n" + \
+                    "min: " + str(round(self._min_niters2sol, round2)) + "\n" 
 
         _, ax_hist_niter = plt.subplots(1)
-        ax_hist_niter.hist(self._niters2sol, bins = int(len(self._niters2sol)/20.0))
+        ax_hist_niter.hist(self._niters2sol, bins = int(len(self._niters2sol)/bin_scale_factor))
         leg_niter = ax_hist_niter.legend(loc="upper right", 
             title = leg_title)
         leg_niter.set_draggable(True)
@@ -595,10 +722,10 @@ class PostProcL1:
         ax_niter_box.grid()
 
         # n. of solution retries
-        leg_title = "average: " + str(round(self._avrg_trial_idxs, 2)) + "\n" + \
-                    "RMSE: " + str(round(self._rmse_trial_idxs, 2)) + "\n" + \
-                    "max: " + str(round(self._max_trial_idxs, 2)) + "\n" + \
-                    "min: " + str(round(self._min_trial_idxs, 2)) + "\n" 
+        leg_title = "average: " + str(round(self._avrg_trial_idxs, round2)) + "\n" + \
+                    "RMSE: " + str(round(self._rmse_trial_idxs, round2)) + "\n" + \
+                    "max: " + str(round(self._max_trial_idxs, round2)) + "\n" + \
+                    "min: " + str(round(self._min_trial_idxs, round2)) + "\n" 
         _, ax_retr_sc = plt.subplots(1)
         ax_retr_sc.scatter(self._ms_index, self._trial_idxs)
         leg_retries = ax_retr_sc.legend(loc="upper right", 
@@ -620,18 +747,18 @@ class PostProcL1:
         ax_retr_box.set_title(r"Number of solution retries per ms node", fontdict=None, loc='center')
         ax_retr_box.grid()
 
-    def make_cost_stat_plots(self):
+    def make_cost_stat_plots(self, bin_scale_factor = 20.0, round2 = 5):
 
         green_diamond = dict(markerfacecolor='g', marker='D')
 
         # opt cost
-        leg_title = "average: " + str(round(self._avrg_opt_costs, 5)) + "\n" + \
-                    "RMSE: " + str(round(self._rmse_opt_costs, 5)) + "\n" + \
-                    "max: " + str(round(self._max_opt_costs, 5)) + "\n" + \
-                    "min: " + str(round(self._min_opt_costs, 5)) + "\n" 
+        leg_title = "average: " + str(round(self._avrg_opt_costs, round2)) + "\n" + \
+                    "RMSE: " + str(round(self._rmse_opt_costs, round2)) + "\n" + \
+                    "max: " + str(round(self._max_opt_costs, round2)) + "\n" + \
+                    "min: " + str(round(self._min_opt_costs, round2)) + "\n" 
 
         _, ax_opt_c_hist = plt.subplots(1)
-        ax_opt_c_hist.hist(self._opt_costs, bins = int(len(self._opt_costs)/20.0))
+        ax_opt_c_hist.hist(self._opt_costs, bins = int(len(self._opt_costs)/bin_scale_factor))
         leg_opt_c = ax_opt_c_hist.legend(loc="upper right", 
             title = leg_title)
         leg_opt_c.set_draggable(True)
@@ -652,13 +779,13 @@ class PostProcL1:
         ax_opt_c_box.grid()
 
         # man. cost
-        leg_title = "average: " + str(round(self._avrg_man_cost, 5)) + "\n" + \
-                    "RMSE: " + str(round(self._rmse_man_cost, 5)) + "\n" + \
-                    "max: " + str(round(self._max_man_cost, 5)) + "\n" + \
-                    "min: " + str(round(self._min_man_cost, 5)) + "\n" 
+        leg_title = "average: " + str(round(self._avrg_man_cost, round2)) + "\n" + \
+                    "RMSE: " + str(round(self._rmse_man_cost, round2)) + "\n" + \
+                    "max: " + str(round(self._max_man_cost, round2)) + "\n" + \
+                    "min: " + str(round(self._min_man_cost, round2)) + "\n" 
 
         _, ax_opt_m_hist = plt.subplots(1)
-        ax_opt_m_hist.hist(self._man_cost, bins = int(len(self._man_cost)/20.0))
+        ax_opt_m_hist.hist(self._man_cost, bins = int(len(self._man_cost)/bin_scale_factor))
         leg_opt_m = ax_opt_m_hist.legend(loc="upper right", 
             title = leg_title)
         leg_opt_m.set_draggable(True)
@@ -679,13 +806,13 @@ class PostProcL1:
         ax_opt_c_box.grid()
 
         # man. index
-        leg_title = "average: " + str(round(self._avrg_man_index, 5)) + "\n" + \
-                    "RMSE: " + str(round(self._rmse_man_index, 5)) + "\n" + \
-                    "max: " + str(round(self._max_man_index, 5)) + "\n" + \
-                    "min: " + str(round(self._min_man_index, 5)) + "\n" 
+        leg_title = "average: " + str(round(self._avrg_man_index, round2)) + "\n" + \
+                    "RMSE: " + str(round(self._rmse_man_index, round2)) + "\n" + \
+                    "max: " + str(round(self._max_man_index, round2)) + "\n" + \
+                    "min: " + str(round(self._min_man_index, round2)) + "\n" 
 
         _, ax_opt_mi_hist = plt.subplots(1)
-        ax_opt_mi_hist.hist(self._man_index, bins = int(len(self._man_index)/20.0))
+        ax_opt_mi_hist.hist(self._man_index, bins = int(len(self._man_index)/bin_scale_factor))
         leg_opt_m = ax_opt_mi_hist.legend(loc="upper right", 
             title = leg_title)
         leg_opt_m.set_draggable(True)
@@ -705,13 +832,42 @@ class PostProcL1:
         ax_opt_mi_box.set_title(r"Man. index", fontdict=None, loc='center')
         ax_opt_mi_box.grid()
 
-    def make_plots(self):
+        # cl. man. index
+
+        leg_title= "average left arm: " + str(np.round([self._2avrg_cl_man_l_trasl, self._2avrg_cl_man_l_rot], round2)) + "\n" + \
+                    "RMSE left arm: " + str(np.round([self._avrg_rmse_cl_man_l_trasl, self._avrg_rmse_cl_man_l_rot], round2)) + "\n" + \
+                    "max left arm: " + str(np.round([self._2max_cl_man_l_trasl, self._2max_cl_man_l_rot], round2)) + "\n" + \
+                    "min left arm: " + str(np.round([self._2min_cl_man_l_trasl, self._2min_cl_man_l_rot], round2)) + "\n" 
+
+        _, ax_opt_mi_hist = plt.subplots(1)
+        ax_opt_mi_hist.hist(np.array(self._avrg_cl_man_llist + self._avrg_cl_man_rlist).T,\
+                                bins = int(len(self._avrg_cl_man_llist[0])/bin_scale_factor), 
+                                label = ["trasl. left", "rot. left", \
+                                    "trasl. right", "rot. right"])
+        leg = ax_opt_mi_hist.legend(loc="upper right", 
+            title = leg_title)
+        leg.set_draggable(True)
+        ax_opt_mi_hist.set_xlabel(r"avrg. cl. man. index")
+        ax_opt_mi_hist.set_ylabel(r"N samples")
+        ax_opt_mi_hist.set_title(r"Average classical man. across multistart samples", fontdict=None, loc='center')
+        ax_opt_mi_hist.grid()
         
-        self.make_solver_stat_plots()
+        # _, ax_opt_mi_box = plt.subplots(1)
+        # ax_opt_mi_box.boxplot(self._man_index, flierprops = green_diamond, vert=True, 
+        #                 # whis = (0, 100),
+        #                 autorange = True)
+        # leg_opt_m_box = ax_opt_mi_box.legend(loc="upper right", 
+        #     title = leg_title)
+        # leg_opt_m_box.set_draggable(True)
+        # ax_opt_mi_box.set_xlabel(r"man. index")
+        # ax_opt_mi_box.set_title(r"Man. index", fontdict=None, loc='center')
+        # ax_opt_mi_box.grid()
 
-        self.make_cost_stat_plots()
+    def make_plots(self, bin_scale_factor = 20.0):
+        
+        self.make_solver_stat_plots(bin_scale_factor=bin_scale_factor)
 
-        # cl. man measure
+        self.make_cost_stat_plots(bin_scale_factor=bin_scale_factor)
 
     def show_plots(self):
 

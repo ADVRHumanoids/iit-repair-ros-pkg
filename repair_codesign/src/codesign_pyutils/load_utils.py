@@ -75,4 +75,7 @@ class LoadSols():
         for i in range(len(fail_file_list)):
 
             self.fail_data[i] = mat_storer.matStorer(self.fail_full_paths[i]).load()
+        
+        self.n_opt_sols = len(self.opt_data)
+        self.n_fail_sols = len(self.fail_data)
 
