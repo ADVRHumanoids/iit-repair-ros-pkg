@@ -93,7 +93,7 @@ def gen_slvr_copies(task: TaskGen,
 def compute_node_cl_man(task: TaskGen, q: np.ndarray):
 
     Jl = task.jac_arm_l( q = q )["J"]
-    Jr = task.jac_arm_r( q = q)["J"]
+    Jr = task.jac_arm_r( q = q )["J"]
     cl_man_ltrasl, cl_man_lrot, cl_man_ltot = task.compute_cl_man(Jl)
     cl_man_rtrasl, cl_man_rrot, cl_man_rtot = task.compute_cl_man(Jr)
 
