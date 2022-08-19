@@ -80,6 +80,7 @@ class PostProcL1:
                         self._load_path + "\n", 
                         "blue"))
 
+        # Loading solutions
         self._sol_loader = LoadSols(self._load_path,
                                 opt_dir_name=opt_dirname, 
                                 fail_dir_name=fail_dirname, 
@@ -94,6 +95,75 @@ class PostProcL1:
 
         self._dump_vars = {}
         
+        self.__read_info_data()
+        self.__read_opt_data()
+
+        self._man_cost = self.__get_man_cost()
+        self._man_index = self.__get_man_index(self._man_cost)
+
+        self.__compute_solver_stats()
+
+        if self.cl_man_post_proc:
+
+            self.__gen_urdf()
+            print(colored("\nGenerating task copy...\n", "magenta"))
+            self._task_copy = gen_task_copies(self._man_w_base, self._class_man_w_base,
+                                            self._filling_nnodes, 
+                                            self._wrist_off,
+                                            self._ny_sampl,
+                                            self._y_sampl_ub, 
+                                            self._urdf_full_path, 
+                                            self._t_exec_task, 
+                                            self._rot_error_epsi, 
+                                            self._is_class_man, 
+                                            self._is_sliding_wrist, 
+                                            self._coll_yaml_path, 
+                                            is_second_lev_opt=False)
+
+            self._cl_man_llist, self._cl_man_rlist = self.__get_cl_man_list()
+
+            self.__compute_cl_man_data()
+
+    def __read_info_data(self):
+
+        # reading other stuff from add info data
+        self._task_dt = self._prb_info_data["dt"][0][0]
+        self._filling_nnodes = self._prb_info_data["filling_nodes"][0][0]
+        self._integrator = self._prb_info_data["integrator"][0]
+        self._ig_seed = self._prb_info_data["ig_seed"][0][0]
+        self._max_retry_n = self._prb_info_data["max_retry_n"][0][0]
+        self._ms_trgt = self._prb_info_data["n_msrt_trgt"][0][0]
+        self._ny_sampl = self._prb_info_data["n_y_samples"][0]
+        self._y_sampl_ub = self._prb_info_data["y_sampl_ub"][0]
+        self._nodes_list = correct_list(self._prb_info_data["nodes_list"])
+        self._proc_sol_divs = correct_list(self._prb_info_data["proc_sol_divs"])
+        self._rot_error_epsi = self._prb_info_data["rot_error_epsi"][0][0]
+
+        self._slvr_opts_tol = self._prb_info_data["slvr_opts"]["ipopt.tol"][0][0][0][0]
+        self._slvr_opts_maxiter = self._prb_info_data["slvr_opts"]["ipopt.max_iter"][0][0][0][0]
+        self._slvr_opts_cnstr_viol = self._prb_info_data["slvr_opts"]["ipopt.constr_viol_tol"][0][0][0][0]
+        self._slvr_opts_print_l = self._prb_info_data["slvr_opts"]["ipopt.print_level"][0][0][0][0]
+        self._slvr_opts_lin_solv = self._prb_info_data["slvr_opts"]["ipopt.linear_solver"][0][0][0]
+        self._solver_type = self._prb_info_data["solver_type"][0]
+
+        self._is_biman_pick = bool(self._prb_info_data["is_biman_pick"][0][0])
+        self._is_in_place_flip = bool(self._prb_info_data["is_in_place_flip"][0][0])
+        self._t_exec_task = self._prb_info_data["t_exec_task"][0][0]
+        self._task_base_nnodes = self._prb_info_data["task_base_nnodes"]
+        self._task_dict = self._prb_info_data["tasks_dict"]
+        self._tasks_list = self._prb_info_data["tasks_list"]
+        self._transcription_method = self._prb_info_data["transcription_method"][0]
+        self._unique_id = self._prb_info_data["unique_id"][0]
+        self._is_class_man = bool(self._prb_info_data["use_classical_man"][0][0])
+        self._class_man_w_base = self._prb_info_data["w_clman_base"][0][0]
+        self._class_man_w_a = self._prb_info_data["w_clman_actual"][0][0]
+        self._man_w_base = self._prb_info_data["w_man_base"][0][0]
+        self._man_w_a = self._prb_info_data["w_man_actual"][0][0]
+        self._wrist_off = self._prb_info_data["sliding_wrist_offset"][0][0]
+        self._is_sliding_wrist = bool(self._prb_info_data["is_sliding_wrist"][0][0])
+
+    def __read_opt_data(self):
+
         # reading stuff from opt data
         self._coll_cnstrnt_data = [{}] * len(self._opt_data)
         self.__get_data_matching("coll", self._coll_cnstrnt_data,
@@ -201,45 +271,8 @@ class PostProcL1:
                                 self._opt_data,
                                 patter_is_varname = True)
 
-        # reading stuff from add info data
-        self._task_dt = self._prb_info_data["dt"][0][0]
-        self._filling_nnodes = self._prb_info_data["filling_nodes"][0][0]
-        self._integrator = self._prb_info_data["integrator"][0]
-        self._ig_seed = self._prb_info_data["ig_seed"][0][0]
-        self._max_retry_n = self._prb_info_data["max_retry_n"][0][0]
-        self._ms_trgt = self._prb_info_data["n_msrt_trgt"][0][0]
-        self._ny_sampl = self._prb_info_data["n_y_samples"][0]
-        self._y_sampl_ub = self._prb_info_data["y_sampl_ub"][0]
-        self._nodes_list = correct_list(self._prb_info_data["nodes_list"])
-        self._proc_sol_divs = correct_list(self._prb_info_data["proc_sol_divs"])
-        self._rot_error_epsi = self._prb_info_data["rot_error_epsi"][0][0]
-
-        self._slvr_opts_tol = self._prb_info_data["slvr_opts"]["ipopt.tol"][0][0][0][0]
-        self._slvr_opts_maxiter = self._prb_info_data["slvr_opts"]["ipopt.max_iter"][0][0][0][0]
-        self._slvr_opts_cnstr_viol = self._prb_info_data["slvr_opts"]["ipopt.constr_viol_tol"][0][0][0][0]
-        self._slvr_opts_print_l = self._prb_info_data["slvr_opts"]["ipopt.print_level"][0][0][0][0]
-        self._slvr_opts_lin_solv = self._prb_info_data["slvr_opts"]["ipopt.linear_solver"][0][0][0]
-        self._solver_type = self._prb_info_data["solver_type"][0]
-
-        self._is_biman_pick = bool(self._prb_info_data["is_biman_pick"][0][0])
-        self._is_in_place_flip = bool(self._prb_info_data["is_in_place_flip"][0][0])
-        self._t_exec_task = self._prb_info_data["t_exec_task"][0][0]
-        self._task_base_nnodes = self._prb_info_data["task_base_nnodes"]
-        self._task_dict = self._prb_info_data["tasks_dict"]
-        self._tasks_list = self._prb_info_data["tasks_list"]
-        self._transcription_method = self._prb_info_data["transcription_method"][0]
-        self._run_id = self._prb_info_data["unique_id"][0]
-        self._is_class_man = bool(self._prb_info_data["use_classical_man"][0][0])
-        self._class_man_w_base = self._prb_info_data["w_clman_base"][0][0]
-        self._class_man_w_a = self._prb_info_data["w_clman_actual"][0][0]
-        self._man_w_base = self._prb_info_data["w_man_base"][0][0]
-        self._man_w_a = self._prb_info_data["w_man_actual"][0][0]
-        self._wrist_off = self._prb_info_data["sliding_wrist_offset"][0][0]
-        self._is_sliding_wrist = bool(self._prb_info_data["is_sliding_wrist"][0][0])
-
-        self._man_cost = self.__get_man_cost()
-        self._man_index = self.__get_man_index(self._man_cost)
-
+    def __compute_solver_stats(self):
+        
         self._tot_sol_time = np.sum(np.array(self._sol_times))
         self._avrg_sol_time = np.mean(np.array(self._sol_times))
         self._max_sol_time = np.max(np.array(self._sol_times))
@@ -273,47 +306,29 @@ class PostProcL1:
         self._min_opt_costs = np.min(np.array(self._opt_costs))
         self._rmse_opt_costs = self.__rmse(self._avrg_opt_costs, self._opt_costs)
 
-        if self.cl_man_post_proc:
-            self.__gen_urdf()
-            print(colored("\nGenerating task copy...\n", "magenta"))
-            self._task_copy = gen_task_copies(self._man_w_base, self._class_man_w_base,
-                                            self._filling_nnodes, 
-                                            self._wrist_off,
-                                            self._ny_sampl,
-                                            self._y_sampl_ub, 
-                                            self._urdf_full_path, 
-                                            self._t_exec_task, 
-                                            self._rot_error_epsi, 
-                                            self._is_class_man, 
-                                            self._is_sliding_wrist, 
-                                            self._coll_yaml_path, 
-                                            is_second_lev_opt=False)
+    def __compute_cl_man_data(self):
 
-            self._cl_man_llist, self._cl_man_rlist = self.__get_cl_man_list()
+        self._avrg_cl_man_llist, self._avrg_cl_man_rlist = self.__compute_avrg_cl_man_list()
+        self._max_cl_man_llist, self._max_cl_man_rlist = self.__compute_max_cl_man_list()
+        self._min_cl_man_llist, self._min_cl_man_rlist = self.__compute_min_cl_man_list()
+        self._rmse_cl_man_llist, self._rmse_cl_man_rlist = self.__compute_rmse_cl_man_list()
 
-            self._avrg_cl_man_llist, self._avrg_cl_man_rlist = self.__compute_avrg_cl_man_list()
-            self._max_cl_man_llist, self._max_cl_man_rlist = self.__compute_max_cl_man_list()
-            self._min_cl_man_llist, self._min_cl_man_rlist = self.__compute_min_cl_man_list()
-            self._rmse_cl_man_llist, self._rmse_cl_man_rlist = self.__compute_rmse_cl_man_list()
-
-            self._2avrg_cl_man_l_trasl = np.sum(np.array(self._avrg_cl_man_llist[0]))/ self._n_opt_sols
-            self._2avrg_cl_man_l_rot =  np.sum(np.array(self._avrg_cl_man_llist[1]))/ self._n_opt_sols
-            self._2avrg_cl_man_r_trasl = np.sum(np.array(self._avrg_cl_man_rlist[0]))/ self._n_opt_sols
-            self._2avrg_cl_man_r_rot = np.sum(np.array(self._avrg_cl_man_rlist[1]))/ self._n_opt_sols
-            self._2max_cl_man_l_trasl = np.max(np.array(self._max_cl_man_llist[0]))
-            self._2max_cl_man_l_rot = np.max(np.array(self._max_cl_man_llist[1]))
-            self._2max_cl_man_r_trasl = np.max(np.array(self._max_cl_man_rlist[0]))
-            self._2max_cl_man_r_rot = np.max(np.array(self._max_cl_man_rlist[1]))
-            self._2min_cl_man_l_trasl = np.min(np.array(self._min_cl_man_llist[0]))
-            self._2min_cl_man_l_rot = np.min(np.array(self._min_cl_man_llist[1]))
-            self._2min_cl_man_r_trasl = np.min(np.array(self._min_cl_man_rlist[0]))
-            self._2min_cl_man_r_rot = np.min(np.array(self._min_cl_man_rlist[1]))
-            self._avrg_rmse_cl_man_l_trasl = np.sum(np.array(self._rmse_cl_man_llist[0]))/ self._n_opt_sols
-            self._avrg_rmse_cl_man_l_rot = np.sum(np.array(self._rmse_cl_man_llist[1]))/ self._n_opt_sols
-            self._avrg_rmse_cl_man_r_trasl = np.sum(np.array(self._rmse_cl_man_rlist[0]))/ self._n_opt_sols
-            self._avrg_rmse_cl_man_r_rot = np.sum(np.array(self._rmse_cl_man_rlist[1]))/ self._n_opt_sols
-
-        #COMPUTE MAN STATISTICS
+        self._2avrg_cl_man_l_trasl = np.sum(np.array(self._avrg_cl_man_llist[0]))/ self._n_opt_sols
+        self._2avrg_cl_man_l_rot =  np.sum(np.array(self._avrg_cl_man_llist[1]))/ self._n_opt_sols
+        self._2avrg_cl_man_r_trasl = np.sum(np.array(self._avrg_cl_man_rlist[0]))/ self._n_opt_sols
+        self._2avrg_cl_man_r_rot = np.sum(np.array(self._avrg_cl_man_rlist[1]))/ self._n_opt_sols
+        self._2max_cl_man_l_trasl = np.max(np.array(self._max_cl_man_llist[0]))
+        self._2max_cl_man_l_rot = np.max(np.array(self._max_cl_man_llist[1]))
+        self._2max_cl_man_r_trasl = np.max(np.array(self._max_cl_man_rlist[0]))
+        self._2max_cl_man_r_rot = np.max(np.array(self._max_cl_man_rlist[1]))
+        self._2min_cl_man_l_trasl = np.min(np.array(self._min_cl_man_llist[0]))
+        self._2min_cl_man_l_rot = np.min(np.array(self._min_cl_man_llist[1]))
+        self._2min_cl_man_r_trasl = np.min(np.array(self._min_cl_man_rlist[0]))
+        self._2min_cl_man_r_rot = np.min(np.array(self._min_cl_man_rlist[1]))
+        self._avrg_rmse_cl_man_l_trasl = np.sum(np.array(self._rmse_cl_man_llist[0]))/ self._n_opt_sols
+        self._avrg_rmse_cl_man_l_rot = np.sum(np.array(self._rmse_cl_man_llist[1]))/ self._n_opt_sols
+        self._avrg_rmse_cl_man_r_trasl = np.sum(np.array(self._rmse_cl_man_rlist[0]))/ self._n_opt_sols
+        self._avrg_rmse_cl_man_r_rot = np.sum(np.array(self._rmse_cl_man_rlist[1]))/ self._n_opt_sols
 
     def __gen_urdf(self):
 
@@ -521,7 +536,7 @@ class PostProcL1:
     
     def print_sol_run_info(self, round2 = 8):
         
-        print(colored("############ SOLUTION RUN " + self._run_id + " ############\n", "blue"))
+        print(colored("############ SOLUTION RUN " + self._unique_id + " ############\n", "blue"))
 
         print(colored(" TASK INFO:\n", "white"))
 

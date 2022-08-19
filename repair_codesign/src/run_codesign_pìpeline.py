@@ -118,93 +118,96 @@ if __name__ == '__main__':
 
     os.chdir(exec_path) # change current path, so that executable can be run with check_call
 
-    try:
+    if args.multistart_n_l1 > 0:
 
-        print(colored("\n--> STARTING FIRST LEVEL OPTIMIZATION....\n", "blue"))
-        reset_term = subprocess.check_call(["reset"])
-        # run first level (blocking --> we have to wait for data to be dumped to file)
-        first_level_proc = subprocess.check_call(["./run_first_level_opt_on_workstation.py", \
-                                    "-mst", \
-                                    str(args.multistart_n_l1), \
-                                    "-mtf", \
-                                    str(args.max_trials_factor_l1), \
-                                    "-igs", \
-                                    str(args.ig_seed_l1),  \
-                                    "-fnn", \
-                                    str(args.filling_nnodes), \
-                                    "-ipopt_v", \
-                                    str(args.ipopt_verb_lev), \
-                                    "-run_ext", \
-                                    str(True), \
-                                    "-id", \
-                                    str(unique_id), \
-                                    "-ma57", \
-                                    str(args.use_ma57), \
-                                    "-wo", \
-                                    str(args.wrist_offset), \
-                                    "-isw", \
-                                    str(args.is_sliding_wrist), \
-                                    "-nysf", \
-                                    str(args.n_y_samples_flip),\
-                                    "-nysb", \
-                                    str(args.n_y_samples_biman),\
-                                    "-yubf", \
-                                    str(args.y_sampl_ub_flip), \
-                                    "-yubb", \
-                                    str(args.y_sampl_ub_biman), \
-                                    "-dfn", \
-                                    l1_dump_folder_name, \
-                                    "-rdbs", \
-                                    res_dir_basename, \
-                                    "-iplf", \
-                                    str(args.is_in_place_flip), \
-                                    "-ibp", \
-                                    str(args.is_biman_pick), \
-                                    "-urdf", \
-                                    urdf_full_path, \
-                                    "-coll", \
-                                    coll_yaml_path])
+        try:
 
-        print(colored("\n--> FIRST LEVEL OPTIMIZATION FINISHED SUCCESSFULLY. \n", "blue"))
+            print(colored("\n--> STARTING FIRST LEVEL OPTIMIZATION....\n", "blue"))
+            reset_term = subprocess.check_call(["reset"])
+            # run first level (blocking --> we have to wait for data to be dumped to file)
+            first_level_proc = subprocess.check_call(["./run_first_level_opt_on_workstation.py", \
+                                        "-mst", \
+                                        str(args.multistart_n_l1), \
+                                        "-mtf", \
+                                        str(args.max_trials_factor_l1), \
+                                        "-igs", \
+                                        str(args.ig_seed_l1),  \
+                                        "-fnn", \
+                                        str(args.filling_nnodes), \
+                                        "-ipopt_v", \
+                                        str(args.ipopt_verb_lev), \
+                                        "-run_ext", \
+                                        str(True), \
+                                        "-id", \
+                                        str(unique_id), \
+                                        "-ma57", \
+                                        str(args.use_ma57), \
+                                        "-wo", \
+                                        str(args.wrist_offset), \
+                                        "-isw", \
+                                        str(args.is_sliding_wrist), \
+                                        "-nysf", \
+                                        str(args.n_y_samples_flip),\
+                                        "-nysb", \
+                                        str(args.n_y_samples_biman),\
+                                        "-yubf", \
+                                        str(args.y_sampl_ub_flip), \
+                                        "-yubb", \
+                                        str(args.y_sampl_ub_biman), \
+                                        "-dfn", \
+                                        l1_dump_folder_name, \
+                                        "-rdbs", \
+                                        res_dir_basename, \
+                                        "-iplf", \
+                                        str(args.is_in_place_flip), \
+                                        "-ibp", \
+                                        str(args.is_biman_pick), \
+                                        "-urdf", \
+                                        urdf_full_path, \
+                                        "-coll", \
+                                        coll_yaml_path])
 
-    except:
+            print(colored("\n--> FIRST LEVEL OPTIMIZATION FINISHED SUCCESSFULLY. \n", "blue"))
 
-        print(colored('\n An exception occurred while running the first level of the codesign pipeline. Muy malo!!! \n', "red"))
+        except:
+
+            print(colored('\n An exception occurred while running the first level of the codesign pipeline. Muy malo!!! \n', "red"))
     
 
-    try:
+    if args.multistart_n_l2 > 0:
+        try:
 
-        print(colored("\n--> STARTING SECOND LEVEL OPTIMIZATION....\n", "blue"))
+            print(colored("\n--> STARTING SECOND LEVEL OPTIMIZATION....\n", "blue"))
 
-        #run first level (blocking --> we have to wait for data to be dumped to file)
-        second_level_proc = subprocess.check_call(["./run_second_level_opt_on_workstation.py", \
-                                    "-d", \
-                                    res_dir_full_name, \
-                                    "-dfn", \
-                                    l2_dump_folder_name,
-                                    "-rdbs", \
-                                    res_dir_basename, \
-                                    "-ldn", \
-                                    l1_dump_folder_name, \
-                                    "-ipopt_v", \
-                                    str(args.ipopt_verb_lev), \
-                                    "-nc",\
-                                    str(args.n_clust_l2), 
-                                    "-ma57", \
-                                    str(args.use_ma57), 
-                                    "-igs", \
-                                    str(args.ig_seed_l2),
-                                    "-mtf", \
-                                    str(args.max_trials_factor_l2), \
-                                    "-mst",
-                                    str(args.multistart_n_l2), \
-                                    "-urdf", \
-                                    urdf_full_path, \
-                                    "-coll", \
-                                    coll_yaml_path])
+            #run first level (blocking --> we have to wait for data to be dumped to file)
+            second_level_proc = subprocess.check_call(["./run_second_level_opt_on_workstation.py", \
+                                        "-d", \
+                                        res_dir_full_name, \
+                                        "-dfn", \
+                                        l2_dump_folder_name,
+                                        "-rdbs", \
+                                        res_dir_basename, \
+                                        "-ldn", \
+                                        l1_dump_folder_name, \
+                                        "-ipopt_v", \
+                                        str(args.ipopt_verb_lev), \
+                                        "-nc",\
+                                        str(args.n_clust_l2), 
+                                        "-ma57", \
+                                        str(args.use_ma57), 
+                                        "-igs", \
+                                        str(args.ig_seed_l2),
+                                        "-mtf", \
+                                        str(args.max_trials_factor_l2), \
+                                        "-mst",
+                                        str(args.multistart_n_l2), \
+                                        "-urdf", \
+                                        urdf_full_path, \
+                                        "-coll", \
+                                        coll_yaml_path])
 
-        print(colored("\n--> SECOND LEVEL OPTIMIZATION FINISHED SUCCESSFULLY. \n", "blue"))
+            print(colored("\n--> SECOND LEVEL OPTIMIZATION FINISHED SUCCESSFULLY. \n", "blue"))
 
-    except:
+        except:
 
-        print(colored('\n An exception occurred while running the second level of the codesign pipeline. Muy malo!!! \n', "red"))
+            print(colored('\n An exception occurred while running the second level of the codesign pipeline. Muy malo!!! \n', "red"))

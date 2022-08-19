@@ -17,7 +17,7 @@ import os
 import numpy as np
 
 postprl1 = PostProcL1("/home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/load_dir",
-                        cl_man_post_proc= True)
+                        cl_man_post_proc= False)
 
 # postprl1.print_sol_run_info()
 
