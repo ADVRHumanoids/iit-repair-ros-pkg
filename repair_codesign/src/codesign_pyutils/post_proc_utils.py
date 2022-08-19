@@ -58,7 +58,11 @@ class PostProcL1:
                 l1_dirname="first_level", 
                 dump_dirname="l1_postproc", 
                 opt_dirname="opt", 
-                fail_dirname="failed"):
+                fail_dirname="failed", 
+                cl_man_post_proc = False):
+
+        self.cl_man_post_proc = cl_man_post_proc # whether to compute and print
+        # also cl. man. postproc. info (can take time on large n. samples)
 
         self._load_path = load_path + "/" + l1_dirname + "/"
         self._dump_path = load_path + "/" + dump_dirname
@@ -269,44 +273,45 @@ class PostProcL1:
         self._min_opt_costs = np.min(np.array(self._opt_costs))
         self._rmse_opt_costs = self.__rmse(self._avrg_opt_costs, self._opt_costs)
 
-        self.__gen_urdf()
-        print(colored("\nGenerating task copy...\n", "magenta"))
-        self._task_copy = gen_task_copies(self._man_w_base, self._class_man_w_base,
-                                        self._filling_nnodes, 
-                                        self._wrist_off,
-                                        self._ny_sampl,
-                                        self._y_sampl_ub, 
-                                        self._urdf_full_path, 
-                                        self._t_exec_task, 
-                                        self._rot_error_epsi, 
-                                        self._is_class_man, 
-                                        self._is_sliding_wrist, 
-                                        self._coll_yaml_path, 
-                                        is_second_lev_opt=False)
+        if self.cl_man_post_proc:
+            self.__gen_urdf()
+            print(colored("\nGenerating task copy...\n", "magenta"))
+            self._task_copy = gen_task_copies(self._man_w_base, self._class_man_w_base,
+                                            self._filling_nnodes, 
+                                            self._wrist_off,
+                                            self._ny_sampl,
+                                            self._y_sampl_ub, 
+                                            self._urdf_full_path, 
+                                            self._t_exec_task, 
+                                            self._rot_error_epsi, 
+                                            self._is_class_man, 
+                                            self._is_sliding_wrist, 
+                                            self._coll_yaml_path, 
+                                            is_second_lev_opt=False)
 
-        self._cl_man_llist, self._cl_man_rlist = self.__get_cl_man_list()
+            self._cl_man_llist, self._cl_man_rlist = self.__get_cl_man_list()
 
-        self._avrg_cl_man_llist, self._avrg_cl_man_rlist = self.__compute_avrg_cl_man_list()
-        self._max_cl_man_llist, self._max_cl_man_rlist = self.__compute_max_cl_man_list()
-        self._min_cl_man_llist, self._min_cl_man_rlist = self.__compute_min_cl_man_list()
-        self._rmse_cl_man_llist, self._rmse_cl_man_rlist = self.__compute_rmse_cl_man_list()
+            self._avrg_cl_man_llist, self._avrg_cl_man_rlist = self.__compute_avrg_cl_man_list()
+            self._max_cl_man_llist, self._max_cl_man_rlist = self.__compute_max_cl_man_list()
+            self._min_cl_man_llist, self._min_cl_man_rlist = self.__compute_min_cl_man_list()
+            self._rmse_cl_man_llist, self._rmse_cl_man_rlist = self.__compute_rmse_cl_man_list()
 
-        self._2avrg_cl_man_l_trasl = np.sum(np.array(self._avrg_cl_man_llist[0]))/ self._n_opt_sols
-        self._2avrg_cl_man_l_rot =  np.sum(np.array(self._avrg_cl_man_llist[1]))/ self._n_opt_sols
-        self._2avrg_cl_man_r_trasl = np.sum(np.array(self._avrg_cl_man_rlist[0]))/ self._n_opt_sols
-        self._2avrg_cl_man_r_rot = np.sum(np.array(self._avrg_cl_man_rlist[1]))/ self._n_opt_sols
-        self._2max_cl_man_l_trasl = np.max(np.array(self._max_cl_man_llist[0]))
-        self._2max_cl_man_l_rot = np.max(np.array(self._max_cl_man_llist[1]))
-        self._2max_cl_man_r_trasl = np.max(np.array(self._max_cl_man_rlist[0]))
-        self._2max_cl_man_r_rot = np.max(np.array(self._max_cl_man_rlist[1]))
-        self._2min_cl_man_l_trasl = np.min(np.array(self._min_cl_man_llist[0]))
-        self._2min_cl_man_l_rot = np.min(np.array(self._min_cl_man_llist[1]))
-        self._2min_cl_man_r_trasl = np.min(np.array(self._min_cl_man_rlist[0]))
-        self._2min_cl_man_r_rot = np.min(np.array(self._min_cl_man_rlist[1]))
-        self._avrg_rmse_cl_man_l_trasl = np.sum(np.array(self._rmse_cl_man_llist[0]))/ self._n_opt_sols
-        self._avrg_rmse_cl_man_l_rot = np.sum(np.array(self._rmse_cl_man_llist[1]))/ self._n_opt_sols
-        self._avrg_rmse_cl_man_r_trasl = np.sum(np.array(self._rmse_cl_man_rlist[0]))/ self._n_opt_sols
-        self._avrg_rmse_cl_man_r_rot = np.sum(np.array(self._rmse_cl_man_rlist[1]))/ self._n_opt_sols
+            self._2avrg_cl_man_l_trasl = np.sum(np.array(self._avrg_cl_man_llist[0]))/ self._n_opt_sols
+            self._2avrg_cl_man_l_rot =  np.sum(np.array(self._avrg_cl_man_llist[1]))/ self._n_opt_sols
+            self._2avrg_cl_man_r_trasl = np.sum(np.array(self._avrg_cl_man_rlist[0]))/ self._n_opt_sols
+            self._2avrg_cl_man_r_rot = np.sum(np.array(self._avrg_cl_man_rlist[1]))/ self._n_opt_sols
+            self._2max_cl_man_l_trasl = np.max(np.array(self._max_cl_man_llist[0]))
+            self._2max_cl_man_l_rot = np.max(np.array(self._max_cl_man_llist[1]))
+            self._2max_cl_man_r_trasl = np.max(np.array(self._max_cl_man_rlist[0]))
+            self._2max_cl_man_r_rot = np.max(np.array(self._max_cl_man_rlist[1]))
+            self._2min_cl_man_l_trasl = np.min(np.array(self._min_cl_man_llist[0]))
+            self._2min_cl_man_l_rot = np.min(np.array(self._min_cl_man_llist[1]))
+            self._2min_cl_man_r_trasl = np.min(np.array(self._min_cl_man_rlist[0]))
+            self._2min_cl_man_r_rot = np.min(np.array(self._min_cl_man_rlist[1]))
+            self._avrg_rmse_cl_man_l_trasl = np.sum(np.array(self._rmse_cl_man_llist[0]))/ self._n_opt_sols
+            self._avrg_rmse_cl_man_l_rot = np.sum(np.array(self._rmse_cl_man_llist[1]))/ self._n_opt_sols
+            self._avrg_rmse_cl_man_r_trasl = np.sum(np.array(self._rmse_cl_man_rlist[0]))/ self._n_opt_sols
+            self._avrg_rmse_cl_man_r_rot = np.sum(np.array(self._rmse_cl_man_rlist[1]))/ self._n_opt_sols
 
         #COMPUTE MAN STATISTICS
 
@@ -648,18 +653,20 @@ class PostProcL1:
         print(colored(" rmse_man_index:", "white"), np.round(self._rmse_man_index, round2))
 
         print("\n")
+        
+        if self.cl_man_post_proc:
 
-        print(colored(" left avrg_cl_man_index:", "white"), np.round(self._avrg_cl_man_llist, round2))
-        print(colored(" left max_cl_man_index:", "white"), np.round(self._max_cl_man_llist, round2))
-        print(colored(" left min_cl_man_index:", "white"), np.round(self._min_cl_man_llist, round2))
-        print(colored(" left rmse_cl_man_index:", "white"), np.round(self._rmse_cl_man_llist, round2))
+            print(colored(" left avrg_cl_man_index:", "white"), np.round(self._avrg_cl_man_llist, round2))
+            print(colored(" left max_cl_man_index:", "white"), np.round(self._max_cl_man_llist, round2))
+            print(colored(" left min_cl_man_index:", "white"), np.round(self._min_cl_man_llist, round2))
+            print(colored(" left rmse_cl_man_index:", "white"), np.round(self._rmse_cl_man_llist, round2))
 
-        print(colored(" right avrg_cl_man_index:", "white"), np.round(self._avrg_cl_man_rlist, round2))
-        print(colored(" right max_cl_man_index:", "white"), np.round(self._max_cl_man_rlist, round2))
-        print(colored(" right min_cl_man_index:", "white"), np.round(self._min_cl_man_rlist, round2))
-        print(colored(" right rmse_cl_man_index:", "white"), np.round(self._rmse_cl_man_rlist, round2))
+            print(colored(" right avrg_cl_man_index:", "white"), np.round(self._avrg_cl_man_rlist, round2))
+            print(colored(" right max_cl_man_index:", "white"), np.round(self._max_cl_man_rlist, round2))
+            print(colored(" right min_cl_man_index:", "white"), np.round(self._min_cl_man_rlist, round2))
+            print(colored(" right rmse_cl_man_index:", "white"), np.round(self._rmse_cl_man_rlist, round2))
 
-        print("\n")
+            print("\n")
 
         print(colored("\n########################################################\n", "blue"))
 
@@ -834,34 +841,25 @@ class PostProcL1:
 
         # cl. man. index
 
-        leg_title= "average left arm: " + str(np.round([self._2avrg_cl_man_l_trasl, self._2avrg_cl_man_l_rot], round2)) + "\n" + \
-                    "RMSE left arm: " + str(np.round([self._avrg_rmse_cl_man_l_trasl, self._avrg_rmse_cl_man_l_rot], round2)) + "\n" + \
-                    "max left arm: " + str(np.round([self._2max_cl_man_l_trasl, self._2max_cl_man_l_rot], round2)) + "\n" + \
-                    "min left arm: " + str(np.round([self._2min_cl_man_l_trasl, self._2min_cl_man_l_rot], round2)) + "\n" 
+        if self.cl_man_post_proc:
 
-        _, ax_opt_mi_hist = plt.subplots(1)
-        ax_opt_mi_hist.hist(np.array(self._avrg_cl_man_llist + self._avrg_cl_man_rlist).T,\
-                                bins = int(len(self._avrg_cl_man_llist[0])/bin_scale_factor), 
-                                label = ["trasl. left", "rot. left", \
-                                    "trasl. right", "rot. right"])
-        leg = ax_opt_mi_hist.legend(loc="upper right", 
-            title = leg_title)
-        leg.set_draggable(True)
-        ax_opt_mi_hist.set_xlabel(r"avrg. cl. man. index")
-        ax_opt_mi_hist.set_ylabel(r"N samples")
-        ax_opt_mi_hist.set_title(r"Average classical man. across multistart samples", fontdict=None, loc='center')
-        ax_opt_mi_hist.grid()
-        
-        # _, ax_opt_mi_box = plt.subplots(1)
-        # ax_opt_mi_box.boxplot(self._man_index, flierprops = green_diamond, vert=True, 
-        #                 # whis = (0, 100),
-        #                 autorange = True)
-        # leg_opt_m_box = ax_opt_mi_box.legend(loc="upper right", 
-        #     title = leg_title)
-        # leg_opt_m_box.set_draggable(True)
-        # ax_opt_mi_box.set_xlabel(r"man. index")
-        # ax_opt_mi_box.set_title(r"Man. index", fontdict=None, loc='center')
-        # ax_opt_mi_box.grid()
+            leg_title= "average left arm: " + str(np.round([self._2avrg_cl_man_l_trasl, self._2avrg_cl_man_l_rot], round2)) + "\n" + \
+                        "RMSE left arm: " + str(np.round([self._avrg_rmse_cl_man_l_trasl, self._avrg_rmse_cl_man_l_rot], round2)) + "\n" + \
+                        "max left arm: " + str(np.round([self._2max_cl_man_l_trasl, self._2max_cl_man_l_rot], round2)) + "\n" + \
+                        "min left arm: " + str(np.round([self._2min_cl_man_l_trasl, self._2min_cl_man_l_rot], round2)) + "\n" 
+
+            _, ax_opt_mi_hist = plt.subplots(1)
+            ax_opt_mi_hist.hist(np.array(self._avrg_cl_man_llist + self._avrg_cl_man_rlist).T,\
+                                    bins = int(len(self._avrg_cl_man_llist[0])/bin_scale_factor), 
+                                    label = ["trasl. left", "rot. left", \
+                                        "trasl. right", "rot. right"])
+            leg = ax_opt_mi_hist.legend(loc="upper right", 
+                title = leg_title)
+            leg.set_draggable(True)
+            ax_opt_mi_hist.set_xlabel(r"avrg. cl. man. index")
+            ax_opt_mi_hist.set_ylabel(r"N samples")
+            ax_opt_mi_hist.set_title(r"Average classical man. across multistart samples", fontdict=None, loc='center')
+            ax_opt_mi_hist.grid()
 
     def make_plots(self, bin_scale_factor = 20.0):
         
