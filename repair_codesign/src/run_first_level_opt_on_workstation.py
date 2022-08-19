@@ -431,7 +431,8 @@ if __name__ == '__main__':
                     "rot_error_epsi": rot_error_epsi, 
                     "t_exec_task": t_exec_task, 
                     "is_in_place_flip": args.is_in_place_flip, 
-                    "is_biman_pick": args.is_biman_pick}
+                    "is_biman_pick": args.is_biman_pick, 
+                    "n_int": task_copies[0].n_int}
     
     task_info_dumper.add_storer(other_stuff, results_path,\
                             "first_level_info_t" + unique_id,\

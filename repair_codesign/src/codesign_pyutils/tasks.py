@@ -471,6 +471,7 @@ class TaskGen:
 
         self.dt = 0.0 # dt of the problem (for now constant)
         self.tf = 0.0 # final time of the traj. opt. problem
+        self.n_int = 0
 
         self.prb = None # problem object
 
@@ -648,7 +649,6 @@ class TaskGen:
 
             self.add_cl_man_cost(self)           
             
-
     def init_prb(self, urdf_full_path: str, weight_pos = 0.001, weight_rot = 0.001,\
                 weight_glob_man = 0.0001, weight_class_man = 0.0001,\
                 is_soft_pose_cnstr = False,\
@@ -665,13 +665,13 @@ class TaskGen:
         self.weight_glob_man = weight_glob_man / ( self.total_nnodes )
         self.weight_classical_man = weight_class_man / ( self.total_nnodes )
 
-        n_int = self.total_nnodes - 1 # adding addditional filling nodes between nodes of two successive tasks
-        self.prb = problem.Problem(n_int) 
+        self.n_int = self.total_nnodes - 1 # adding addditional filling nodes between nodes of two successive tasks
+        self.prb = problem.Problem(self.n_int) 
 
         self.urdf = open(urdf_full_path, 'r').read()
         self.kindyn = cas_kin_dyn.CasadiKinDyn(self.urdf)
         self.tf = tf_single_task * len(self.nodes_list)
-        self.dt = self.tf / n_int
+        self.dt = self.tf / self.n_int
         
         self.joint_names = self.kindyn.joint_names()
         if 'universe' in self.joint_names: self.joint_names.remove('universe')
