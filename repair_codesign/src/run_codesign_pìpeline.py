@@ -125,7 +125,7 @@ if __name__ == '__main__':
             print(colored("\n--> STARTING FIRST LEVEL OPTIMIZATION....\n", "blue"))
             reset_term = subprocess.check_call(["reset"])
             # run first level (blocking --> we have to wait for data to be dumped to file)
-            first_level_proc = subprocess.check_call(["./run_first_level_opt_on_workstation.py", \
+            first_level_proc = subprocess.check_call(["./run_1st_step_opt_on_workstation.py", \
                                         "-mst", \
                                         str(args.multistart_n_l1), \
                                         "-mtf", \
@@ -180,7 +180,7 @@ if __name__ == '__main__':
             print(colored("\n--> STARTING SECOND LEVEL OPTIMIZATION....\n", "blue"))
 
             #run first level (blocking --> we have to wait for data to be dumped to file)
-            second_level_proc = subprocess.check_call(["./run_second_level_opt_on_workstation.py", \
+            second_level_proc = subprocess.check_call(["./run_2nd_3rd_step_opt_on_workstation.py", \
                                         "-d", \
                                         res_dir_full_name, \
                                         "-dfn", \

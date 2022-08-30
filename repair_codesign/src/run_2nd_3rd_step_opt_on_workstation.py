@@ -266,10 +266,10 @@ if __name__ == '__main__':
 
     n_opt_sol = postprl1._n_opt_sols
     n_int = postprl1._n_int 
-    first_lev_cand_inds = postprl1.clusterer.get_l1_cl_cands_idx()
-    fist_lev_cand_man_measure = postprl1.clusterer.get_l1_cl_cands_man_measure()
-    fist_lev_cand_opt_costs = postprl1.clusterer.get_l1_cl_cands_opt_cost()
-    n_clust = postprl1.clusterer.get_n_clust()
+    first_lev_cand_inds = postprl1._clusterer.get_l1_cl_cands_idx()
+    fist_lev_cand_man_measure = postprl1._clusterer.get_l1_cl_cands_man_measure()
+    fist_lev_cand_opt_costs = postprl1._clusterer.get_l1_cl_cands_opt_cost()
+    n_clust = postprl1._clusterer.get_n_clust()
     # unique id used for generation of results
     unique_id = postprl1._unique_id
     # task-specific options

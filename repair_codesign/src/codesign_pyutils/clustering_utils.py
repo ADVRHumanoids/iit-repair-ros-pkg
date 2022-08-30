@@ -353,7 +353,7 @@ class Clusterer():
                     # whis = (0, 100),
                     autorange = True)
     ax_box.set_xlabel("cluster index")
-    ax_box.set_ylabel("$\eta$\,[rad/s]")
+    ax_box.set_ylabel("man measure [rad/s]")
     ax_box.set_title(r"First level cluster boxplot", fontdict=None, loc='center')
     ax_box.grid()
       
