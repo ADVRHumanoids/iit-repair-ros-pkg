@@ -167,6 +167,11 @@ class PostProcL1:
                                 self._opt_data, 
                                 is_dict = True)
 
+        self._lambd_cnstrnt_data = [{}] * len(self._opt_data)
+        self.__get_data_matching("lambd", self._lambd_cnstrnt_data,
+                                self._opt_data, 
+                                is_dict = True)
+
         self._pos_cnstrnt_data = [{}] * len(self._opt_data)
         self.__get_data_matching("pos", self._pos_cnstrnt_data, 
                                 self._opt_data,

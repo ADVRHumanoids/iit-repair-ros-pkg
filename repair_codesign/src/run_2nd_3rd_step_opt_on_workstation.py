@@ -47,7 +47,7 @@ def solve(multistart_nodes,\
             task, slvr,\
             q_ig, q_dot_ig,\
             solutions,\
-            sol_costs, cnstr_opt,\
+            sol_costs, cnstr_opt, cnstr_lmbd,\
             solve_failed_array, 
             q_codes_l1, 
             cluster_id, 
@@ -112,6 +112,7 @@ def solve(multistart_nodes,\
 
         sol_costs[sol_index] = solutions[sol_index]["opt_cost"]
         cnstr_opt[sol_index] = slvr.getConstraintSolutionDict()
+        cnstr_lmbd[sol_index] = slvr.getCnstrLmbdSolDict()
 
         solve_failed_array[sol_index] = solve_failed # for now, solve_failed will always be true
     
@@ -133,6 +134,7 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
     sol_costs = [1e10] * n_multistarts_main
     solutions = [None] * n_multistarts_main
     cnstr_opt = [None] * n_multistarts_main
+    cnstr_lmbd = [None] * n_multistarts_main
     trial_idxs = [-1] * n_multistarts_main
 
     # adding q_codes to the initial guess
@@ -142,7 +144,7 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
             task, slvr,\
             q_ig, q_dot_ig,\
             solutions,\
-            sol_costs, cnstr_opt,\
+            sol_costs, cnstr_opt, cnstr_lmbd,\
             solve_failed_array, 
             q_codes_l1, 
             cluster_id, 
@@ -159,6 +161,7 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
             
         full_solution = {**(solutions[sol_index]),
                         **(cnstr_opt[sol_index]),
+                        **(cnstr_lmbd[sol_index]),
                         "q_ig": q_ig[multistart_nodes[sol_index] + n_multistarts * trial_idxs[sol_index]],\
                         "q_dot_ig": q_dot_ig[multistart_nodes[sol_index] + n_multistarts * trial_idxs[sol_index]], \
                         "multistart_index": multistart_nodes[sol_index], 

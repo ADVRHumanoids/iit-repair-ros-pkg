@@ -58,7 +58,7 @@ def solve(multistart_nodes,\
             task, slvr,\
             q_ig, q_dot_ig,\
             solutions,\
-            sol_costs, cnstr_opt,\
+            sol_costs, cnstr_opt, cnstr_lmbd,\
             solve_failed_array,
             trial_idxs, 
             n_multistarts, 
@@ -116,6 +116,7 @@ def solve(multistart_nodes,\
 
         sol_costs[sol_index] = solutions[sol_index]["opt_cost"]
         cnstr_opt[sol_index] = slvr.getConstraintSolutionDict()
+        cnstr_lmbd[sol_index] = slvr.getCnstrLmbdSolDict()
 
         solve_failed_array[sol_index] = solve_failed
 
@@ -134,13 +135,14 @@ def sol_main(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path, op
     sol_costs = [1e10] * n_multistarts_main
     solutions = [None] * n_multistarts_main
     cnstr_opt = [None] * n_multistarts_main
+    cnstr_lmbd = [None] * n_multistarts_main
     trial_idxs = [-1] * n_multistarts_main
 
     solution_time = solve(multistart_nodes,\
             task, slvr,\
             q_ig, q_dot_ig,\
             solutions,\
-            sol_costs, cnstr_opt,\
+            sol_costs, cnstr_opt, cnstr_lmbd,\
             solve_failed_array, 
             trial_idxs, 
             n_multistarts, 
@@ -152,9 +154,10 @@ def sol_main(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path, op
     sol_dumper = SolDumper()
 
     for sol_index in range(len(multistart_nodes)):
-            
+        
         full_solution = {**(solutions[sol_index]),
                         **(cnstr_opt[sol_index]),
+                        **(cnstr_lmbd[sol_index]),
                         "q_ig": q_ig[multistart_nodes[sol_index] + n_multistarts * trial_idxs[sol_index]],
                         "q_dot_ig": q_dot_ig[multistart_nodes[sol_index] + n_multistarts * trial_idxs[sol_index]], \
                         "multistart_index": multistart_nodes[sol_index], 
