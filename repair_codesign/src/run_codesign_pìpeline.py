@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     # first level specific arguments
     parser.add_argument('--multistart_n_l1', '-msn_l1', type = int,\
-                        help = '', default = 1296)
+                        help = '', default = 720) #1296 
     parser.add_argument('--max_trials_factor_l1', '-mtfl1', type=int,\
                         help = 'for each multistart node, at best max_trials_factor new solutions will be tried to obtain an optimal solution',
                         default = 5)
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     parser.add_argument('--ipopt_verb_lev', '-ipopt_v', type = int,\
                         help = '', default = 1)
     parser.add_argument('--filling_nnodes', '-fnn', type = int,\
-                        help = '', default = 0)
+                        help = '', default = 5)
     parser.add_argument('--use_ma57', '-ma57', type=str2bool,\
                         help = 'whether to use ma57 linear solver or not', default = False)
     parser.add_argument('--wrist_offset', '-wo', type = np.double,\
@@ -47,16 +47,16 @@ if __name__ == '__main__':
     parser.add_argument('--n_y_samples_flip', '-nysf', type = int,\
                         help = 'number of y-axis samples on which tasks (flipping task) are placed', default = 4)
     parser.add_argument('--y_sampl_ub_flip', '-yubf', type = np.double,\
-                        help = 'upper bound of the y sampling (bimanual task)', default = 0.4)
+                        help = 'upper bound of the y sampling (bimanual task)', default = 0.3)
     parser.add_argument('--n_y_samples_biman', '-nysb', type = int,\
-                        help = 'number of y-axis samples on which tasks(flipping task) are placed', default = 3)
+                        help = 'number of y-axis samples on which tasks(flipping task) are placed', default = 4)
     parser.add_argument('--y_sampl_ub_biman', '-yubb', type = np.double,\
                         help = 'upper bound of the y sampling (bimanual task)', default = 0.2)
                         
     # second level-specific arguments
     parser.add_argument('--multistart_n_l2', '-msn_l2', type=int,\
                         help = 'number of multistarts (per cluster) to use',
-                        default = 72)
+                        default = 50)
     parser.add_argument('--max_trials_factor_l2', '-mtfl2', type=int,\
                         help = 'for each multistart node, at best max_trials_factor new solutions will be tried to obtain an optimal solution',
                         default = 20)
