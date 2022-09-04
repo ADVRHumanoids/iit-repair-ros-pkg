@@ -1,0 +1,25 @@
+<launch>
+    <arg name="gui" default="true" />
+    <arg name="rate" default="250.0"/>
+    <arg name="is_sliding_wrist" default="false"/>
+    <arg name="show_softhand" default="false"/>
+    <arg name="show_coll" default="false"/>
+
+    <!-- send the mirror robot XML to param server -->
+    <param name="robot_description" command="xacro '$(find repair_urdf)/urdf/repair_full.urdf.xacro' 
+        is_sliding_wrist:=$(arg is_sliding_wrist)
+        show_softhand:=$(arg show_softhand)
+        show_coll:=$(arg show_coll)" />
+        
+    <param name="use_gui" value="$(arg gui)"/>
+
+    <!-- start robot state publisher -->
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+        <param name="publish_frequency" type="double" value="$(arg rate)" />
+    </node>
+    
+    <group if="$(arg gui)">
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find repair_urdf)/config/repair_full_markers.rviz" />
+    </group>
+    
+</launch>

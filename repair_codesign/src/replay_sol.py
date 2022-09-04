@@ -39,7 +39,7 @@ refinement_scale = 10
 def main(args):
 
     sliding_wrist_command = "is_sliding_wrist:=" + "true"
-    show_softhand_command = "show_softhand:=" + "true"
+    show_softhand_command = "show_softhand:=" + str(args.show_softhand).lower()
     show_coll_command = "show_coll:=" + str(args.show_coll).lower()
     # preliminary ops
 
@@ -172,6 +172,8 @@ if __name__ == '__main__':
                         help = 'whether to only the best solution', default = True)
     parser.add_argument('--show_coll', '-coll', type=str2bool,\
                         help = 'whether to collisions', default = False)
+    parser.add_argument('--show_softhand', '-show_soft', type=str2bool,\
+                        help = 'whether to show softhand', default = True)
 
     args = parser.parse_args()
 

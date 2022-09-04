@@ -963,6 +963,7 @@ class PostProcL2:
         self._confidence_coeffs = [-1] * self._n_clust
 
         self._second_lev_true_costs = [-1] * self._n_clust
+        self._second_lev_best_ms_index = -1
         self.second_lev_true_man = [-1] * self._n_clust
         self.n_of_improved_costs = 0
 
@@ -1038,6 +1039,122 @@ class PostProcL2:
         self._wrist_off = self._info_data["sliding_wrist_offset"][0][0]
         self._is_sliding_wrist = bool(self._info_data["is_sliding_wrist"][0][0])
 
+    def __read_opt_data(self):
+
+        # reading stuff from opt data
+        self._coll_cnstrnt_data = [{}] * len(self._opt_data)
+        self.__get_data_matching("coll", self._coll_cnstrnt_data,
+                                self._opt_data, 
+                                is_dict = True)
+
+        self._lambd_cnstrnt_data = [{}] * len(self._opt_data)
+        self.__get_data_matching("lambd", self._lambd_cnstrnt_data,
+                                self._opt_data, 
+                                is_dict = True)
+
+        self._pos_cnstrnt_data = [{}] * len(self._opt_data)
+        self.__get_data_matching("pos", self._pos_cnstrnt_data, 
+                                self._opt_data,
+                                is_dict = True)
+
+        self._rot_cnstrnt_data = [{}] * len(self._opt_data)
+        self.__get_data_matching("rot", self._rot_cnstrnt_data, 
+                                self._opt_data,
+                                is_dict = True)
+
+        self._ws_lim_cnstrnt_data = [{}] * len(self._opt_data)
+        self.__get_data_matching("keep", self._ws_lim_cnstrnt_data, 
+                                self._opt_data,
+                                is_dict = True)
+
+        self._codes_simmetry_cnstrt = [{}] * len(self._opt_data)
+        self.__get_data_matching("same", self._codes_simmetry_cnstrt, 
+                                self._opt_data,
+                                is_dict = True)
+
+        self._mult_shoot_cnstrnt_data = [None] * len(self._opt_data)
+        self.__get_data_matching("multiple_shooting", self._mult_shoot_cnstrnt_data, 
+                                self._opt_data,
+                                patter_is_varname = True)
+
+        self._codes_var_cnstr = [None] * len(self._opt_data)
+        self.__get_data_matching("single_var", self._codes_var_cnstr, 
+                                self._opt_data,
+                                is_dict = True)
+
+        self._niters2sol = [-1] * len(self._opt_data)
+        self.__get_data_matching("n_iter2sol", self._niters2sol, 
+                                self._opt_data,
+                                patter_is_varname = True, 
+                                is_scalar = True)
+
+        self._opt_costs = [-1] * len(self._opt_data)
+        self.__get_data_matching("opt_cost", self._opt_costs,
+                                self._opt_data, 
+                                patter_is_varname = True, 
+                                is_scalar = True)
+
+        self._q = [None] * len(self._opt_data)
+        self.__get_data_matching("q", self._q, 
+                                self._opt_data,
+                                patter_is_varname = True)
+        
+        self._q_ig = [None] * len(self._opt_data)
+        self.__get_data_matching("q_ig", self._q_ig,
+                                self._opt_data, 
+                                patter_is_varname = True)
+                                    
+        self._q_dot = [None] * len(self._opt_data)
+        self.__get_data_matching("q_dot", self._q_dot,
+                                self._opt_data, 
+                                patter_is_varname = True)
+        
+        self._q_dot_ig = [None] * len(self._opt_data)
+        self.__get_data_matching("q_dot_ig", self._q_dot_ig, 
+                                self._opt_data,
+                                patter_is_varname = True)
+
+        self._ms_indxs = [None] * len(self._opt_data)
+        self.__get_data_matching("multistart_index", self._ms_indxs, 
+                                self._opt_data,
+                                patter_is_varname = True, 
+                                is_scalar = True)
+
+        self._sol_times = [None] * len(self._opt_data)
+        self.__get_data_matching("solution_time", self._sol_times, 
+                                self._opt_data,
+                                patter_is_varname = True, 
+                                is_scalar = True)
+
+        self._solve_failed = [None] * len(self._opt_data)
+        self.__get_data_matching("solve_failed", self._solve_failed,
+                                self._opt_data,
+                                patter_is_varname = True, 
+                                is_scalar = True)
+
+        self._trial_idxs = [None] * len(self._opt_data)
+        self.__get_data_matching("trial_index", self._trial_idxs, 
+                                self._opt_data,
+                                patter_is_varname = True, 
+                                is_scalar = True)
+
+        self._u_opt = [None] * len(self._opt_data)
+        self.__get_data_matching("u_opt", self._u_opt,
+                                self._opt_data, 
+                                patter_is_varname = True)
+
+        self._x_opt = [None] * len(self._opt_data)
+        self.__get_data_matching("x_opt", self._x_opt, 
+                                self._opt_data,
+                                patter_is_varname = True)
+
+        self._sols_run_ids = [None] * len(self._opt_data)
+        self.__get_data_matching("run_id", self._sols_run_ids, 
+                                self._opt_data,
+                                patter_is_varname = True)
+
+        self._q_design = extract_q_design(self._q)
+        
     def __load_clust_sols(self):
 
         for cl in range(self._n_clust):
