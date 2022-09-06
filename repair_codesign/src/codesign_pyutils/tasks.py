@@ -629,23 +629,21 @@ class TaskGen:
         
         epsi = 1 # used to make classical man cost robust wrt singularity
 
-        if not is_classical_man:
+        # the global man cost has to be removed from the final node of each task
+        # so that the transition nodes between them do not influence the optimization
+        # This is not needed for the classical man cost because it does not involve joint velocity
 
-            # the global man cost has to be removed from the final node of each task
-            # so that the transition nodes between them do not influence the optimization
-            # This is not needed for the classical man cost because it does not involve joint velocity
+        for i in range(n_of_tasks): # iterate through each task
+            
+            start_node_idx = self.nodes_list[i][0] # first node index of task i
+            last_node_idx = self.nodes_list[i][-1] # last node index of task i
+            
+            # min inputs 
+            self.prb.createIntermediateCost("max_global_manipulability" + str(i),\
+                            self.compute_man(self.weight_glob_man, self.q_dot),
+                            nodes = range(start_node_idx, last_node_idx)) 
 
-            for i in range(n_of_tasks): # iterate through each task
-                
-                start_node_idx = self.nodes_list[i][0] # first node index of task i
-                last_node_idx = self.nodes_list[i][-1] # last node index of task i
-                
-                # min inputs 
-                self.prb.createIntermediateCost("max_global_manipulability" + str(i),\
-                                self.compute_man(self.weight_glob_man, self.q_dot),
-                                nodes = range(start_node_idx, last_node_idx)) 
-
-        else:
+        if is_classical_man:
 
             self.add_cl_man_cost(self)           
             
