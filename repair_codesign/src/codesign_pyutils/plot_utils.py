@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-
+import numpy as np
 from codesign_pyutils.math_utils import compute_man_index
 
 def scatter3Dcodesign(opt_costs: list,

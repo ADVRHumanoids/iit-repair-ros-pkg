@@ -5,6 +5,8 @@ from codesign_pyutils.task_utils import gen_task_copies, compute_ms_cl_man
 from codesign_pyutils.miscell_utils import correct_list, extract_q_design
 from codesign_pyutils.clustering_utils import Clusterer
 
+from codesign_pyutils.misc_definitions import get_design_map
+
 from horizon.utils import mat_storer
 
 import os
@@ -46,7 +48,7 @@ def compute_man_cost(task_node_list: list,
 
   return man_cost
 
-class PostProcL1:
+class PostProcS1:
 
     def __init__(self, load_path, 
                 additional_info_pattern="info", 
@@ -274,6 +276,8 @@ class PostProcL1:
                                 patter_is_varname = True)
 
         self._q_design = extract_q_design(self._q)
+        
+        self._n_des_vars = len(self._q_design[:, 0])
 
     def __compute_solver_stats(self):
         
@@ -315,7 +319,7 @@ class PostProcL1:
         self._avrg_cl_man_llist, self._avrg_cl_man_rlist = self.__compute_avrg_cl_man_list()
         self._max_cl_man_llist, self._max_cl_man_rlist = self.__compute_max_cl_man_list()
         self._min_cl_man_llist, self._min_cl_man_rlist = self.__compute_min_cl_man_list()
-        self._rmse_cl_man_llist, self._rmse_cl_man_rlist = self.____compute_rmse_cl_man_list()
+        self._rmse_cl_man_llist, self._rmse_cl_man_rlist = self.__compute_rmse_cl_man_list()
 
         self._2avrg_cl_man_l_trasl = np.sum(np.array(self._avrg_cl_man_llist[0]))/ self._n_opt_sols
         self._2avrg_cl_man_l_rot =  np.sum(np.array(self._avrg_cl_man_llist[1]))/ self._n_opt_sols
@@ -416,7 +420,7 @@ class PostProcL1:
 
         return avrg_cl_man_list_l, avrg_cl_man_list_r
 
-    def ____compute_rmse_cl_man_list(self):
+    def __compute_rmse_cl_man_list(self):
 
         rmse_cl_man_list_l_trasl = []
         rmse_cl_man_list_l_rot = []
@@ -883,12 +887,50 @@ class PostProcL1:
             ax_opt_mi_hist.set_ylabel(r"N samples")
             ax_opt_mi_hist.set_title(r"Average classical man. across multistart samples", fontdict=None, loc='center')
             ax_opt_mi_hist.grid()
+    
+    def make_sol_stat_plots(self, bin_scale_factor = 20.0, round2 = 5):
+        
+        design_var_map = get_design_map()
+        design_var_names = list(design_var_map.keys())
+
+        # 1D histograms (w.r.t. co-design variables)
+        design_var_names = [r"$h$", 
+                            r"$w$", 
+                            r"${\theta}_{r}$", 
+                            r"${\delta}_{wr}$"]
+
+        design_var_description = [r"Mounting height", 
+                            r"Shoulder width", 
+                            r"Shoulder mounting angle", 
+                            r"Wrist offset"]
+
+        si_units = [r"[m]", 
+                    r"[m]", 
+                    r"[rad]", 
+                    r"[m]"]
+        n_rows = 2
+        n_cols = 2
+        fig, ax = plt.subplots(n_rows, n_cols)
+        counter = 0
+        for i in range(n_rows):
+            for j in range(n_cols):
+
+                ax[i, j].hist(self._q_design[counter, :], bins = int(len(self._q_design[counter, :])/bin_scale_factor))
+                # ax[i, j].legend(loc="upper left")
+                ax[i, j].set_xlabel(design_var_names[counter] + " " + si_units[counter], loc = "center")
+                ax[i, j].set_ylabel(r"N. sol.")
+                ax[i, j].set_title(design_var_description[counter], fontdict=None, loc='center')
+                ax[i, j].grid()
+
+                counter = counter + 1
 
     def make_plots(self, bin_scale_factor = 20.0):
         
         self.make_solver_stat_plots(bin_scale_factor=bin_scale_factor)
 
         self.make_cost_stat_plots(bin_scale_factor=bin_scale_factor)
+
+        self.make_sol_stat_plots(bin_scale_factor=bin_scale_factor)
 
         self._clusterer.create_cluster_plot(plt_red_factor=4)
 
@@ -914,12 +956,13 @@ class PostProcL1:
 
                 self._dump_vars[attr] = attr_dict[attr]
 
-class PostProcL2:
+class PostProcS3:
 
     def __init__(self, load_path, 
                 clust_dir_basename = "clust", 
                 additional_info_pattern = "info", 
-                dump_dirname = "l2_postproc"):
+                dump_dirname = "l2_postproc", 
+                ):
 
         self._load_path = load_path + "/second_level/"
         self._clust_dir_basename = clust_dir_basename

@@ -3,7 +3,7 @@ import argparse
 
 import rospkg
         
-from codesign_pyutils.post_proc_utils import PostProcL2
+from codesign_pyutils.post_proc_utils import PostProcS3
 
 import numpy as np
 
@@ -21,7 +21,7 @@ def main(args):
 
     dump_dirname = "2nd_lev_postproc"
 
-    post_proc = PostProcL2(results_path, 
+    post_proc = PostProcS3(results_path, 
                     dump_dirname = dump_dirname) # loads 2nd level solutions and dumps general and postproc. info to file
 
     opt_costs = post_proc.second_lev_opt_costs

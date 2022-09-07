@@ -14,6 +14,8 @@ import numpy as np
 
 from codesign_pyutils.miscell_utils import str2bool
 
+from codesign_pyutils.post_proc_utils import PostProcS3
+
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(
@@ -64,6 +66,14 @@ if __name__ == '__main__':
                         help = 'number of clusters to be generated', default = 15)
     parser.add_argument("--ig_seed_l2", '-ig_l2', type = int,\
                         help = '', default = 28)
+    
+    # cl man reference generation-specific arguments
+    # parser.add_argument('--gen_cl_man_ref', '-gen_clmr', type=bool,\
+    #                     help = 'whether to run the cl. manipulability reference generation',
+    #                     default = True)
+    # parser.add_argument('--max_trials_factor_clmr', '-mtfl2', type=int,\
+    #                     help = 'for each multistart node, at best max_trials_factor new solutions will be tried to obtain an optimal solution',
+    #                     default = 20)
 
     args = parser.parse_args()
 
@@ -175,6 +185,7 @@ if __name__ == '__main__':
     
 
     if args.multistart_n_l2 > 0:
+
         try:
 
             print(colored("\n--> STARTING SECOND LEVEL OPTIMIZATION....\n", "blue"))
@@ -211,3 +222,36 @@ if __name__ == '__main__':
         except:
 
             print(colored('\n An exception occurred while running the second level of the codesign pipeline. Muy malo!!! \n', "red"))
+
+
+    # if args.run_l3_postp:
+
+    #     try:
+
+    #         print(colored("\n--> PERFORMING POST-PROCESSING STEPS FOR 3rd STEP....\n", "blue"))
+
+    #         postprl2 = PostProcS3(codesign_path + "/" + res_dir_basename)
+
+    #     except:
+
+    #         print(colored('\n An exception occurred while running 3rd step postprocessing. Muy malo!!! \n', "red"))
+
+    # if args.gen_cl_man_ref:
+
+    #     try:
+
+    #         print(colored("\n--> PERFORMING POST-PROCESSING STEPS FOR 3rd STEP....\n", "blue"))
+
+    #         postprl2 = PostProcS3(codesign_path + "/" + res_dir_basename)
+
+    #         # generate cl man references
+    #         second_level_proc = subprocess.check_call(["./gen_cl_man_ref.py", \
+    #                                     "-mst", \
+    #                                     args.max_trials_factor_clmr, \
+    #                                     ])
+
+    #     except:
+
+    #         print(colored('\n An exception occurred while running 3rd step postprocessing. Muy malo!!! \n', "red"))
+
+    

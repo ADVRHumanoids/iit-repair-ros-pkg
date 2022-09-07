@@ -602,7 +602,7 @@ class TaskGen:
 
         return node_man
 
-    def add_cl_man_cost(self, Jl, Jr):
+    def add_cl_man_cost(self):
 
         Jl = self.larm_tcp_jacobian_sym
         Jr = self.rarm_tcp_jacobian_sym
@@ -645,7 +645,7 @@ class TaskGen:
 
         if is_classical_man:
 
-            self.add_cl_man_cost(self)           
+            self.add_cl_man_cost()           
             
     def init_prb(self, urdf_full_path: str, weight_pos = 0.001, weight_rot = 0.001,\
                 weight_glob_man = 0.0001, weight_class_man = 0.0001,\
@@ -1327,3 +1327,271 @@ class TaskGen:
                                 rot_selection = ["x", "y",  "z"],\
                                 weight_rot = self.weight_rot,\
                                 is_soft = is_soft_pose_cnstr, epsi = epsi)
+
+class HighClManGen:
+
+    def __init__(self,
+                sliding_wrist_offset = 0.0, \
+                coll_yaml_path = ""):
+        
+        self.coll_yaml_path = coll_yaml_path
+
+        self.sliding_wrist_offset =  sliding_wrist_offset # mounting offset for wrist auxiliary joint
+
+        self.weight_classical_man = 0 # actual weight assigned to the classical manipulability cost
+
+        self.urdf = None # opened urdf file
+        self.joint_names = None # joint names
+        self.nq = 0 # number of positional states
+        self.nv = 0 # number of velocity  states
+        self.kindyn = None # CasadiKinDyn object
+        self.lbs = None # holds the lower (positional) bounds on state variables
+        self.ubs = None # holds the upper (positional) bounds on state variables
+
+        self.q = None # positional state
+        self.q_dot = None # velocity state
+        self.q_design = None # positional state of design variables
+        self.q_design_dot = None # velocity state of design variables
+        self.q_codes_ref = None
+        self.wrist_off_ref = None
+
+        self.d_var_map = get_design_map() # retrieving design map (dangerous method)
+
+        self.total_nnodes = 2 # total number of nodes of the problem (not intervals!)
+
+        self.dt = 0.0 # dt of the problem (for now constant)
+        self.tf = 0.0 # final time of the traj. opt. problem
+        self.n_int = 0
+
+        self.prb = None # problem object
+
+        self.rght_arm_picks = [] # whether the right or left arm picks 
+        self.contact_heights = [] # reference heights
+        self.hor_offsets = [] # horizontal offsets w.r.t. the object (not used now)
+
+        self.was_init_called = False # flag to check if the init() method was called
+
+        # kinematic quantities
+
+        self.lft_inward_q = np.array([- np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0]) # inward orientation for left arm
+        self.rght_inward_q = np.array([- np.sqrt(2.0)/2.0, np.sqrt(2.0)/2.0, 0.0, 0.0]) # inward orientation for right arm
+
+        self.lft_pick_q = [] # where left arm will pick
+        self.rght_pick_q = [] # where right arm will pick
+
+        self.object_pos_lft = [] # object pose on working surface
+        self.object_q_lft = []
+        self.object_pos_rght = []
+        self.object_q_rght = []  
+        self.object_size = [] # used by the bimanual task
+
+        self.rarm_tcp_pos_rel_ws = None # relative positions and orientations to the ws frame (but not expressed wrt to it)
+        self.larm_tcp_pos_rel_ws = None 
+        self.rarm_tcp_rot_wrt_ws = None
+        self.larm_tcp_rot_wrt_ws = None
+
+        self.lft_tcp_pos_wrt_ws = None # relative positions and orientations to the ws expressed w.r.t. that frame
+        self.lft_tcp_rot_wrt_ws = None
+        self.rght_tcp_pos_wrt_ws = None
+        self.rght_tcp_rot_wrt_ws = None
+        self.rght_tcp_pos_wrt_lft_tcp = None
+        self.rght_tcp_rot_wrt_lft_tcp = None
+
+        self.jac_arm_r = None
+        self.jac_arm_l = None
+        self.rarm_tcp_jacobian_sym = None
+        self.larm_tcp_jacobian_sym = None
+
+        self.coll_handler = None
+
+        self.rot2trasl_man_scl_fact = rot2trasl_man_scl_fact
+
+    def set_ig(self, q_ig = None, q_dot_ig = None):
+
+        if q_ig is not None:
+
+            self.q.setInitialGuess(q_ig)
+
+        if q_dot_ig is not None:
+
+            self.q_dot.setInitialGuess(q_dot_ig)
+
+    def compute_cl_man(self, J):
+
+        J_trasl = J[0:3, :]
+        J_rot = J[3:(J[:,0].shape[0]), :]
+    
+        cl_man_trasl = cs.sqrt(cs.det(J_trasl @ J_trasl.T))
+        cl_man_rot = cs.sqrt(cs.det(J_rot @ J_rot.T))
+        cl_man_tot = cs.sqrt(cs.det(J @ J.T))
+
+        return cl_man_trasl, cl_man_rot, cl_man_tot
+
+    def compute_man(self, q_dot):
+
+        node_man = cs.sumsqr(q_dot)
+
+        return node_man
+
+    def add_cl_man_cost(self):
+
+        Jl = self.larm_tcp_jacobian_sym
+        Jr = self.rarm_tcp_jacobian_sym
+
+        man_l_trasl, man_l_rot, _1 = self.compute_cl_man(Jl)
+        man_r_trasl, man_r_rot, _2 = self.compute_cl_man(Jr)
+
+        self.prb.createIntermediateCost("max_clman_l_trasl",\
+                        self.weight_classical_man / (man_l_trasl)**2, nodes=1)
+        self.prb.createIntermediateCost("max_clman_l_rot",\
+                        self.weight_classical_man / (man_l_rot)**2, nodes=1)
+
+        self.prb.createIntermediateCost("max_clman_r_trasl",\
+                        self.weight_classical_man / (man_r_trasl)**2, nodes=1)
+        self.prb.createIntermediateCost("max_clman_r_rot",\
+                        self.weight_classical_man / (man_r_rot)**2, nodes=1)
+        
+        # self.prb.createIntermediateCost("max_clman_l_trasl",\
+        #                 self.weight_classical_man / (man_l_trasl)**2)
+        # self.prb.createIntermediateCost("max_clman_l_rot",\
+        #                 self.weight_classical_man / (man_l_rot)**2)
+
+        # self.prb.createIntermediateCost("max_clman_r_trasl",\
+        #                 self.weight_classical_man / (man_r_trasl)**2)
+        # self.prb.createIntermediateCost("max_clman_r_rot",\
+        #                 self.weight_classical_man / (man_r_rot)**2)
+
+    def init_prb(self, urdf_full_path: str, weight_class_man = 1.0,\
+                tf_single_task = 10):
+
+        ## All the main initializations for the prb are performed here ##
+
+        self.was_init_called  = True
+
+        self.weight_classical_man = weight_class_man / ( self.total_nnodes )
+
+        self.n_int = self.total_nnodes - 1 # adding addditional filling nodes between nodes of two successive tasks
+
+        self.prb = problem.Problem(self.n_int) 
+
+        self.urdf = open(urdf_full_path, 'r').read()
+        self.kindyn = cas_kin_dyn.CasadiKinDyn(self.urdf)
+        self.tf = tf_single_task
+        self.dt = self.tf / self.n_int
+        
+        self.joint_names = self.kindyn.joint_names()
+        if 'universe' in self.joint_names: self.joint_names.remove('universe')
+        if 'floating_base_joint' in self.joint_names: self.joint_names.remove('floating_base_joint')
+        
+        print(self.joint_names)
+        print("\n")
+
+        self.nq = self.kindyn.nq()
+        self.nv = self.kindyn.nv()
+
+        self.lbs = self.kindyn.q_min() 
+        self.ubs = self.kindyn.q_max()
+
+        self.q = self.prb.createStateVariable('q', self.nq)
+        self.q_dot = self.prb.createInputVariable('q_dot', self.nv)
+
+        # THIS DEFINITIONS CAN CHANGE IF THE URDF CHANGES --> MIND THE URDF!!!
+    
+        self.q_design = self.q[self.d_var_map["mount_h"],\
+                            self.d_var_map["should_w_l"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
+                            self.d_var_map["should_w_r"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]] # design vector
+
+        self.q_design_dot = self.q_dot[self.d_var_map["mount_h"],\
+                            self.d_var_map["should_w_l"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
+                            self.d_var_map["should_w_r"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]]
+        
+        self.wrist_off_ref = self.prb.createParameter('wrist_off_ref', 1)
+
+        self.q_codes_ref = self.prb.createParameter('q_codes_ref', 4)
+
+        self.prb.setDynamics(self.q_dot)
+        self.prb.setDt(self.dt)  
+
+        # getting useful kinematic quantities
+        fk_ws = cs.Function.deserialize(self.kindyn.fk("working_surface_link"))
+        ws_link_pos = fk_ws(q = np.zeros((self.nq, 1)).flatten())["ee_pos"] # w.r.t. world
+        ws_link_rot = fk_ws(q = np.zeros((self.nq, 1)).flatten())["ee_rot"] # w.r.t. world (3x3 rot matrix)
+        
+        fk_arm_r = cs.Function.deserialize(self.kindyn.fk("arm_1_tcp")) 
+        rarm_tcp_pos = fk_arm_r(q = self.q)["ee_pos"] # w.r.t. world
+        rarm_tcp_rot = fk_arm_r(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
+        self.rarm_tcp_pos_rel_ws = rarm_tcp_pos - ws_link_pos # pos vector relative to working surface in world frame (w.r.t. world)
+        
+        self.jac_arm_r = cs.Function.deserialize(self.kindyn.jacobian("arm_1_tcp",\
+                        cas_kin_dyn.CasadiKinDyn.LOCAL_WORLD_ALIGNED))
+        self.rarm_tcp_jacobian_sym = self.jac_arm_r(q = self.q)["J"]
+
+        fk_arm_l = cs.Function.deserialize(self.kindyn.fk("arm_2_tcp"))  
+        larm_tcp_pos = fk_arm_l(q = self.q)["ee_pos"] # w.r.t. world
+        larm_tcp_rot = fk_arm_l(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
+        self.larm_tcp_pos_rel_ws = larm_tcp_pos - ws_link_pos # pos vector relative to working surface in world frame (w.r.t. world)
+
+        self.jac_arm_l = cs.Function.deserialize(self.kindyn.jacobian("arm_2_tcp",\
+                        cas_kin_dyn.CasadiKinDyn.LOCAL_WORLD_ALIGNED))
+        self.larm_tcp_jacobian_sym = self.jac_arm_l(q = self.q)["J"]
+
+        self.rght_tcp_rot_wrt_ws = ws_link_rot.T @ rarm_tcp_rot
+        self.rght_tcp_pos_wrt_ws = ws_link_rot.T @ (rarm_tcp_pos - ws_link_pos)
+
+        self.lft_tcp_rot_wrt_ws = ws_link_rot.T @ larm_tcp_rot
+        self.lft_tcp_pos_wrt_ws = ws_link_rot.T @ (larm_tcp_pos - ws_link_pos)
+
+        self.rght_tcp_pos_wrt_lft_tcp = self.lft_tcp_rot_wrt_ws.T @ (self.rght_tcp_pos_wrt_ws - self.lft_tcp_pos_wrt_ws)
+        self.rght_tcp_rot_wrt_lft_tcp = self.lft_tcp_rot_wrt_ws.T @ self.rght_tcp_rot_wrt_ws
+
+    def setup_prb(self,\
+                q_ig = None, q_dot_ig = None):
+         
+        ## All the constraints and costs are set here ##
+
+        # setting initial guesses
+        if q_ig is not None:
+
+            self.q.setInitialGuess(q_ig)
+
+        if q_dot_ig is not None:
+            
+            self.q_dot.setInitialGuess(q_dot_ig)
+
+        # lower and upper bounds for design variables and joint variables
+        self.q.setBounds(self.lbs, self.ubs)
+
+        # design vars equal on all nodes 
+        # self.prb.createConstraint("single_var_cntrnt",\
+        #                     self.q_design_dot,\
+        #                     nodes = range(0, (self.total_nnodes - 1)))
+
+        # roll and shoulder vars equal
+        self.prb.createConstraint("same_roll", \
+                                self.q[self.d_var_map["should_roll_l"]] - \
+                                self.q[self.d_var_map["should_roll_r"]])
+
+        self.prb.createConstraint("same_shoulder_w",\
+                                self.q[self.d_var_map["should_w_l"]] - \
+                                self.q[self.d_var_map["should_w_r"]])
+
+        self.prb.createConstraint("same_wrist_offset",\
+                                self.q[self.d_var_map["wrist_off_l"]] - \
+                                self.q[self.d_var_map["wrist_off_r"]])
+
+        self.prb.createConstraint("codesign_values",\
+                self.q_design[0:4] - self.q_codes_ref,\
+                nodes = 0) # is sufficient to put it on the first node and only on one arm
+
+        self.prb.createConstraint("wrist_offset_value",\
+                self.q[self.d_var_map["wrist_off_l"]] - self.wrist_off_ref,\
+                nodes = 0) # is sufficient to put it on the first node and only on one arm 
+
+        # min inputs 
+        self.add_cl_man_cost()      
+
+        # adding regularization 
+        self.prb.createIntermediateCost("regular",\
+                        self.compute_man(self.q_dot))
+
+   

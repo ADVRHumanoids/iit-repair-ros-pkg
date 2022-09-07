@@ -1,6 +1,6 @@
 import numpy as np
 
-from codesign_pyutils.tasks import TaskGen
+from codesign_pyutils.tasks import TaskGen, HighClManGen
 
 from codesign_pyutils.miscell_utils import gen_y_sampling
 
@@ -66,6 +66,28 @@ def gen_task_copies(weight_global_manip: np.double, weight_class_manip: np.doubl
     # set constraints and costs
     task.setup_prb(rot_err_epsi, is_classical_man = use_classical_man,
                     is_second_lev_opt=is_second_lev_opt)
+
+    return task
+
+def gen_cl_man_gen_copies(
+                    wrist_offset: np.double, 
+                    urdf_path: str,
+                    t_exec: np.double,
+                    coll_path = "", 
+                    weight_class_manip = 1):
+
+    # initialize problem task
+    task = HighClManGen(
+                    sliding_wrist_offset = wrist_offset,\
+                    coll_yaml_path = coll_path)
+
+    # initialize problem
+    task.init_prb(urdf_path,
+                weight_class_manip,
+                tf_single_task = t_exec)
+
+    # set constraints and costs
+    task.setup_prb()
 
     return task
 

@@ -20,7 +20,7 @@ from codesign_pyutils.task_utils import gen_task_copies, gen_slvr_copies
 from codesign_pyutils.dump_utils import SolDumper
 from codesign_pyutils.solution_utils import solve_prb_standalone, \
                                         generate_ig            
-from codesign_pyutils.post_proc_utils import PostProcL1
+from codesign_pyutils.post_proc_utils import PostProcS1
 
 from termcolor import colored
 
@@ -264,7 +264,7 @@ if __name__ == '__main__':
     solution_base_name = args.solution_base_name
 
     # loading solution and extracting data
-    postprl1 = PostProcL1(load_path, l1_dirname=args.load_dir_name)
+    postprl1 = PostProcS1(load_path, l1_dirname=args.load_dir_name)
     postprl1.clusterize(args.n_clust)
 
     n_opt_sol = postprl1._n_opt_sols
