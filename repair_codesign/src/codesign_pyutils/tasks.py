@@ -8,7 +8,7 @@ from codesign_pyutils.horizon_utils import add_pose_cnstrnt, SimpleCollHandler
 
 from codesign_pyutils.ros_utils import MarkerGen, ReplaySol
 
-from codesign_pyutils.misc_definitions import get_design_map 
+from codesign_pyutils.misc_definitions import get_design_map, get_coll_joint_map
 
 from horizon import problem
 
@@ -283,6 +283,14 @@ class DoubleArmCartTask:
 
         # lower and upper bounds for design variables and joint variables
         self.q.setBounds(self.lbs, self.ubs)
+        
+        # adapt collision model of the bent link (link5) to the wrist offset value
+        # this is to account for variations link5's footprint as a results of the optimal
+        # wrist offset 
+
+        self.prb.createConstraint("adapt_link5_coll_model", \
+                                self.q[self.d_var_map["should_roll_l"]] - \
+                                self.q[self.d_var_map["should_roll_r"]])
 
         # roll and shoulder vars equal
         self.prb.createConstraint("same_roll", \
@@ -459,6 +467,7 @@ class TaskGen:
         self.wrist_off_ref = None
 
         self.d_var_map = get_design_map() # retrieving design map (dangerous method)
+        self.coll_aux_joint_map = get_coll_joint_map()
 
         self.total_nnodes = 0 # total number of nodes of the problem (not intervals!)
         self.filling_n_nodes = filling_n_nodes # filling nodes in between two base task nodes 
@@ -755,6 +764,16 @@ class TaskGen:
 
         # lower and upper bounds for design variables and joint variables
         self.q.setBounds(self.lbs, self.ubs)
+        
+        # adapt link5 coll model to the wrist offset so that future design 
+        # changes of link5 are accounted for in the optimzation
+
+        self.prb.createConstraint("adapt_link5_coll_model_l", \
+                                self.q[self.coll_aux_joint_map["link5_coll_joint_l"]] - \
+                                self.q[self.d_var_map["wrist_off_l"]])
+        self.prb.createConstraint("adapt_link5_coll_model_r", \
+                                self.q[self.coll_aux_joint_map["link5_coll_joint_r"]] - \
+                                self.q[self.d_var_map["wrist_off_r"]])
 
         # roll and shoulder vars equal
         self.prb.createConstraint("same_roll", \

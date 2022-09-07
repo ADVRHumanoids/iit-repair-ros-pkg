@@ -23,7 +23,7 @@ if __name__ == '__main__':
 
     # first level specific arguments
     parser.add_argument('--multistart_n_l1', '-msn_l1', type = int,\
-                        help = '', default = 720) #1296 
+                        help = '', default = 288)
     parser.add_argument('--max_trials_factor_l1', '-mtfl1', type=int,\
                         help = 'for each multistart node, at best max_trials_factor new solutions will be tried to obtain an optimal solution',
                         default = 5)
@@ -31,41 +31,41 @@ if __name__ == '__main__':
     parser.add_argument('--is_in_place_flip', '-iplf', type=str2bool,\
                         help = 'whether to use in place flip task', default = True)
     parser.add_argument('--is_biman_pick', '-ibp', type=str2bool,\
-                        help = 'whether to use bimanual pick task', default = False)
+                        help = 'whether to use bimanual pick task', default = True)
 
     parser.add_argument('--ig_seed_l1', '-ig_l1', type = int,\
                         help = '', default = 1)
     parser.add_argument('--ipopt_verb_lev', '-ipopt_v', type = int,\
                         help = '', default = 1)
     parser.add_argument('--filling_nnodes', '-fnn', type = int,\
-                        help = '', default = 5)
+                        help = '', default = 3)
     parser.add_argument('--use_ma57', '-ma57', type=str2bool,\
                         help = 'whether to use ma57 linear solver or not', default = False)
     parser.add_argument('--wrist_offset', '-wo', type = np.double,\
                         help = 'sliding_wrist_offset', default = 0.0)
     parser.add_argument('--is_sliding_wrist', '-isw', type = bool,\
-                        help = 'is wrist off. is to be used as an additional codes variable', default = False)
+                        help = 'is wrist off. is to be used as an additional codes variable', default = True)
 
     parser.add_argument('--n_y_samples_flip', '-nysf', type = int,\
                         help = 'number of y-axis samples on which tasks (flipping task) are placed', default = 4)
     parser.add_argument('--y_sampl_ub_flip', '-yubf', type = np.double,\
                         help = 'upper bound of the y sampling (bimanual task)', default = 0.3)
     parser.add_argument('--n_y_samples_biman', '-nysb', type = int,\
-                        help = 'number of y-axis samples on which tasks(flipping task) are placed', default = 4)
+                        help = 'number of y-axis samples on which tasks(flipping task) are placed', default = 1)
     parser.add_argument('--y_sampl_ub_biman', '-yubb', type = np.double,\
-                        help = 'upper bound of the y sampling (bimanual task)', default = 0.2)
+                        help = 'upper bound of the y sampling (bimanual task)', default = 0.0)
                         
     # second level-specific arguments
     parser.add_argument('--multistart_n_l2', '-msn_l2', type=int,\
                         help = 'number of multistarts (per cluster) to use',
-                        default = 50)
+                        default = 20)
     parser.add_argument('--max_trials_factor_l2', '-mtfl2', type=int,\
                         help = 'for each multistart node, at best max_trials_factor new solutions will be tried to obtain an optimal solution',
-                        default = 20)
+                        default = 10)
     parser.add_argument('--n_clust_l2', '-nc_l2', type=int,\
-                        help = 'number of clusters to be generated', default = 15)
+                        help = 'number of clusters to be generated', default = 10)
     parser.add_argument("--ig_seed_l2", '-ig_l2', type = int,\
-                        help = '', default = 28)
+                        help = '', default = 12)
     
     # cl man reference generation-specific arguments
     # parser.add_argument('--gen_cl_man_ref', '-gen_clmr', type=bool,\

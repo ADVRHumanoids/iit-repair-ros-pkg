@@ -11,19 +11,32 @@ def get_design_map():
 
     # THIS DEFINITIONS CAN CHANGE IF THE URDF CHANGES --> MIND THE URDF!!!
     arm_dofs = 7
+    coll_dof_n = 1
     d_var_map = {}
     d_var_map["mount_h"] = 1
     d_var_map["should_w_l"] = 2
     d_var_map["should_roll_l"] = 3
     d_var_map["wrist_off_l"] = 3 + arm_dofs
     d_var_map["should_w_r"] = \
-        d_var_map["should_w_l"] + (arm_dofs + 3)
+        d_var_map["should_w_l"] + (arm_dofs + coll_dof_n + 3)
     d_var_map["should_roll_r"] = \
-        d_var_map["should_roll_l"] + (arm_dofs + 3)
+        d_var_map["should_roll_l"] + (arm_dofs + coll_dof_n + 3)
     d_var_map["wrist_off_r"] = \
-        d_var_map["wrist_off_l"] + (arm_dofs + 3)
+        d_var_map["wrist_off_l"] + (arm_dofs + coll_dof_n + 3)
 
     return d_var_map
+
+
+def get_coll_joint_map():
+
+    # THIS DEFINITIONS CAN CHANGE IF THE URDF CHANGES --> MIND THE URDF!!!
+    arm_dofs = 7
+    coll_dof_n = 1
+    coll_dof_map = {}
+    coll_dof_map["link5_coll_joint_l"] = 12 
+    coll_dof_map["link5_coll_joint_r"] =  coll_dof_map["link5_coll_joint_l"] + arm_dofs + coll_dof_n + 3
+
+    return coll_dof_map
 
 def get_crossed_handover_local_rot():
     
