@@ -5,7 +5,8 @@
 <xacro:property name="mmTom" value="0.001" />
 <xacro:property name="mm2Tom2" value="${0.001*0.001}" />
 <xacro:property name="tonsToKg" value="1000.0" />
-    
+<xacro:property name="kgmm2_2_kgm2" value="${1e-06}" />
+
 <xacro:property name="PI" value="3.14159265359" />
 <xacro:property name="PI_2" value="1.57079632679" />
 <xacro:property name="PI_3" value="1.047197551196598" />
