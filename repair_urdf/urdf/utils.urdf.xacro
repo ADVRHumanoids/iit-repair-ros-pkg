@@ -8,6 +8,7 @@
     
 <xacro:property name="PI" value="3.14159265359" />
 <xacro:property name="PI_2" value="1.57079632679" />
+<xacro:property name="PI_3" value="1.047197551196598" />
 <xacro:property name="PI_4" value="0.7853981633974483" />
 <xacro:property name="DEG2RAD" value="${PI/180.0}" />
 
@@ -16,7 +17,7 @@
 <xacro:property name="z_joint_lb" value="0.3" />
 <xacro:property name="shoulder_width_lb" value="0.21" /> <!-- wrt shoulder center -->
 <xacro:property name="shoulder_width_ub" value="0.5" />
-<xacro:property name="shoulder_roll_lb" value="-${PI_2}" />
+<xacro:property name="shoulder_roll_lb" value="-${PI_3}" />
 <xacro:property name="shoulder_roll_ub" value="${PI_2}" />
 <xacro:property name="sliding_wrist_deltaz_lb" value="0" />
 <xacro:property name="sliding_wrist_deltaz_ub" value="0.1" />
