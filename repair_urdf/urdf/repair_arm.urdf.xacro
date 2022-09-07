@@ -46,7 +46,7 @@
 
     <inertial>
         <mass value="2"/>
-        <inertia ixx="${1500 * kgmm2_2_kgm2}" ixy="${-100 * kgmm2_2_kgm2}" ixz="${0 * kgmm2_2_kgm2}" iyy="{2700 * kgmm2_2_kgm2}" iyz="${100 * kgmm2_2_kgm2}" izz="${2800 * kgmm2_2_kgm2}"/>
+        <inertia ixx="${1500.0 * kgmm2_2_kgm2}" ixy="${-100.0 * kgmm2_2_kgm2}" ixz="${0.0 * kgmm2_2_kgm2}" iyy="${2700.0 * kgmm2_2_kgm2}" iyz="${100.0 * kgmm2_2_kgm2}" izz="${2800.0 * kgmm2_2_kgm2}"/>
         <origin xyz="0 0 ${-10.0 * mmTom}"/>
     </inertial>
 
@@ -111,7 +111,7 @@
 
     <inertial>
         <mass value="0.4"/>
-        <inertia ixx="${670 * kgmm2_2_kgm2}" ixy="${0 * kgmm2_2_kgm2}" ixz="${180 * kgmm2_2_kgm2}" iyy="{970 * kgmm2_2_kgm2}" iyz="${0 * kgmm2_2_kgm2}" izz="${1000 * kgmm2_2_kgm2}"/>
+        <inertia ixx="${670 * kgmm2_2_kgm2}" ixy="${0 * kgmm2_2_kgm2}" ixz="${180 * kgmm2_2_kgm2}" iyy="${970 * kgmm2_2_kgm2}" iyz="${0 * kgmm2_2_kgm2}" izz="${1000 * kgmm2_2_kgm2}"/>
         <origin xyz="${40 * mmTom} ${0 * mmTom} ${35.0 * mmTom}"/>
     </inertial>
 
@@ -154,7 +154,7 @@
 
     <inertial>
         <mass value="3.3"/>
-        <inertia ixx="${25000 * kgmm2_2_kgm2}" ixy="${0 * kgmm2_2_kgm2}" ixz="${0 * kgmm2_2_kgm2}" iyy="{26000 * kgmm2_2_kgm2}" iyz="${0 * kgmm2_2_kgm2}" izz="${22000 * kgmm2_2_kgm2}"/>
+        <inertia ixx="${25000 * kgmm2_2_kgm2}" ixy="${0 * kgmm2_2_kgm2}" ixz="${0 * kgmm2_2_kgm2}" iyy="${26000 * kgmm2_2_kgm2}" iyz="${0 * kgmm2_2_kgm2}" izz="${22000 * kgmm2_2_kgm2}"/>
         <origin xyz="${0 * mmTom} ${-25 * mmTom} ${230.0 * mmTom}"/>
     </inertial>
 
@@ -188,7 +188,7 @@
 
     <inertial>
         <mass value="0.4"/>
-        <inertia ixx="${670 * kgmm2_2_kgm2}" ixy="${0 * kgmm2_2_kgm2}" ixz="${180 * kgmm2_2_kgm2}" iyy="{970 * kgmm2_2_kgm2}" iyz="${0 * kgmm2_2_kgm2}" izz="${1000 * kgmm2_2_kgm2}"/>
+        <inertia ixx="${670 * kgmm2_2_kgm2}" ixy="${0 * kgmm2_2_kgm2}" ixz="${180 * kgmm2_2_kgm2}" iyy="${970 * kgmm2_2_kgm2}" iyz="${0 * kgmm2_2_kgm2}" izz="${1000 * kgmm2_2_kgm2}"/>
         <origin xyz="${40 * mmTom} ${0 * mmTom} ${35.0 * mmTom}"/>
     </inertial>
 
@@ -220,7 +220,7 @@
     
     <inertial>
         <mass value="2.8"/>
-        <inertia ixx="${32000 * kgmm2_2_kgm2}" ixy="${0 * kgmm2_2_kgm2}" ixz="${1700 * kgmm2_2_kgm2}" iyy="{34000 * kgmm2_2_kgm2}" iyz="${0 * kgmm2_2_kgm2}" izz="${29000 * kgmm2_2_kgm2}"/>
+        <inertia ixx="${32000 * kgmm2_2_kgm2}" ixy="${0 * kgmm2_2_kgm2}" ixz="${1700 * kgmm2_2_kgm2}" iyy="${34000 * kgmm2_2_kgm2}" iyz="${0 * kgmm2_2_kgm2}" izz="${29000 * kgmm2_2_kgm2}"/>
         <origin xyz="${-5 * mmTom} ${0 * mmTom} ${200.0 * mmTom}"/>
     </inertial>
 
@@ -282,7 +282,7 @@
     
     <inertial>
         <mass value="1.8"/>
-        <inertia ixx="${1700 * kgmm2_2_kgm2}" ixy="${0 * kgmm2_2_kgm2}" ixz="${0 * kgmm2_2_kgm2}" iyy="{2500 * kgmm2_2_kgm2}" iyz="${100 * kgmm2_2_kgm2}" izz="${2700 * kgmm2_2_kgm2}"/>
+        <inertia ixx="${1700 * kgmm2_2_kgm2}" ixy="${0 * kgmm2_2_kgm2}" ixz="${0 * kgmm2_2_kgm2}" iyy="${2500 * kgmm2_2_kgm2}" iyz="${100 * kgmm2_2_kgm2}" izz="${2700 * kgmm2_2_kgm2}"/>
         <origin xyz="${0 * mmTom} ${0 * mmTom} ${0 * mmTom}"/>
     </inertial>
 
@@ -327,7 +327,7 @@
 
     <inertial>
         <mass value="1.5"/>
-        <inertia ixx="${25000 * kgmm2_2_kgm2}" ixy="${0 * kgmm2_2_kgm2}" ixz="${0 * kgmm2_2_kgm2}" iyy="{25000 * kgmm2_2_kgm2}" iyz="${100 * kgmm2_2_kgm2}" izz="${23000 * kgmm2_2_kgm2}"/>
+        <inertia ixx="${25000 * kgmm2_2_kgm2}" ixy="${0 * kgmm2_2_kgm2}" ixz="${0 * kgmm2_2_kgm2}" iyy="${25000 * kgmm2_2_kgm2}" iyz="${100 * kgmm2_2_kgm2}" izz="${23000 * kgmm2_2_kgm2}"/>
         <origin xyz="${0 * mmTom} ${0 * mmTom} ${0 * mmTom}"/>
     </inertial>
 

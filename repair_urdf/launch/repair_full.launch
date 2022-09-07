@@ -1,7 +1,7 @@
 <launch>
     <arg name="gui" default="true" />
     <arg name="rate" default="250.0"/>
-    <arg name="is_sliding_wrist" default="false"/>
+    <arg name="is_sliding_wrist" default="true"/>
     <arg name="show_softhand" default="false"/>
     <arg name="show_coll" default="false"/>
 

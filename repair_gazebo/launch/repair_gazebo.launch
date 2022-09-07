@@ -1,0 +1,31 @@
+<launch>
+
+  <!-- Args -->
+  <arg name="paused" default="false"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="gui" default="true"/>
+  <arg name="headless" default="false"/>
+  <arg name="debug" default="false"/>
+
+  <arg name="sliding_guide" default="true" />
+  <arg name="calibrated_urdf" default="false" />
+
+  <!-- Launching awesome_leg.world -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find awesome_leg)/worlds/awesome_leg.world"/>
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="headless" value="$(arg headless)"/>
+  </include>
+
+  <!-- Load the right URDF into the ROS Parameter Server, depending on the chosen model type -->
+
+  <param name="robot_description" command="$(find xacro)/xacro '$(find awesome_leg)/description/urdf/awesome_leg_test_rig.urdf.xacro' 
+    sliding_guide:=$(arg sliding_guide) calibrated_urdf:=$(arg calibrated_urdf) " />
+  
+  <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
+  <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" args="-urdf -model awesome_leg -param robot_description"/>
+
+</launch>
