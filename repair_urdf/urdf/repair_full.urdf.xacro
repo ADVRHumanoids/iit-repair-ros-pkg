@@ -15,25 +15,23 @@
 <xacro:if value="$(arg load_sol)">
 
     <joint name="x_joint" type="prismatic">
-        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <origin xyz="0.0 0.0 ${mount_h}" rpy="0.0 0.0 0.0"/>
         <parent link="working_surface_link"/>
-        <child link="dummy_link"/>
+        <child link="base_link"/>
         <axis xyz="1 0 0"/>
         <limit lower="${- cage_depth/2 + x_joint_limit_margin}" upper= "${cage_depth/2 - x_joint_limit_margin}" effort="1000.0" velocity="20.0"/>
     </joint>
-    
-    <link name="dummy_link">
-    </link>
-
-    <!-- RePAIR assembly (two arms) -->
-
-    <joint name="z_joint" type="fixed">
-        <origin xyz="0.0 0.0 ${mount_h}" rpy="0.0 0.0 0.0"/>
-        <parent link="dummy_link"/>
-        <child link="base_link"/>
-    </joint>
 
     <link name="base_link">
+        <!-- torso inertias + stuff attached to the sliding guide -->
+        <inertial>
+          <mass value="1000000" />
+          <origin xyz="0 0 0" />
+          <inertia ixx="0" ixy="0"  ixz="0"
+                  iyy="0" iyz="0"
+                  izz="0" />
+        </inertial> 
+
     </link>
 
     <joint name="r_arm_mount_joint" type="fixed">
@@ -67,11 +65,11 @@
     </joint>
 
     <link name="r_arm_mount_frame">
-        <xacro:fake_inertial/> 
+        <xacro:aux_inertia cutoff_inertia="${gazebo_cutoff_inertia}"/>
     </link>
 
     <link name="l_arm_mount_frame">
-        <xacro:fake_inertial/> 
+        <xacro:aux_inertia cutoff_inertia="${gazebo_cutoff_inertia}"/>  
     </link>
 
 </xacro:if>
@@ -140,6 +138,7 @@
     </joint>
 
     <link name="r_arm_mount_frame">
+    
     </link>
 
     <link name="l_arm_mount_frame">

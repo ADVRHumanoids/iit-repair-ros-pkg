@@ -331,8 +331,15 @@
   </joint> 
 
   <link name="working_surface_link">
-    <xacro:fake_inertial/> 
-    
+    <!-- Huge inertia (does not matter, is fixed to the world)-->
+      <inertial>
+          <mass value="1" />
+          <origin xyz="0 0 0" />
+          <inertia ixx="0" ixy="0"  ixz="0"
+                  iyy="0" iyz="0"
+                  izz="0" />
+      </inertial> 
+
   </link>
 
 </robot>

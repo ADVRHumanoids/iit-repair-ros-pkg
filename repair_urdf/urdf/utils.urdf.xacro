@@ -17,6 +17,7 @@
 To give some  perspective, a grain of sand weights  0.0000045 grams. So this corresponds to less than 1/4 of a grain of sand of
 fake inertia -> it is acceptable. -->
 
+<xacro:property name="full_torso_mass" value="5.0" />
 <xacro:property name="x_joint_limit_margin" value="0.1" />
 <xacro:property name="z_joint_limit_margin" value="0.1" />
 <xacro:property name="z_joint_lb" value="0.3" />
@@ -42,14 +43,14 @@ fake inertia -> it is acceptable. -->
     <color rgba="0.6 0.6 0.6 1"/>
 </material>
 
-<!-- Macro for adding fake inertias to auxiliary links, so that
+<!-- Macro for adding simple fake inertias to auxiliary links, so that
 Gazebo does not ignore them. gazebo_cutoff_inertia is the lowest admissible mass value 
 under which Gazebo starts to neglect links. The rotational inertias can be put to 0
 without problems.-->
-<xacro:macro name="fake_inertial">
+<xacro:macro name="aux_inertia" params="cutoff_inertia">
     <!-- dummy intertia to make Gazebo urdf2sdf converter work -->
     <inertial>
-      <mass value="${gazebo_cutoff_inertia}" />
+      <mass value="${cutoff_inertia}" />
       <origin xyz="0 0 0" />
       <inertia ixx="0" ixy="0"  ixz="0"
                iyy="0" iyz="0"
