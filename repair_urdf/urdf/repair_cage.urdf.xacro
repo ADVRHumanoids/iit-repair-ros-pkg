@@ -331,14 +331,8 @@
   </joint> 
 
   <link name="working_surface_link">
-    <!-- dummy intertia to make Gazebo urdf2sdf converter work -->
-    <inertial>
-      <mass value="1.0" />
-      <origin xyz="0 0 0" />
-      <inertia ixx="0.1" ixy="0"  ixz="0"
-               iyy="0.1" iyz="0"
-               izz="0.01" />
-    </inertial>
+    <xacro:fake_inertial/> 
+    
   </link>
 
 </robot>

@@ -12,25 +12,20 @@
 <xacro:arg name="show_coll" default="false" />
 <xacro:arg name="load_sol" default="false" />
 
-<joint name="x_joint" type="prismatic">
-    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-    <parent link="working_surface_link"/>
-    <child link="dummy_link"/>
-    <axis xyz="1 0 0"/>
-    <limit lower="${- cage_depth/2 + x_joint_limit_margin}" upper= "${cage_depth/2 - x_joint_limit_margin}" effort="1000.0" velocity="20.0"/>
-</joint>
-
-<link name="dummy_link">
-    <inertial>
-      <mass value="1.0" />
-      <origin xyz="0 0 0" />
-      <inertia ixx="0.1" ixy="0"  ixz="0"
-               iyy="0.1" iyz="0"
-               izz="0.01" />
-    </inertial>
-</link>
-
 <xacro:if value="$(arg load_sol)">
+
+    <joint name="x_joint" type="prismatic">
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <parent link="working_surface_link"/>
+        <child link="dummy_link"/>
+        <axis xyz="1 0 0"/>
+        <limit lower="${- cage_depth/2 + x_joint_limit_margin}" upper= "${cage_depth/2 - x_joint_limit_margin}" effort="1000.0" velocity="20.0"/>
+    </joint>
+    
+    <link name="dummy_link">
+    </link>
+
+    <!-- RePAIR assembly (two arms) -->
 
     <joint name="z_joint" type="fixed">
         <origin xyz="0.0 0.0 ${mount_h}" rpy="0.0 0.0 0.0"/>
@@ -38,25 +33,8 @@
         <child link="base_link"/>
     </joint>
 
-</xacro:if>
-<xacro:unless value="$(arg load_sol)">
-
-    <joint name="z_joint" type="prismatic">
-        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-        <parent link="dummy_link"/>
-        <child link="base_link"/>
-        <axis xyz="0 0 1"/>
-        <limit lower="${z_joint_lb}" upper= "2" effort="1000.0" velocity="20.0"/>
-    </joint>
-
-</xacro:unless>
-
-<!-- RePAIR assembly (two arms) -->
-
-<link name="base_link">
-</link>
-
-<xacro:if value="$(arg load_sol)">
+    <link name="base_link">
+    </link>
 
     <joint name="r_arm_mount_joint" type="fixed">
         <origin xyz="0.0 ${-should_w} 0.0" rpy="0 0 0"/>
@@ -70,8 +48,64 @@
         <child link="dummy_l"/>
     </joint>
 
+    <link name="dummy_r">
+    </link>
+
+    <link name="dummy_l">
+    </link>
+
+    <joint name="roll_r" type="fixed">
+        <origin xyz="0 0.0 0.0" rpy="${roll_mount} 0.0 0.0"/>
+        <parent link="dummy_r"/>
+        <child link="r_arm_mount_frame"/>
+    </joint>
+
+    <joint name="roll_l" type="fixed">
+        <origin xyz="0 0.0 0.0" rpy="${-roll_mount} 0.0 0.0"/>
+        <parent link="dummy_l"/>
+        <child link="l_arm_mount_frame"/>
+    </joint>
+
+    <link name="r_arm_mount_frame">
+        <xacro:fake_inertial/> 
+    </link>
+
+    <link name="l_arm_mount_frame">
+        <xacro:fake_inertial/> 
+    </link>
+
 </xacro:if>
 <xacro:unless value="$(arg load_sol)">
+
+    <joint name="x_joint" type="prismatic">
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <parent link="working_surface_link"/>
+        <child link="dummy_link"/>
+        <axis xyz="1 0 0"/>
+        <limit lower="${- cage_depth/2 + x_joint_limit_margin}" upper= "${cage_depth/2 - x_joint_limit_margin}" effort="1000.0" velocity="20.0"/>
+    </joint>
+    
+    <link name="dummy_link">
+    </link>
+
+    <joint name="z_joint" type="prismatic">
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <parent link="dummy_link"/>
+        <child link="base_link"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="${z_joint_lb}" upper= "2" effort="1000.0" velocity="20.0"/>
+    </joint>
+
+    <!-- RePAIR assembly (two arms) -->
+
+    <link name="base_link">
+    </link>
+
+    <link name="dummy_r">
+    </link>
+
+    <link name="dummy_l">
+    </link>
 
     <joint name="r_arm_mount_joint" type="prismatic">
         <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
@@ -89,32 +123,6 @@
         <limit lower="${shoulder_width_lb}" upper= "${shoulder_width_ub}" effort="1000.0" velocity="20.0"/>
     </joint>
 
-</xacro:unless>
-
-
-<link name="dummy_r">
-</link>
-
-<link name="dummy_l">
-</link>
-
-<xacro:if value="$(arg load_sol)">
-    
-    <joint name="roll_r" type="fixed">
-        <origin xyz="0 0.0 0.0" rpy="${roll_mount} 0.0 0.0"/>
-        <parent link="dummy_r"/>
-        <child link="r_arm_mount_frame"/>
-    </joint>
-
-    <joint name="roll_l" type="fixed">
-        <origin xyz="0 0.0 0.0" rpy="${-roll_mount} 0.0 0.0"/>
-        <parent link="dummy_l"/>
-        <child link="l_arm_mount_frame"/>
-    </joint>
-
-</xacro:if>
-<xacro:unless value="$(arg load_sol)">
-
     <joint name="roll_r" type="revolute">
         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
         <parent link="dummy_r"/>
@@ -130,14 +138,14 @@
         <axis xyz="-1 0 0"/>
         <limit lower="${shoulder_roll_lb}" upper="${shoulder_roll_ub}" effort="0.0" velocity="0.0"/>
     </joint>
-    
+
+    <link name="r_arm_mount_frame">
+    </link>
+
+    <link name="l_arm_mount_frame">
+    </link>
+
 </xacro:unless>
-
-<link name="r_arm_mount_frame">
-</link>
-
-<link name="l_arm_mount_frame">
-</link>
 
 <xacro:repair_arm base_link="r_arm_mount_frame" id="1" is_sliding_wrist="$(arg is_sliding_wrist)"
 show_softhand="$(arg show_softhand)" show_coll="$(arg show_coll)" load_sol="$(arg load_sol)"/> 
