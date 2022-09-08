@@ -35,14 +35,7 @@
     <child link="table_top_link" />
   </joint> 
 
-  <link name="table_top_link">
-    <inertial>
-      <mass value="1.0" />
-      <origin xyz="${table_x} ${table_y} ${table_z+table_height-table_top_thickness/2}" />
-      <inertia ixx="1" ixy="0"  ixz="0"
-               iyy="1" iyz="0"
-               izz="1" />
-    </inertial> 
+  <link name="table_top_link"> 
     <visual>
       <origin xyz="${table_x} ${table_y} ${table_z+table_height-table_top_thickness/2}" />
       <geometry>
@@ -64,13 +57,6 @@
     <child link="leg1_link" />
   </joint> 
   <link name="leg1_link">
-    <inertial>
-      <mass value="1.0" />
-      <origin xyz="0 0 ${-table_height/2}" />
-      <inertia ixx="0.1" ixy="0"  ixz="0"
-               iyy="0.1" iyz="0"
-               izz="0.01" />
-    </inertial> 
     <visual>
       <origin xyz="0.0 0.0 ${-table_height/2}" rpy="0 0 0" />
       <geometry>
@@ -91,13 +77,6 @@
     <child link="vbar1_link" />
   </joint> 
   <link name="vbar1_link">
-    <inertial>
-      <mass value="1.0" />
-      <origin xyz="0 0 0" />
-      <inertia ixx="0.1" ixy="0"  ixz="0"
-               iyy="0.1" iyz="0"
-               izz="0.01" />
-    </inertial> 
     <visual>
       <origin xyz="0.0 0.0 0" rpy="0 0 0" />
       <geometry>
@@ -119,13 +98,6 @@
     <child link="leg2_link" />
   </joint> 
   <link name="leg2_link">
-    <inertial>
-      <mass value="1.0" />
-      <origin xyz="0 0 ${-table_height/2}" />
-      <inertia ixx="0.1" ixy="0"  ixz="0"
-               iyy="0.1" iyz="0"
-               izz="0.01" />
-    </inertial> 
     <visual>
       <origin xyz="0.0 0.0 ${-table_height/2}" rpy="0 0 0" />
       <geometry>
@@ -147,13 +119,6 @@
     <child link="vbar2_link" />
   </joint> 
   <link name="vbar2_link">
-    <inertial>
-      <mass value="1.0" />
-      <origin xyz="0 0 0" />
-      <inertia ixx="0.1" ixy="0"  ixz="0"
-               iyy="0.1" iyz="0"
-               izz="0.01" />
-    </inertial> 
     <visual>
       <origin xyz="0.0 0.0 0" rpy="0 0 0" />
       <geometry>
@@ -174,14 +139,7 @@
     <origin xyz="${table_x+cage_width/2} ${table_y-cage_depth/2} ${table_z+table_height}" rpy="0 0 0" />
     <child link="leg3_link" />
   </joint> 
-  <link name="leg3_link">
-    <inertial>
-      <mass value="1.0" />
-      <origin xyz="0 0 ${-table_height/2}" />
-      <inertia ixx="0.1" ixy="0"  ixz="0"
-               iyy="0.1" iyz="0"
-               izz="0.01" />
-    </inertial> 
+  <link name="leg3_link"> 
     <visual>
       <origin xyz="0.0 0.0 ${-table_height/2}" rpy="0 0 0" />
       <geometry>
@@ -203,13 +161,6 @@
     <child link="vbar3_link" />
   </joint> 
   <link name="vbar3_link">
-    <inertial>
-      <mass value="1.0" />
-      <origin xyz="0 0 0" />
-      <inertia ixx="0.1" ixy="0"  ixz="0"
-               iyy="0.1" iyz="0"
-               izz="0.01" />
-    </inertial> 
     <visual>
       <origin xyz="0.0 0.0 0" rpy="0 0 0" />
       <geometry>
@@ -231,13 +182,6 @@
     <child link="leg4_link" />
   </joint> 
   <link name="leg4_link">
-    <inertial>
-      <mass value="1.0" />
-      <origin xyz="0 0 ${-table_height/2}" />
-      <inertia ixx="0.1" ixy="0"  ixz="0"
-               iyy="0.1" iyz="0"
-               izz="0.01" />
-    </inertial> 
     <visual>
       <origin xyz="0.0 0.0 ${-table_height/2}" rpy="0 0 0" />
       <geometry>
@@ -259,13 +203,6 @@
     <child link="vbar4_link" />
   </joint> 
   <link name="vbar4_link">
-    <inertial>
-      <mass value="1.0" />
-      <origin xyz="0 0 0" />
-      <inertia ixx="0.1" ixy="0"  ixz="0"
-               iyy="0.1" iyz="0"
-               izz="0.01" />
-    </inertial> 
     <visual>
       <origin xyz="0.0 0.0 0" rpy="0 0 0" />
       <geometry>
@@ -287,13 +224,6 @@
     <child link="obar1_link" />
   </joint> 
   <link name="obar1_link">
-    <inertial>
-      <mass value="1.0" />
-      <origin xyz="0 0 0" />
-      <inertia ixx="0.1" ixy="0"  ixz="0"
-               iyy="0.1" iyz="0"
-               izz="0.01" />
-    </inertial> 
     <visual>
       <origin xyz="0.0 0.0 0" rpy="0 0 0" />
       <geometry>
@@ -315,13 +245,6 @@
     <child link="obar2_link" />
   </joint> 
   <link name="obar2_link">
-    <inertial>
-      <mass value="1.0" />
-      <origin xyz="0 0 0" />
-      <inertia ixx="0.1" ixy="0"  ixz="0"
-               iyy="0.1" iyz="0"
-               izz="0.01" />
-    </inertial> 
     <visual>
       <origin xyz="0.0 0.0 0" rpy="0 0 0" />
       <geometry>
@@ -343,13 +266,6 @@
     <child link="obar3_link" />
   </joint> 
   <link name="obar3_link">
-    <inertial>
-      <mass value="1.0" />
-      <origin xyz="0 0 0" />
-      <inertia ixx="0.1" ixy="0"  ixz="0"
-               iyy="0.1" iyz="0"
-               izz="0.01" />
-    </inertial> 
     <visual>
       <origin xyz="0.0 0.0 0" rpy="0 0 0" />
       <geometry>
@@ -371,13 +287,7 @@
     <child link="obar4_link" />
   </joint> 
   <link name="obar4_link">
-    <inertial>
-      <mass value="1.0" />
-      <origin xyz="0 0 0" />
-      <inertia ixx="0.1" ixy="0"  ixz="0"
-               iyy="0.1" iyz="0"
-               izz="0.01" />
-    </inertial> 
+    <!-- dummy intertia to make Gazebo urdf2sdf converter work -->
     <visual>
       <origin xyz="0.0 0.0 0" rpy="0 0 0" />
       <geometry>
@@ -399,13 +309,6 @@
     <child link="sliding_guide_link" />
   </joint> 
   <link name="sliding_guide_link">
-    <inertial>
-      <mass value="1.0" />
-      <origin xyz="0 0 0" />
-      <inertia ixx="0.1" ixy="0"  ixz="0"
-               iyy="0.1" iyz="0"
-               izz="0.01" />
-    </inertial> 
     <visual>
       <origin xyz="0.0 0.0 0" rpy="0 0 0" />
       <geometry>
@@ -426,7 +329,16 @@
     <origin xyz="-${cage_height} 0 0" rpy="0.0 -${PI_2} ${PI}" />
     <child link="working_surface_link" />
   </joint> 
+
   <link name="working_surface_link">
+    <!-- dummy intertia to make Gazebo urdf2sdf converter work -->
+    <inertial>
+      <mass value="1.0" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="0.1" ixy="0"  ixz="0"
+               iyy="0.1" iyz="0"
+               izz="0.01" />
+    </inertial>
   </link>
 
 </robot>

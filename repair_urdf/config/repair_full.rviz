@@ -85,6 +85,41 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        arm_1_link1_coll:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_1_link2_coll:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_1_link3_coll:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_1_link4_coll:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_1_link5_coll:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_1_link6_coll:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_1_link7_coll:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         arm_1_link_1:
           Alpha: 1
           Show Axes: false
@@ -123,6 +158,40 @@ Visualization Manager:
         arm_1_tcp:
           Alpha: 1
           Show Axes: true
+          Show Trail: false
+        arm_2_link1_coll:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_2_link2_coll:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_2_link3_coll:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_2_link4_coll:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_2_link5_coll:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_2_link6_coll:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_2_link7_coll:
+          Alpha: 1
+          Show Axes: false
           Show Trail: false
           Value: true
         arm_2_link_1:
@@ -164,7 +233,6 @@ Visualization Manager:
           Alpha: 1
           Show Axes: true
           Show Trail: false
-          Value: true
         base_link:
           Alpha: 1
           Show Axes: false
@@ -178,14 +246,6 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
         dummy_r:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        dummy_sliding_wrist1_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        dummy_sliding_wrist2_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -359,7 +419,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.5203431844711304
+      Distance: 3.360994338989258
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -367,9 +427,9 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.9952146410942078
-        Y: 0.2659756541252136
-        Z: 0.6275961995124817
+        X: 1.3045443296432495
+        Y: 0.39400026202201843
+        Z: 1.0775028467178345
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
@@ -395,5 +455,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1920
-  X: -2
-  Y: -30
+  X: 2401
+  Y: 41

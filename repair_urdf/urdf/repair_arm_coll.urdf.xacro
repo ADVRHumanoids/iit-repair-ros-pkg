@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+<xacro:macro name="repair_coll" params="load_sol" />
+
 <joint name="arm_${id}_link_1_coll_joint" type="fixed">
 
     <origin xyz="${link1_coll_offset_x} ${link1_coll_offset_y} ${link1_coll_offset_z}" rpy="0 0 0"/>
@@ -105,19 +107,37 @@
 
 </link>
 
-<joint name="arm_${id}_link_5_coll_joint" type="prismatic">
+<xacro:if value="${load_sol == True}">
 
-    <origin xyz="${link5_coll_offset_x} ${link5_coll_offset_y} ${link5_coll_offset_z}" rpy="0 0 0"/>
+    <joint name="arm_${id}_link_5_coll_joint" type="fixed">
 
-    <parent link="arm_${id}_link_5"/>
+         <origin xyz="${link5_coll_offset_x + wrist_off} ${link5_coll_offset_y} ${link5_coll_offset_z}" rpy="0 0 0"/>
 
-    <child link="arm_${id}_link5_coll"/>
+        <parent link="arm_${id}_link_5"/>
 
-    <limit lower="${0}" upper="${sliding_wrist_deltaz_ub}" effort="${big_tau_max}" velocity="10.0"/>
+        <child link="arm_${id}_link5_coll"/>
 
-    <axis xyz="1 0 0"/>
+    </joint>
 
-</joint>
+</xacro:if>
+<xacro:unless value="${load_sol == True}">
+
+    <joint name="arm_${id}_link_5_coll_joint" type="prismatic">
+
+        <origin xyz="${link5_coll_offset_x} ${link5_coll_offset_y} ${link5_coll_offset_z}" rpy="0 0 0"/>
+
+        <parent link="arm_${id}_link_5"/>
+
+        <child link="arm_${id}_link5_coll"/>
+
+        <limit lower="${0}" upper="${sliding_wrist_deltaz_ub}" effort="${big_tau_max}" velocity="10.0"/>
+
+        <axis xyz="1 0 0"/>
+
+    </joint>
+
+</xacro:unless>
+
 
 <link name="arm_${id}_link5_coll">
 

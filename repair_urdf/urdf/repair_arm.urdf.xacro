@@ -8,11 +8,13 @@
 
 <xacro:include filename="$(find repair_urdf)/urdf/repair_arm_coll_params.urdf.xacro"/>
 
-<xacro:macro name="repair_arm" params="id base_link is_sliding_wrist show_softhand show_coll" >
+<xacro:macro name="repair_arm" params="id base_link is_sliding_wrist show_softhand show_coll load_sol" >
 
 <xacro:if value="${show_coll == True}">
 
     <xacro:include filename="$(find repair_urdf)/urdf/repair_arm_coll.urdf.xacro"/>
+
+    <xacro:repair_coll load_sol="${load_sol}"/> 
 
 </xacro:if>
 
@@ -255,26 +257,38 @@
 <xacro:unless value="${is_sliding_wrist != True}">
 
     <joint name="arm_${id}_joint_6" type="revolute">
-    
-        <origin xyz="0 0 ${321.000 * mmTom}" rpy="0 ${-PI_2} 0"/>
-        <parent link="arm_${id}_link_5"/>
-        <child link="dummy_sliding_wrist${id}_link"/>
-        <axis xyz="0 0 1"/>
-        <limit lower="${-150.0 * DEG2RAD}" upper="${150.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
-    
-    </joint>
+
+            <origin xyz="0 0 ${321.000 * mmTom}" rpy="0 ${-PI_2} 0"/>
+            <parent link="arm_${id}_link_5"/>
+            <child link="dummy_sliding_wrist${id}_link"/>
+            <axis xyz="0 0 1"/>
+            <limit lower="${-150.0 * DEG2RAD}" upper="${150.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
+            
+    </joint> 
 
     <link name="dummy_sliding_wrist${id}_link">
     </link>
 
+    <xacro:if value="${load_sol == True}">
+        
+        <joint name="dummy_sliding_wrist${id}_joint" type="fixed">
+            <origin xyz="0.0 0.0 ${-wrist_off}" rpy="0 0 0"/>
+            <parent link="dummy_sliding_wrist${id}_link"/>
+            <child link="arm_${id}_link_6"/>
+        </joint>     
+        
+    </xacro:if>
+    <xacro:unless value="${load_sol == True}">
 
-    <joint name="dummy_sliding_wrist${id}_joint" type="prismatic">
-        <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
-        <parent link="dummy_sliding_wrist${id}_link"/>
-        <child link="arm_${id}_link_6"/>
-        <axis xyz="0 0 -1"/>
-        <limit lower="${sliding_wrist_deltaz_lb}" upper= "${sliding_wrist_deltaz_ub}" effort="1000.0" velocity="20.0"/>
-    </joint>
+        <joint name="dummy_sliding_wrist${id}_joint" type="prismatic">
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+            <parent link="dummy_sliding_wrist${id}_link"/>
+            <child link="arm_${id}_link_6"/>
+            <axis xyz="0 0 -1"/>
+            <limit lower="${sliding_wrist_deltaz_lb}" upper= "${sliding_wrist_deltaz_ub}" effort="1000.0" velocity="20.0"/>
+        </joint>
+
+    </xacro:unless>
 
 </xacro:unless>
 

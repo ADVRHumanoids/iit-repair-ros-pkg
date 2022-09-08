@@ -40,7 +40,7 @@ def main(args):
 
     sliding_wrist_command = "is_sliding_wrist:=" + "true"
     show_softhand_command = "show_softhand:=" + str(args.show_softhand).lower()
-    show_coll_command = "show_coll:=" + str(args.show_coll).lower()
+    gen_coll_command = "show_coll:=" + str(args.gen_coll).lower()
     # preliminary ops
 
     try:
@@ -51,7 +51,7 @@ def main(args):
                                         xacro_full_path, \
                                         sliding_wrist_command, \
                                         show_softhand_command, \
-                                        show_coll_command, \
+                                        gen_coll_command, \
                                         "-o", 
                                         urdf_full_path])
 
@@ -67,7 +67,7 @@ def main(args):
                                         "repair_full.launch", \
                                         sliding_wrist_command,\
                                         show_softhand_command,
-                                        show_coll_command])
+                                        gen_coll_command])
 
     except:
 
@@ -170,8 +170,8 @@ if __name__ == '__main__':
                         help = 'whether to resample the obtained solution before replaying it', default = False)
     parser.add_argument('--replay_only_best', '-rob', type=str2bool,\
                         help = 'whether to only the best solution', default = True)
-    parser.add_argument('--show_coll', '-coll', type=str2bool,\
-                        help = 'whether to collisions', default = False)
+    parser.add_argument('--gen_coll', '-coll', type=str2bool,\
+                        help = 'whether to generate collisions', default = True)
     parser.add_argument('--show_softhand', '-show_soft', type=str2bool,\
                         help = 'whether to show softhand', default = True)
 
