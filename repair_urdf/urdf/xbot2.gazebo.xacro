@@ -2,29 +2,38 @@
 
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
-<gazebo>
 
-    <!-- xbot2 joint device driver-->
-    <gazebo>  
-        <plugin name='xbot2_gz_joint_server' filename='libxbot2_gz_joint_server.so'> 
-            <pid>
+<!-- xbot2 joint device driver-->
+<gazebo>  
+    <plugin name='xbot2_gz_joint_server' filename='libxbot2_gz_joint_server.so'> 
+        <pid>
+            <gain name="lowpwr_mot" p="50"  d="5"/>
+            <gain name="small_mot"  p="1000"  d="10"/>
+            <gain name="medium_mot" p="4000" d="40"/>
+            <gain name="big_mot"    p="8000" d="50"/>
+            <gain name="wheel_mot"  p="0" d="10"/>
 
-                <gain name="null_mode"  p="0"  d="0"/>
-                <gain name="small_mot"  p="250"  d="5"/>
-                <gain name="medium_mot" p="1000" d="10"/>
-                <gain name="big_mot"    p="3000" d="10"/>
+            <pid name="arm_1_joint_1" profile="medium_mot"/>
+            <pid name="arm_1_joint_2" profile="medium_mot"/>
+            <pid name="arm_1_joint_3" profile="medium_mot"/>
+            <pid name="arm_1_joint_4" profile="medium_mot"/>
+            <pid name="arm_1_joint_5" profile="medium_mot"/>
+            <pid name="arm_1_joint_6" profile="medium_mot"/>
+            <pid name="arm_1_joint_7" profile="medium_mot"/>
+            
+            <pid name="arm_2_joint_1" profile="medium_mot"/>
+            <pid name="arm_2_joint_2" profile="medium_mot"/>
+            <pid name="arm_2_joint_3" profile="medium_mot"/>
+            <pid name="arm_2_joint_4" profile="medium_mot"/>
+            <pid name="arm_2_joint_5" profile="medium_mot"/>
+            <pid name="arm_2_joint_6" profile="medium_mot"/>
+            <pid name="arm_2_joint_7" profile="medium_mot"/>
+        </pid>
+    </plugin>
+</gazebo>
 
-                <gain name="test_rig2HIP" profile="big_mot"/>
-                <gain name="hip_actuation" profile="medium_mot"/>
-                <gain name="knee_actuation" profile="medium_mot"/>
-            </pid>
-        </plugin>
-    </gazebo>
-
-    <gazebo> 
-        <plugin name="xbot2_ft_driver" filename="libxbot2_gz_ft_server.so"/>
-    </gazebo>
-
+<gazebo> 
+    <plugin name="xbot2_ft_driver" filename="libxbot2_gz_ft_server.so"/>
 </gazebo>
 
 </robot>

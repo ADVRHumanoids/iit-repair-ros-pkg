@@ -267,6 +267,7 @@
     </joint> 
 
     <link name="dummy_sliding_wrist${id}_link">
+    
     </link>
 
     <xacro:if value="${load_sol == True}">

@@ -321,24 +321,34 @@ fake inertia -> it is acceptable. -->
     </inertial>
   </link>
   <!-- Reading some parameters from a YAML config file -->
+  <!-- xbot2 joint device driver-->
   <gazebo>
-    <!-- xbot2 joint device driver-->
-    <gazebo>
-      <plugin filename="libxbot2_gz_joint_server.so" name="xbot2_gz_joint_server">
-        <pid>
-          <gain d="0" name="null_mode" p="0"/>
-          <gain d="5" name="small_mot" p="250"/>
-          <gain d="10" name="medium_mot" p="1000"/>
-          <gain d="10" name="big_mot" p="3000"/>
-          <gain name="test_rig2HIP" profile="big_mot"/>
-          <gain name="hip_actuation" profile="medium_mot"/>
-          <gain name="knee_actuation" profile="medium_mot"/>
-        </pid>
-      </plugin>
-    </gazebo>
-    <gazebo>
-      <plugin filename="libxbot2_gz_ft_server.so" name="xbot2_ft_driver"/>
-    </gazebo>
+    <plugin filename="libxbot2_gz_joint_server.so" name="xbot2_gz_joint_server">
+      <pid>
+        <gain d="5" name="lowpwr_mot" p="50"/>
+        <gain d="10" name="small_mot" p="1000"/>
+        <gain d="40" name="medium_mot" p="4000"/>
+        <gain d="50" name="big_mot" p="8000"/>
+        <gain d="10" name="wheel_mot" p="0"/>
+        <pid name="arm_1_joint_1" profile="medium_mot"/>
+        <pid name="arm_1_joint_2" profile="medium_mot"/>
+        <pid name="arm_1_joint_3" profile="medium_mot"/>
+        <pid name="arm_1_joint_4" profile="medium_mot"/>
+        <pid name="arm_1_joint_5" profile="medium_mot"/>
+        <pid name="arm_1_joint_6" profile="medium_mot"/>
+        <pid name="arm_1_joint_7" profile="medium_mot"/>
+        <pid name="arm_2_joint_1" profile="medium_mot"/>
+        <pid name="arm_2_joint_2" profile="medium_mot"/>
+        <pid name="arm_2_joint_3" profile="medium_mot"/>
+        <pid name="arm_2_joint_4" profile="medium_mot"/>
+        <pid name="arm_2_joint_5" profile="medium_mot"/>
+        <pid name="arm_2_joint_6" profile="medium_mot"/>
+        <pid name="arm_2_joint_7" profile="medium_mot"/>
+      </pid>
+    </plugin>
+  </gazebo>
+  <gazebo>
+    <plugin filename="libxbot2_gz_ft_server.so" name="xbot2_ft_driver"/>
   </gazebo>
   <joint name="x_joint" type="prismatic">
     <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.3034329527232317"/>
@@ -539,6 +549,7 @@ fake inertia -> it is acceptable. -->
     <limit effort="200.0" lower="-2.6179938779916667" upper="2.6179938779916667" velocity="10.0"/>
   </joint>
   <link name="dummy_sliding_wrist1_link">
+    
     </link>
   <joint name="dummy_sliding_wrist1_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0.0 0.0 -0.09589076394119754"/>
@@ -740,6 +751,7 @@ fake inertia -> it is acceptable. -->
     <limit effort="200.0" lower="-2.6179938779916667" upper="2.6179938779916667" velocity="10.0"/>
   </joint>
   <link name="dummy_sliding_wrist2_link">
+    
     </link>
   <joint name="dummy_sliding_wrist2_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0.0 0.0 -0.09589076394119754"/>
