@@ -17,7 +17,19 @@
 
   <xacro:property name="PI" value="3.14159265359" />
   <xacro:property name="PI_2" value="1.57079632679" />
-  
+
+  <!-- only something to avoid collisions between leg and ground plane when using Gaz. -->
+  <xacro:if value="$(arg shorten_table_legs_coll)">
+
+    <xacro:property name="leg_z_offset_gz" value="0.05" /> 
+
+  </xacro:if>
+  <xacro:unless value="$(arg shorten_table_legs_coll)">
+
+    <xacro:property name="leg_z_offset_gz" value="0.0" /> 
+
+  </xacro:unless>
+
   <material name="wood">
     <color rgba="0.522 0.369 0.259 0.8"/>
   </material>
@@ -65,7 +77,7 @@
     <material name="silver_gray" />
     </visual> 
     <collision>
-      <origin xyz="0.0 0.0 ${-table_height/2}" rpy="0.0 0.0 0.0" />
+      <origin xyz="0.0 0.0 ${-table_height/2 + leg_z_offset_gz}" rpy="0.0 0.0 0.0" />
       <geometry>
         <cylinder radius="${leg_radius}" length="${table_height}" />
       </geometry>
@@ -107,7 +119,7 @@
 
     </visual> 
     <collision>
-      <origin xyz="0.0 0.0 ${-table_height/2}" rpy="0.0 0.0 0.0" />
+      <origin xyz="0.0 0.0 ${-table_height/2 + leg_z_offset_gz}" rpy="0.0 0.0 0.0" />
       <geometry>
         <cylinder radius="${leg_radius}" length="${table_height}" />
       </geometry>
@@ -149,7 +161,7 @@
 
     </visual> 
     <collision>
-      <origin xyz="0.0 0.0 ${-table_height/2}" rpy="0.0 0.0 0.0" />
+      <origin xyz="0.0 0.0 ${-table_height/2 + leg_z_offset_gz}" rpy="0.0 0.0 0.0" />
       <geometry>
         <cylinder radius="${leg_radius}" length="${table_height}" />
       </geometry>
@@ -191,7 +203,7 @@
 
     </visual> 
     <collision>
-      <origin xyz="0.0 0.0 ${-table_height/2}" rpy="0.0 0.0 0.0" />
+      <origin xyz="0.0 0.0 ${-table_height/2 + leg_z_offset_gz}" rpy="0.0 0.0 0.0" />
       <geometry>
         <cylinder radius="${leg_radius}" length="${table_height}" />
       </geometry>

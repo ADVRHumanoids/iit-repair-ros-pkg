@@ -1,25 +1,26 @@
-# description
 XBotInterface:
   urdf_path: $(rospack find repair_urdf)/urdf/repair_full.urdf
   srdf_path: $(rospack find awesome_leg)/srdf/repair_full.srdf
 
-# model interface
 ModelInterface:
   model_type: RBDL
   is_model_floating_base: false
 
+
 # hal
 xbotcore_device_configs:
-    sim: $PWD/ecat_config/hal/repair_gz.yaml
-    dummy: $PWD/ecat_config/hal/repair_dummy.yaml
-    ec_pos: $PWD/ecat_config/hal/repair_ec_all.yaml
-    ec_imp: $PWD/ecat_config/hal/repair_ec_all.yaml
-    ec_idle: $PWD/ecat_config/hal/repair_ec_all.yaml
+    sim: $PWD/hal/repair_gz.yaml
+    dummy: $PWD/hal/repair_dummy.yaml
+    ec_pos: $PWD/hal/repair_ec_all.yaml
+    ec_imp: $PWD/hal/repair_ec_all.yaml
+    ec_idle: $PWD/hal/repair_ec_all.yaml
+
 
 # threads
 xbotcore_threads:
     rt_main:  {sched: fifo , prio: 60, period: 0.001, core_id: 2}
     nrt_main: {sched: other, prio: 0 , period: 0.005}
+
 
 # plugins
 xbotcore_plugins:
@@ -34,8 +35,15 @@ xbotcore_plugins:
     
     ec_ros: {thread: nrt_main, type: ec_ros}
 
+
+
 # global parameters
 xbotcore_param:
     /jm/tx_filter_autostart: {value: true, type: bool}
     /jm/tx_filter_cutoff: {value: 2.0, type: double}
-    
+
+
+
+
+
+

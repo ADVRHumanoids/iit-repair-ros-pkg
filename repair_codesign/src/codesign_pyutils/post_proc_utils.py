@@ -924,7 +924,7 @@ class PostProcS1:
 
                 counter = counter + 1
 
-    def make_plots(self, bin_scale_factor = 20.0):
+    def make_plots(self, bin_scale_factor = 20.0, plt_red_factor = 4):
         
         self.make_solver_stat_plots(bin_scale_factor=bin_scale_factor)
 
@@ -932,7 +932,7 @@ class PostProcS1:
 
         self.make_sol_stat_plots(bin_scale_factor=bin_scale_factor)
 
-        self._clusterer.create_cluster_plot(plt_red_factor=4)
+        self._clusterer.create_cluster_plot(plt_red_factor=plt_red_factor)
 
     def show_plots(self):
 
@@ -1017,7 +1017,7 @@ class PostProcS3:
 
         self.__load_clust_sols()
         self.__compute_second_lev_true_costs()
-        self._l2_cl_cands_man_measure = compute_man_index(self._l2_cl_cands_opt_cost, self._n_int)
+        self._s2_cl_cands_man_measure = compute_man_index(self._s2_cl_cands_opt_cost, self._n_int)
 
         self.__compute_conf_coeff()
         self.__compute_weighted_costs()
@@ -1042,10 +1042,10 @@ class PostProcS3:
         self._task_dt = self._info_data["dt"][0][0]
         self._filling_nnodes = self._info_data["filling_nodes"][0][0]
 
-        self._l2_cl_cand_inds = self._info_data["l2_cl_cand_inds"][0]
-        self._l2_cl_cands_opt_cost = self._info_data["l2_cl_opt_costs"][0]
-        self._l2_cl_candidates = self._info_data["l2_cl_best_candidates"]
-        self._l2_cl_cands_man_measure = self._info_data["l2_cl_cand_man_measure"]
+        self._s2_cl_cand_inds = self._info_data["l2_cl_cand_inds"][0]
+        self._s2_cl_cands_opt_cost = self._info_data["l2_cl_opt_costs"][0]
+        self._s2_cl_candidates = self._info_data["l2_cl_best_candidates"]
+        self._s2_cl_cands_man_measure = self._info_data["l2_cl_cand_man_measure"]
 
         self._integrator = self._info_data["integrator"][0]
         self._ig_seed = self._info_data["ig_seed"][0][0]
@@ -1226,11 +1226,11 @@ class PostProcS3:
             min_second_lev_cl = np.min(np.array(self._second_lev_opt_costs[cl]))
 
             self._second_lev_true_costs[cl] = \
-                min_second_lev_cl if (min_second_lev_cl<=self._l2_cl_cands_opt_cost[cl]) else self._l2_cl_cands_opt_cost[cl]
+                min_second_lev_cl if (min_second_lev_cl<=self._s2_cl_cands_opt_cost[cl]) else self._s2_cl_cands_opt_cost[cl]
 
         self.second_lev_true_man = compute_man_index(self._second_lev_true_costs, self._n_int)
 
-        did_cost_improve = np.array(self._l2_cl_cands_opt_cost != self._second_lev_true_costs)
+        did_cost_improve = np.array(self._s2_cl_cands_opt_cost != self._second_lev_true_costs)
         self.n_of_improved_costs = len(np.argwhere(did_cost_improve == True).flatten())
 
     def __compute_weighted_costs(self):
@@ -1257,7 +1257,7 @@ class PostProcS3:
 
     def __compute_second_lev_best_sol(self, use_weighted = False):
 
-        n_des_params = len(self._l2_cl_candidates) # number of design parameters
+        n_des_params = len(self._s2_cl_candidates) # number of design parameters
 
         best_second_lev_qcodes = np.zeros((n_des_params, 1)).flatten()
 
@@ -1271,7 +1271,7 @@ class PostProcS3:
 
             for i in range(n_des_params): # iterating through design paramter dimension
 
-                best_second_lev_qcodes[i] = self._l2_cl_candidates[i][best_second_lev_cl_index]
+                best_second_lev_qcodes[i] = self._s2_cl_candidates[i][best_second_lev_cl_index]
 
         else:   
 
@@ -1283,7 +1283,7 @@ class PostProcS3:
             
             for i in range(n_des_params):
 
-                best_second_lev_qcodes[i] = self._l2_cl_candidates[i][best_second_lev_cl_index]
+                best_second_lev_qcodes[i] = self._s2_cl_candidates[i][best_second_lev_cl_index]
 
         return best_second_lev_cost, best_second_lev_cl_index,\
                 best_second_lev_man_measure, best_second_lev_qcodes
@@ -1309,10 +1309,10 @@ class PostProcS3:
         stuff = {"unique_id": self._unique_id,\
                     "n_clust": self._n_clust,
                     "n_int": self._n_int,
-                    "_l2_cl_cand_inds": self._l2_cl_cand_inds,
-                    "_l2_cl_best_candidates": self._l2_cl_candidates,
-                    "_l2_cl_opt_costs": self._l2_cl_cands_opt_cost, 
-                    "first_lev_man_measure": self._l2_cl_cands_man_measure,
+                    "s2_cl_cand_inds": self._s2_cl_cand_inds,
+                    "s2_cl_best_candidates": self._s2_cl_candidates,
+                    "s2_cl_opt_costs": self._s2_cl_cands_opt_cost, 
+                    "s2_cl_man_measure": self._s2_cl_cands_man_measure,
                     "second_lev_opt_costs": np.array(self._second_lev_opt_costs, dtype=object),
                     "second_lev_man_measure": np.array(self._second_lev_man_measure, dtype=object),
                     "opt_mult_indeces": np.array(self._opt_mult_indeces, dtype=object),
@@ -1320,14 +1320,14 @@ class PostProcS3:
                     "second_lev_true_costs": self._second_lev_true_costs,
                     "n_of_improved_costs": self.n_of_improved_costs,
                     "second_lev_weighted_costs": self._second_lev_weighted_costs,
-                    "best_second_lev_cost": self.best_second_lev_cost,
-                    "best_second_lev_cl_index": self.best_second_lev_cl_index,
-                    "best_second_lev_man_measure": self.best_second_lev_man_measure,
-                    "best_second_lev_qcodes": self.best_second_lev_qcodes,
-                    "best_second_lev_weight_cost": self.best_second_lev_weight_cost,
-                    "best_second_lev_weight_cl_index": self.best_second_lev_weight_cl_index,
-                    "best_second_lev_weight_man_measure": self.best_second_lev_weight_man_measure,
-                    "best_second_lev_weight_qcodes": self.best_second_lev_weight_qcodes,
+                    "best_cost": self.best_second_lev_cost,
+                    "best_cl_index": self.best_second_lev_cl_index,
+                    "best_man_measure": self.best_second_lev_man_measure,
+                    "best_qcodes": self.best_second_lev_qcodes,
+                    "best_weight_cost": self.best_second_lev_weight_cost,
+                    "best_weight_cl_index": self.best_second_lev_weight_cl_index,
+                    "best_weight_man_measure": self.best_second_lev_weight_man_measure,
+                    "best_weight_qcodes": self.best_second_lev_weight_qcodes,
                     "rmse_man_meas": self._rmse_man_meas, 
                     "rmse_opt_cost":self._rmse_opt_cost}
 
