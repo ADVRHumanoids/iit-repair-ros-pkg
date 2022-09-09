@@ -154,6 +154,7 @@ TrajLinInterp::TrajLinInterp(Eigen::VectorXd sample_time, Eigen::MatrixXd input_
 
 Eigen::MatrixXd TrajLinInterp::eval_at(Eigen::VectorXd interp_times)
 {
+
     // check interp_times is within _sample_times
     check_time_vector(interp_times);
 
@@ -262,10 +263,8 @@ Eigen::VectorXd TrajLinInterp::interp_1d(Eigen::VectorXd& interp_times, int dim_
 
     Eigen::VectorXd interp_vect = Eigen::VectorXd::Zero(n_int_samples);
     
-
     for (int i = 0; i < n_int_samples; i++)
     {
-
         int first_indx = -1;
         int second_indx = -1;
 
@@ -307,65 +306,59 @@ void TrajLinInterp::get_closest_points(double inter_time, int& first_indx, int& 
     
     Eigen::VectorXd diff_array = Eigen::VectorXd::Zero(_n_samples); 
 
+    int closest_sampl_idx = -1;
+    double previous_pos_diff = 1000000000000000000.0; // auxiliary value, initialized to very high value
+
     for (int i = 0; i < _n_samples; i++)
     {
-        diff_array(i) = abs(inter_time - _sample_times(i)); 
-    }
-    int index_aux; 
-    diff_array.minCoeff(&index_aux);
+        diff_array(i) = inter_time - _sample_times(i); 
 
-    if (diff_array[index_aux] < 0)
-    {
-        if (index_aux == 0)
-        { // working outside the time sample array, before the first element --> indexes cannot be negative
-
-            first_indx = 0;
-            second_indx = 1;
-
-        }
-        else
+        if (diff_array(i) > 0 && diff_array(i) < previous_pos_diff)
         {
+            previous_pos_diff = diff_array(i);
 
-            first_indx = index_aux;
-            second_indx = index_aux + 1;
-
+            closest_sampl_idx = i;
         }
-
-        
     }
-    else
+
+    if (closest_sampl_idx == -1) // all negative differences --> we are before the first time sample
     {
+        first_indx = 0;
+        second_indx = 1;
+    }
 
-        if (index_aux == _n_samples - 1)
-        { // working outside the time sample array, past the last element --> indexes cannot go outside the array length
+    if (closest_sampl_idx == (_n_samples - 1 )) // we are past the last time sample
+    {
+        first_indx = _n_samples - 2;
+        second_indx = _n_samples - 1;
+    }
 
-            first_indx = _n_samples - 2;
-            second_indx = _n_samples - 1;
-
-        }
-        else
-        {
-
-            first_indx = index_aux;
-            second_indx = index_aux + 1;
-
-        }
-
-        
+    if(closest_sampl_idx != -1 && closest_sampl_idx != (_n_samples - 1 ))
+    {
+        first_indx = closest_sampl_idx;
+        second_indx = closest_sampl_idx + 1;
     }
 
 }
+
 
 ///////////////////////////// TrajLoader /////////////////////////////
 
 TrajLoader::TrajLoader(){};
 
-TrajLoader::TrajLoader(std::string data_path, bool column_major, double resample_err_tol)
-:_data_path{data_path}, _column_major_order{column_major}, _resample_err_tol{resample_err_tol}
+TrajLoader::TrajLoader(std::string data_path, bool column_major, double resample_err_tol, bool load_from_csv)
+:_data_path{data_path}, _column_major_order{column_major}, _resample_err_tol{resample_err_tol}, _load_from_csv{load_from_csv}
 {
 
-    load_data_from_mat(data_path);
-
+    if (!_load_from_csv)
+    {
+        load_data_from_mat(data_path);
+    }
+    else
+    {
+        load_data_from_csv(data_path);
+    }
+    
     check_loaded_data_dims();
 
     _n_nodes = get_n_samples(_q_p);
@@ -378,12 +371,12 @@ TrajLoader::TrajLoader(std::string data_path, bool column_major, double resample
     }
     _exec_time = _sample_times(_n_nodes - 1) - _sample_times(0);
 
-    // int interp_dir = (_column_major_order) ? 1 : 0;
-    // opt_traj.emplace(_q_p_name, TrajLinInterp(_sample_times, _q_p, interp_dir));
-    // opt_traj.emplace(_q_p_dot_name, TrajLinInterp(_sample_times, _q_p_dot, interp_dir));
-    // opt_traj.emplace(_efforts_name,
-    //                 TrajLinInterp(_sample_times.head(_n_nodes - 1),
-    //                     _tau((Eigen::indexing::all, Eigen::indexing::last - 1) ), interp_dir));          
+    int interp_dir = (_column_major_order) ? 1 : 0;
+
+    opt_traj.emplace(_q_p_name, TrajLinInterp(_sample_times, _q_p, interp_dir));
+    opt_traj.emplace(_q_p_dot_name, TrajLinInterp(_sample_times, _q_p_dot, interp_dir));
+    opt_traj.emplace(_efforts_name,
+                    TrajLinInterp(_sample_times, _tau, interp_dir));          
     
 }
 
@@ -439,6 +432,11 @@ int TrajLoader::get_n_nodes()
     return _n_nodes;
 }
 
+Eigen::VectorXd TrajLoader::get_sample_times()
+{
+    return _sample_times;
+}
+
 void TrajLoader::get_loaded_traj(Eigen::MatrixXd& q_p, Eigen::MatrixXd& q_p_dot, Eigen::MatrixXd& tau, Eigen::MatrixXd& dt_opt)
 {
 
@@ -457,12 +455,13 @@ void TrajLoader::resample(double res_dt, Eigen::MatrixXd& q_p_res, Eigen::Matrix
     double n_res_nodes = times.size();
 
     q_p_res =  opt_traj[_q_p_name].eval_at(times);
+
     q_p_dot_res = opt_traj[_q_p_dot_name].eval_at(times);
     tau_res =  opt_traj[_efforts_name].eval_at(times.head(n_res_nodes - 1)); // tau is resampled excluding the last instant of time
 
     tau_res.conservativeResize(tau_res.rows(), tau_res.cols() + 1);
     tau_res.col(tau_res.cols() - 1) = Eigen::VectorXd::Zero(_n_jnts); // to be able to potentially send the whole trajectory concurrently
-    // a dummy null control input is added on the last sample time
+    // // a dummy null control input is added on the last sample time
 
 }
 
@@ -524,7 +523,10 @@ void TrajLoader::check_loaded_data_dims()
     { // check cols (torque matri)
 
         throw std::invalid_argument(std::string("check_loaded_data_dims: ") +
-                                    std::string("The number of columns (i.e. samples) of the loaded data does not match!\n"));
+                                    std::string("The number of columns (i.e. samples) of the loaded data does not match!\n" )+
+                                    std::string("q_p samples: ") + std::to_string(get_n_samples(_q_p)) + std::string("\n") + 
+                                    std::string("q_p_dot samples: ") + std::to_string(get_n_samples(_q_p_dot)) + std::string("\n") +
+                                    std::string("tau samples: ") + std::to_string(get_n_samples(_tau)) + std::string("\n"));
 
     }
 

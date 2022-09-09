@@ -64,8 +64,6 @@ void TrajReplayerRt::get_params_from_config()
     _stop_damping = getParamOrThrow<Eigen::VectorXd>("~stop_damping");
     _delta_effort_lim = getParamOrThrow<double>("~delta_effort_lim");
     _approach_traj_exec_time = getParamOrThrow<double>("~approach_traj_exec_time");
-    _approach_traj_target = getParamOrThrow<Eigen::VectorXd>("~approach_traj_target");
-    // _cntrl_mode =  getParamOrThrow<Eigen::VectorXd>("~cntrl_mode");
     _replay_stiffness = getParamOrThrow<Eigen::VectorXd>("~replay_stiffness"); 
     _replay_damping = getParamOrThrow<Eigen::VectorXd>("~replay_damping");
     _looped_traj = getParamOrThrow<bool>("~looped_traj");
@@ -196,7 +194,7 @@ bool  TrajReplayerRt::on_replay_msg_rcvd(const repair_cntrl::ReplayNowRequest& r
 void TrajReplayerRt::load_opt_data()
 {   
 
-    _traj = plugin_utils::TrajLoader(_mat_path + _mat_name);
+    _traj = plugin_utils::TrajLoader(_mat_path + _mat_name, true, 0.01, false);
 
     int n_traj_jnts = _traj.get_n_jnts();
 
@@ -243,7 +241,7 @@ void TrajReplayerRt::saturate_effort()
 void TrajReplayerRt::compute_approach_traj()
 {
 
-    _approach_traj = plugin_utils::PeisekahTrans(_q_p_meas, _approach_traj_target, _approach_traj_exec_time, _plugin_dt); 
+    _approach_traj = plugin_utils::PeisekahTrans(_q_p_meas, _q_p_ref.col(_sample_index), _approach_traj_exec_time, _plugin_dt); 
 
     _dump_logger->add("approach_traj", _approach_traj.get_traj());
 
