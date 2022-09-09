@@ -6,7 +6,7 @@
 <xacro:arg name="show_coll" default="false" />
 <xacro:arg name="load_sol" default="false" />
 <xacro:arg name="xbot" default="false" />
-<xacro:arg name="shorten_table_legs_coll" default="false" />
+<xacro:arg name="shorten_table_legs_coll" default="false" /> <!-- just to avoid flickering contact when loading into Gazebo -->
 
 <xacro:include filename="$(find repair_urdf)/urdf/repair_arm.urdf.xacro"/>
 
@@ -33,7 +33,7 @@
     <link name="base_link">
         <!-- torso inertias + stuff attached to the sliding guide -->
         <inertial>
-          <mass value="1000000" />
+          <mass value="${full_torso_mass}" />
           <origin xyz="0 0 0" />
           <inertia ixx="0" ixy="0"  ixz="0"
                   iyy="0" iyz="0"
