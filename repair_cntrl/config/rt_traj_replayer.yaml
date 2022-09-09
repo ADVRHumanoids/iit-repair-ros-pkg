@@ -34,29 +34,29 @@ xbotcore_plugins:
     
     traj_replayer:
         thread: rt_main
-        type: traj_replayer
+        type: traj_replayer_rt
         params:
             mat_path: {value: /home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/replay_directory/opt/, type: string}
             mat_name: {value: repair_codesign_opt_l2_id259_cl5_p0_r7_n0_t07-09-2022-16_52_10.mat, type: string}
             resample: {value: false, type: bool}
             stop_stiffness: {value: [500.0, 
                                     500.0, 500.0, 500.0, 500.0, 500.0, 500.0, 500.0, 
-                                    500.0, 500.0, 500.0, 500.0, 500.0, 500.0, , 500.0], type: Eigen::VectorXd}
+                                    500.0, 500.0, 500.0, 500.0, 500.0, 500.0, 500.0], type: Eigen::VectorXd}
             stop_damping: {value: [10.0, 
                                     10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 
-                                    10.0, 10.0, 10.0, 10.0, 10.0, 10.0, , 10.0], type: Eigen::VectorXd}
+                                    10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0], type: Eigen::VectorXd}
             delta_effort_lim: {value: 1e-6, type: double} 
             approach_traj_exec_time: {value: 6.0, type: double} 
             approach_traj_target: {value: [500.0, 
                                     500.0, 500.0, 500.0, 500.0, 500.0, 500.0, 500.0, 
-                                    500.0, 500.0, 500.0, 500.0, 500.0, 500.0, , 500.0], type: Eigen::VectorXd}
+                                    500.0, 500.0, 500.0, 500.0, 500.0, 500.0, 500.0], type: Eigen::VectorXd}
             # cntrl_mode: {value: [25.0, 25.0], type: Eigen::VectorXd}
             replay_stiffness: {value: [500.0, 
                                     500.0, 500.0, 500.0, 500.0, 500.0, 500.0, 500.0, 
-                                    500.0, 500.0, 500.0, 500.0, 500.0, 500.0, , 500.0], type: Eigen::VectorXd}
+                                    500.0, 500.0, 500.0, 500.0, 500.0, 500.0, 500.0], type: Eigen::VectorXd}
             replay_damping: {value: [10.0, 
                                     10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 
-                                    10.0, 10.0, 10.0, 10.0, 10.0, 10.0, , 10.0], type: Eigen::VectorXd}
+                                    10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0], type: Eigen::VectorXd}
             send_pos_ref: {value: true, type: bool}
             send_vel_ref: {value: false, type: bool}
             send_eff_ref: {value: false, type: bool}

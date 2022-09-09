@@ -7,10 +7,13 @@
   <maintainer email="arturo@todo.todo">arturo</maintainer>
   <maintainer email="andrea.patrizi@iit.it">andrea</maintainer>
 
+  <license>TODO</license>
+
   <build_depend>message_generation</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
   <buildtool_depend>catkin</buildtool_depend>
 
+  <exec_depend>message_runtime</exec_depend> 
 
 </package>

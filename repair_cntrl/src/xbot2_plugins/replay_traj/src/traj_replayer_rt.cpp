@@ -161,8 +161,8 @@ void TrajReplayerRt::init_nrt_ros_bridge()
 
 }
 
-bool  TrajReplayerRt::on_replay_msg_rcvd(const repair_cntrl::JumpNowRequest& req,
-                    repair_cntrl::JumpNowResponse& res)
+bool  TrajReplayerRt::on_replay_msg_rcvd(const repair_cntrl::ReplayNowRequest& req,
+                    repair_cntrl::ReplayNowResponse& res)
 {
 
     _replay = req.replay_now;
