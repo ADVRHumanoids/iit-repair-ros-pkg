@@ -1432,12 +1432,13 @@ class PostProcS3:
 
         final_solution_info = {"opt_cost": final_opt_cost, 
                                 "perf_index": final_man_measure,
-                                "dt": self._task_dt,
+                                "dt_opt": self._task_dt,
                                 "q":final_opt_q,
                                 "q_dot": final_opt_q_dot,
                                 "q_des": final_opt_q_des,
-                                "q_jnt": final_opt_q_jnt,
-                                "q_dot_jnt": final_opt_q_dot_jnt}
+                                "q_p": final_opt_q_jnt,
+                                "q_p_dot": final_opt_q_dot_jnt, 
+                                "tau": np.zeros((len(final_opt_q_jnt[:, 0]), len(final_opt_q_dot_jnt[0, :])))}
 
         third_step_dumper.add_storer(info_stuff, self._dump_path,\
                                 "3rd_step_postproc_results_" + str(self._unique_id),\

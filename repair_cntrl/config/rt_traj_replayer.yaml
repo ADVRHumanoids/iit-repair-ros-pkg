@@ -37,7 +37,7 @@ xbotcore_plugins:
         type: traj_replayer_rt
         params:
             mat_path: {value: /home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/replay_directory/opt/, type: string}
-            mat_name: {value: repair_codesign_opt_l2_id259_cl5_p0_r7_n0_t07-09-2022-16_52_10.mat, type: string}
+            mat_name: {value: final_opt_solution_07-09-2022-16_52_10.mat, type: string}
             resample: {value: false, type: bool}
             stop_stiffness: {value: [500.0, 
                                     500.0, 500.0, 500.0, 500.0, 500.0, 500.0, 500.0, 
