@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <robot name = "repair_cage" xmlns:xacro="http://ros.org/wiki/xacro">
   
+  <xacro:include filename="$(find repair_urdf)/urdf/materials.gazebo.xacro"/>
+
   <xacro:property name="table_height" value="0.5" />
   <xacro:property name="cage_width" value="1.5" />
   <xacro:property name="cage_height" value="1.0"/>
@@ -353,5 +355,7 @@
       </inertial> 
 
   </link>
+
+  <xacro:repair_cage_materials />
 
 </robot>
