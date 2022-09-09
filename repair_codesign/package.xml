@@ -8,7 +8,8 @@
 
   <description> Ros package for co-design stuff concerning RePAIR project </description>
 
-  <maintainer email="andrea@todo.todo">andrea</maintainer>
+  <maintainer email="arturo@todo.todo">arturo</maintainer>
+  <maintainer email="andrea.patrizi@iit.it">andrea</maintainer>
 
   <license>TODO</license>
 
