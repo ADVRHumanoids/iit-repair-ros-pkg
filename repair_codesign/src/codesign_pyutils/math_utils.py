@@ -92,6 +92,6 @@ def compute_man_index(man_cost: list, n_int: int):
 
     for i in range(len(man_cost)): 
 
-        man_measure[i] = np.sqrt(man_cost[i] / n_int) # --> discretized root mean squared joint velocities over the opt interval 
+        man_measure[i] = 1 / np.sqrt(man_cost[i] / n_int) # --> discretized root mean squared joint velocities over the opt interval 
 
     return man_measure

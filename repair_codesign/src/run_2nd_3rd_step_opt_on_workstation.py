@@ -426,10 +426,10 @@ if __name__ == '__main__':
                     "n_clust": n_clust,
                     "is_in_place_flip": is_in_place_flip, 
                     "is_biman_pick": is_biman_pick,
-                    "l2_cl_cand_inds": np.array(real_first_level_cand_inds), 
-                    "l2_cl_best_candidates": first_level_q_design_opt,
-                    "l2_cl_opt_costs": fist_lev_cand_opt_costs, 
-                    "l2_cl_cand_man_measure": fist_lev_cand_man_measure, 
+                    "2nd_step_cand_inds": np.array(real_first_level_cand_inds), 
+                    "2nd_step_best_candidates": first_level_q_design_opt,
+                    "2nd_step_cand_opt_costs": fist_lev_cand_opt_costs, 
+                    "2nd_step_can_man_measure": fist_lev_cand_man_measure, 
                     "n_int": task_copies[0].n_int
                     }
 

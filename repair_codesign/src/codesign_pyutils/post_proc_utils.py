@@ -2,7 +2,7 @@ from codesign_pyutils.dump_utils import SolDumper
 from codesign_pyutils.load_utils import LoadSols
 from codesign_pyutils.math_utils import compute_man_index
 from codesign_pyutils.task_utils import gen_task_copies, compute_ms_cl_man
-from codesign_pyutils.miscell_utils import correct_list, extract_q_design
+from codesign_pyutils.miscell_utils import correct_list, extract_q_design, extract_q_joint
 from codesign_pyutils.clustering_utils import Clusterer
 
 from codesign_pyutils.misc_definitions import get_design_map
@@ -997,7 +997,9 @@ class PostProcS3:
         self._info_data = mat_storer.matStorer(self._add_info_path).load()
         self.__read_info_data()
 
-        self.loaders = [] * self._n_clust # list of loaders (one for each cluster)
+        self._loaders = [None] * self._n_clust # list of loaders (one for each cluster)
+        self._3rd_step_opt_data = [None] * self._n_clust # list containing a dictionary for each cluster with all necessary opt data
+
         self._second_lev_opt_costs = [] 
         self._second_lev_man_measure = []
 
@@ -1023,13 +1025,15 @@ class PostProcS3:
         self.__compute_weighted_costs()
         self.__compute_rmse()
 
-        self.best_second_lev_cost, self.best_second_lev_cl_index,\
+        self.best_3rd_step_cost, self._best_second_lev_cl_index,\
             self.best_second_lev_man_measure, self.best_second_lev_qcodes = self.__compute_second_lev_best_sol()
 
         self.best_second_lev_weight_cost, self.best_second_lev_weight_cl_index,\
             self.best_second_lev_weight_man_measure, self.best_second_lev_weight_qcodes =\
                 self.__compute_second_lev_best_sol(use_weighted=True)
 
+        self.__extract_3rd_step_data()
+        
         self.print_best_sol()
         self.print_best_sol(weighted=True)
 
@@ -1082,143 +1086,199 @@ class PostProcS3:
         self._wrist_off = self._info_data["sliding_wrist_offset"][0][0]
         self._is_sliding_wrist = bool(self._info_data["is_sliding_wrist"][0][0])
 
-    def __read_opt_data(self):
+    def __read_opt_data(self, cl_index):
+        
+        print(colored("\nExctracting data from cluster n." + str(cl_index) + " -->\n", 
+                        "blue"))
 
         # reading stuff from opt data
-        self._coll_cnstrnt_data = [{}] * len(self._opt_data)
-        self.__get_data_matching("coll", self._coll_cnstrnt_data,
-                                self._opt_data, 
+        dictio = {}
+        self.__get_data_matching("coll", dictio, "coll_cnstrnt_data",
+                                self._loaders[cl_index].opt_data, 
                                 is_dict = True)
 
-        self._lambd_cnstrnt_data = [{}] * len(self._opt_data)
-        self.__get_data_matching("lambd", self._lambd_cnstrnt_data,
-                                self._opt_data, 
+        self.__get_data_matching("lambd", dictio, "lambd_cnstrnt_data",
+                                self._loaders[cl_index].opt_data, 
                                 is_dict = True)
 
-        self._pos_cnstrnt_data = [{}] * len(self._opt_data)
-        self.__get_data_matching("pos", self._pos_cnstrnt_data, 
-                                self._opt_data,
+        self.__get_data_matching("pos",  dictio, "pos_cnstrnt_data", 
+                                self._loaders[cl_index].opt_data,
                                 is_dict = True)
 
-        self._rot_cnstrnt_data = [{}] * len(self._opt_data)
-        self.__get_data_matching("rot", self._rot_cnstrnt_data, 
-                                self._opt_data,
+        self.__get_data_matching("rot",  dictio, "rot_cnstrnt_data",
+                                self._loaders[cl_index].opt_data,
                                 is_dict = True)
 
-        self._ws_lim_cnstrnt_data = [{}] * len(self._opt_data)
-        self.__get_data_matching("keep", self._ws_lim_cnstrnt_data, 
-                                self._opt_data,
+        self.__get_data_matching("keep",  dictio, "ws_lim_cnstrnt_data",
+                                self._loaders[cl_index].opt_data,
                                 is_dict = True)
 
-        self._codes_simmetry_cnstrt = [{}] * len(self._opt_data)
-        self.__get_data_matching("same", self._codes_simmetry_cnstrt, 
-                                self._opt_data,
+        self.__get_data_matching("same",  dictio, "codes_simmetry_cnstrt",
+                                self._loaders[cl_index].opt_data,
                                 is_dict = True)
 
-        self._mult_shoot_cnstrnt_data = [None] * len(self._opt_data)
-        self.__get_data_matching("multiple_shooting", self._mult_shoot_cnstrnt_data, 
-                                self._opt_data,
+        self.__get_data_matching("multiple_shooting",  dictio, "mult_shoot_cnstrnt_data", 
+                                self._loaders[cl_index].opt_data,
                                 patter_is_varname = True)
 
-        self._codes_var_cnstr = [None] * len(self._opt_data)
-        self.__get_data_matching("single_var", self._codes_var_cnstr, 
-                                self._opt_data,
+        self.__get_data_matching("single_var",  dictio, "codes_var_cnstr",
+                                self._loaders[cl_index].opt_data,
                                 is_dict = True)
 
-        self._niters2sol = [-1] * len(self._opt_data)
-        self.__get_data_matching("n_iter2sol", self._niters2sol, 
-                                self._opt_data,
+        self.__get_data_matching("n_iter2sol",  dictio, "niters2sol",
+                                self._loaders[cl_index].opt_data,
                                 patter_is_varname = True, 
                                 is_scalar = True)
 
-        self._opt_costs = [-1] * len(self._opt_data)
-        self.__get_data_matching("opt_cost", self._opt_costs,
-                                self._opt_data, 
+        self.__get_data_matching("opt_cost",  dictio, "opt_costs",
+                                self._loaders[cl_index].opt_data, 
                                 patter_is_varname = True, 
                                 is_scalar = True)
 
-        self._q = [None] * len(self._opt_data)
-        self.__get_data_matching("q", self._q, 
-                                self._opt_data,
+        self.__get_data_matching("q",  dictio, "q",
+                                self._loaders[cl_index].opt_data,
                                 patter_is_varname = True)
         
-        self._q_ig = [None] * len(self._opt_data)
-        self.__get_data_matching("q_ig", self._q_ig,
-                                self._opt_data, 
+        self.__get_data_matching("q_ig",  dictio, "q_ig",
+                                self._loaders[cl_index].opt_data, 
                                 patter_is_varname = True)
                                     
-        self._q_dot = [None] * len(self._opt_data)
-        self.__get_data_matching("q_dot", self._q_dot,
-                                self._opt_data, 
+        self.__get_data_matching("q_dot",  dictio, "q_dot",
+                                self._loaders[cl_index].opt_data, 
                                 patter_is_varname = True)
         
-        self._q_dot_ig = [None] * len(self._opt_data)
-        self.__get_data_matching("q_dot_ig", self._q_dot_ig, 
-                                self._opt_data,
+        self.__get_data_matching("q_dot_ig",  dictio, "q_dot_ig",
+                                self._loaders[cl_index].opt_data,
                                 patter_is_varname = True)
 
-        self._ms_indxs = [None] * len(self._opt_data)
-        self.__get_data_matching("multistart_index", self._ms_indxs, 
-                                self._opt_data,
+        self.__get_data_matching("multistart_index",  dictio, "ms_indxs",
+                                self._loaders[cl_index].opt_data,
                                 patter_is_varname = True, 
                                 is_scalar = True)
 
-        self._sol_times = [None] * len(self._opt_data)
-        self.__get_data_matching("solution_time", self._sol_times, 
-                                self._opt_data,
+        self.__get_data_matching("solution_time",  dictio, "sol_times",
+                                self._loaders[cl_index].opt_data,
                                 patter_is_varname = True, 
                                 is_scalar = True)
 
-        self._solve_failed = [None] * len(self._opt_data)
-        self.__get_data_matching("solve_failed", self._solve_failed,
-                                self._opt_data,
+        self.__get_data_matching("solve_failed",  dictio, "solve_failed",
+                                self._loaders[cl_index].opt_data,
                                 patter_is_varname = True, 
                                 is_scalar = True)
 
-        self._trial_idxs = [None] * len(self._opt_data)
-        self.__get_data_matching("trial_index", self._trial_idxs, 
-                                self._opt_data,
+        self.__get_data_matching("trial_index",  dictio, "trial_idxs",
+                                self._loaders[cl_index].opt_data,
                                 patter_is_varname = True, 
                                 is_scalar = True)
 
-        self._u_opt = [None] * len(self._opt_data)
-        self.__get_data_matching("u_opt", self._u_opt,
-                                self._opt_data, 
+        self.__get_data_matching("u_opt",  dictio, "u_opt",
+                                self._loaders[cl_index].opt_data, 
                                 patter_is_varname = True)
 
-        self._x_opt = [None] * len(self._opt_data)
-        self.__get_data_matching("x_opt", self._x_opt, 
-                                self._opt_data,
+        self.__get_data_matching("x_opt",  dictio, "x_opt", 
+                                self._loaders[cl_index].opt_data,
                                 patter_is_varname = True)
 
-        self._sols_run_ids = [None] * len(self._opt_data)
-        self.__get_data_matching("run_id", self._sols_run_ids, 
-                                self._opt_data,
+        self.__get_data_matching("run_id",  dictio, "sols_run_ids",
+                                self._loaders[cl_index].opt_data,
                                 patter_is_varname = True)
 
-        self._q_design = extract_q_design(self._q)
+        dictio["q_design"] = extract_q_design(dictio["q"])
+
+        dictio["q_jnt"] = extract_q_joint(dictio["q"])
+
+        dictio["q_dot_jnt"] = extract_q_joint(dictio["q_dot"])
+    
+        print("\n")
         
+        return dictio
+
+    def __get_data_matching(self, pattern: str,
+                            dest_dict: dict,
+                            dest_keyname: str,
+                            source: dict,
+                            is_dict = False, 
+                            patter_is_varname = False, 
+                            is_scalar = False):
+
+        print(colored("Exctracting data matching pattern \"" + pattern + "\"...", 
+                        "magenta"))
+
+        dest_dict[dest_keyname] = [{}] * len(source)
+
+        for i in range(len(source)):
+            
+            varnames_i = source[i].keys()
+
+            for varname in varnames_i:
+                
+                if not patter_is_varname:
+                    
+                    if pattern in varname:
+                    
+                        if is_dict and (type(dest_dict[dest_keyname][i]) == type({})):
+
+                            dest_dict[dest_keyname][i][varname] = source[i][varname]
+                        
+                        if not is_dict:
+                            
+                            dest_dict[dest_keyname][i] = source[i][varname]
+
+                else:
+
+                    if varname == pattern:
+                    
+                        if is_dict and (type(dest_dict[dest_keyname][i]) == type({})):
+
+                            dest_dict[dest_keyname][i][varname] = source[i][varname]
+                        
+                        if not is_dict:
+                            
+                            dest_dict[dest_keyname][i] = source[i][varname]
+        
+        if is_scalar:
+
+            try:
+                
+                self.__array2double_correction(dest_dict[dest_keyname])
+
+            except:
+                
+                print(colored("Failed to apply matrix to scalar correction", "yellow"))
+
+    def __array2double_correction(self, input_data):
+
+        for i in range(len(input_data)):
+
+            input_data[i] = input_data[i][0][0] # needed because scalar data are loaded as matrices
+
     def __load_clust_sols(self):
 
         for cl in range(self._n_clust):
             
             #clusters are loaded in order
-            self.loaders.append(LoadSols(self._load_path + self._clust_dir_basename + str(cl),\
-                                        base_info_path = self._load_path))  
+            self._loaders[cl] = LoadSols(self._load_path + self._clust_dir_basename + str(cl),\
+                                        base_info_path = self._load_path)
 
             opt_cost_aux_list = []
             opt_mult_aux_indeces = []
 
-            for opt_sol_index in range(len(self.loaders[cl].opt_data)):
+            for opt_sol_index in range(len(self._loaders[cl].opt_data)):
 
-                opt_cost_aux_list.append(self.loaders[cl].opt_data[opt_sol_index]["opt_cost"][0][0])
-                opt_mult_aux_indeces.append(self.loaders[cl].opt_data[opt_sol_index]["multistart_index"][0][0])
+                opt_cost_aux_list.append(self._loaders[cl].opt_data[opt_sol_index]["opt_cost"][0][0])
+                opt_mult_aux_indeces.append(self._loaders[cl].opt_data[opt_sol_index]["multistart_index"][0][0])
             
             self._second_lev_opt_costs.append(opt_cost_aux_list)
             self._second_lev_man_measure.append(compute_man_index(opt_cost_aux_list, self._n_int))
 
             self._opt_mult_indeces.append(opt_mult_aux_indeces)
 
+    def __extract_3rd_step_data(self):
+
+        for cl in range(self._n_clust):
+
+            self._3rd_step_opt_data[cl] = self.__read_opt_data(cl)
+            
     def __compute_second_lev_true_costs(self):
 
         for cl in range(self._n_clust):
@@ -1230,8 +1290,9 @@ class PostProcS3:
 
         self.second_lev_true_man = compute_man_index(self._second_lev_true_costs, self._n_int)
 
-        did_cost_improve = np.array(self._s2_cl_cands_opt_cost != self._second_lev_true_costs)
-        self.n_of_improved_costs = len(np.argwhere(did_cost_improve == True).flatten())
+        self._did_cost_improve = np.array(self._s2_cl_cands_opt_cost != self._second_lev_true_costs)
+
+        self.n_of_improved_costs = len(np.argwhere(self._did_cost_improve == True).flatten())
 
     def __compute_weighted_costs(self):
 
@@ -1298,15 +1359,31 @@ class PostProcS3:
 
         self._confidence_coeffs = [opt_sols_n_aux_list[cl]/max_n_cl_opt_sol for cl in range(self._n_clust)]
 
+    def __get_best_sol_index(self):
+
+        # gets the index of the best solution wrt the loaded refined solutions of the best cluster candidate
+        # -1 if the solution from the 2nd step is better (so no improvement in the cost ref. step)
+
+        best_refined_sol_index = -1
+        best_cl_cand_ref_costs = self._3rd_step_opt_data[self._best_second_lev_cl_index]["opt_costs"]
+        n_ref_samples = len(best_cl_cand_ref_costs)
+        for sample_idx in range(n_ref_samples):
+
+            if best_cl_cand_ref_costs[sample_idx] == self.best_3rd_step_cost:
+
+                best_refined_sol_index = sample_idx
+        
+        return best_refined_sol_index
+
     def __dump_results(self):
 
         if not os.path.isdir(self._dump_path):
 
             os.makedirs(self._dump_path)
 
-        task_info_dumper = SolDumper()
+        third_step_dumper = SolDumper()
 
-        stuff = {"unique_id": self._unique_id,\
+        info_stuff = {"unique_id": self._unique_id,\
                     "n_clust": self._n_clust,
                     "n_int": self._n_int,
                     "s2_cl_cand_inds": self._s2_cl_cand_inds,
@@ -1319,9 +1396,10 @@ class PostProcS3:
                     "confidence_coeffs": self._confidence_coeffs,
                     "second_lev_true_costs": self._second_lev_true_costs,
                     "n_of_improved_costs": self.n_of_improved_costs,
+                    "did_cost_improve": self._did_cost_improve,
                     "second_lev_weighted_costs": self._second_lev_weighted_costs,
-                    "best_cost": self.best_second_lev_cost,
-                    "best_cl_index": self.best_second_lev_cl_index,
+                    "best_cost": self.best_3rd_step_cost,
+                    "best_cl_index": self._best_second_lev_cl_index,
                     "best_man_measure": self.best_second_lev_man_measure,
                     "best_qcodes": self.best_second_lev_qcodes,
                     "best_weight_cost": self.best_second_lev_weight_cost,
@@ -1331,18 +1409,52 @@ class PostProcS3:
                     "rmse_man_meas": self._rmse_man_meas, 
                     "rmse_opt_cost":self._rmse_opt_cost}
 
-        task_info_dumper.add_storer(stuff, self._dump_path,\
-                                "2nd_lev_postproc" + str(self._unique_id),\
-                                False)        
+        
+        best_cost_index = self.__get_best_sol_index()
 
-        task_info_dumper.dump()
+        final_opt_cost = -1.0
+        if best_cost_index < 0:
+            
+            final_opt_cost = self._s2_cl_cands_opt_cost[self._best_second_lev_cl_index]
+            final_man_measure = compute_man_index([final_opt_cost], self._n_int)[0]
+            raise Exception("You still need to implement extraction of q from first step!!!!!!!!!!!")
+
+        else:
+
+            final_opt_cost = self._3rd_step_opt_data[self._best_second_lev_cl_index]["opt_costs"][best_cost_index]
+            final_man_measure = compute_man_index([final_opt_cost], self._n_int)[0]
+
+            final_opt_q = self._3rd_step_opt_data[self._best_second_lev_cl_index]["q"][best_cost_index]
+            final_opt_q_dot = self._3rd_step_opt_data[self._best_second_lev_cl_index]["q_dot"][best_cost_index]
+            final_opt_q_des = self._3rd_step_opt_data[self._best_second_lev_cl_index]["q_design"]
+            final_opt_q_jnt = self._3rd_step_opt_data[self._best_second_lev_cl_index]["q_jnt"][best_cost_index]
+            final_opt_q_dot_jnt = self._3rd_step_opt_data[self._best_second_lev_cl_index]["q_dot_jnt"][best_cost_index]
+
+        final_solution_info = {"opt_cost": final_opt_cost, 
+                                "perf_index": final_man_measure,
+                                "dt": self._task_dt,
+                                "q":final_opt_q,
+                                "q_dot": final_opt_q_dot,
+                                "q_des": final_opt_q_des,
+                                "q_jnt": final_opt_q_jnt,
+                                "q_dot_jnt": final_opt_q_dot_jnt}
+
+        third_step_dumper.add_storer(info_stuff, self._dump_path,\
+                                "3rd_step_postproc_results_" + str(self._unique_id),\
+                                False)    
+
+        third_step_dumper.add_storer(final_solution_info, self._dump_path,\
+                                "final_opt_solution_" + str(self._unique_id),\
+                                False) 
+
+        third_step_dumper.dump()
 
     def print_best_sol(self, weighted= False):
 
         if not weighted:
 
-            print("Best sol. cost: " + str(self.best_second_lev_cost))
-            print("Best sol. index : " + str(self.best_second_lev_cl_index))
+            print("Best sol. cost: " + str(self.best_3rd_step_cost))
+            print("Best sol. index : " + str(self._best_second_lev_cl_index))
             print("Best sol. man measure: " + str(self.best_second_lev_man_measure))
             print("Best q codes.: " + str(self.best_second_lev_qcodes))
             print("\n")

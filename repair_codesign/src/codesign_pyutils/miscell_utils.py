@@ -3,7 +3,7 @@ import numpy as np
 
 import os
 
-from codesign_pyutils.misc_definitions import get_design_map
+from codesign_pyutils.misc_definitions import get_design_map, get_coll_joint_map
 
 def str2bool(v: str):
   #susendberg's function
@@ -128,6 +128,38 @@ def extract_q_design(input_data: list):
         design_data[:, i] = input_data[i][design_indeces, 0] # design variables are constant over the nodes (index 0 is sufficient)
 
     return design_data
+
+def extract_q_joint(input_data: list):
+
+  design_var_map = get_design_map()
+
+  coll_aux_jnt_map = get_coll_joint_map()
+
+  n_tot_vars = 24
+  full_indxs_array = np.linspace(0, n_tot_vars - 1, n_tot_vars, dtype=int)
+  indxs_to_be_removed = [design_var_map["mount_h"],\
+  design_var_map["should_w_l"],\
+  design_var_map["should_roll_l"],\
+  design_var_map["wrist_off_l"], \
+  design_var_map["should_w_r"],\
+  design_var_map["should_roll_r"],\
+  design_var_map["wrist_off_r"], \
+  coll_aux_jnt_map["link5_coll_joint_l"], \
+  coll_aux_jnt_map["link5_coll_joint_r"]]
+
+  joint_q_indxs = np.delete(full_indxs_array, indxs_to_be_removed)
+
+  n_samples = len(input_data)
+  
+  joint_q_dim = n_tot_vars - n_samples
+
+  joint_data = [None] * n_samples
+  
+  for i in range(n_samples):
+
+      joint_data[i] = input_data[i][joint_q_indxs, :]
+
+  return joint_data
 
 def gen_y_sampling(n_y_samples: int, y_sampl_ub: np.double):
 
