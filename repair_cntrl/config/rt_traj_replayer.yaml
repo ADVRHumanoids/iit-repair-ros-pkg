@@ -38,6 +38,7 @@ xbotcore_plugins:
         params:
             mat_path: {value: /home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/replay_directory/opt/, type: string}
             mat_name: {value: prova.mat, type: string}
+            dump_dir: {value: /home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/replay_directory/opt/, type: string}
             stop_stiffness: {value: [4000.0, 
                                     4000.0, 4000.0, 4000.0, 4000.0, 4000.0, 4000.0, 4000.0, 
                                     4000.0, 4000.0, 4000.0, 4000.0, 4000.0, 4000.0, 4000.0], type: Eigen::VectorXd}

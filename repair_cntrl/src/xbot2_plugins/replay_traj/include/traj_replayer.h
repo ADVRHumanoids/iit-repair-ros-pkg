@@ -17,6 +17,8 @@
 
 #include <cartesian_interface/ros/RosServerClass.h>
 
+#include <vector>
+
 using namespace XBot;
 using namespace XBot::Cartesian;
 
@@ -62,7 +64,8 @@ public:
 
 private:
     
-    std::string _mat_path, _mat_name;
+    std::string _mat_path, _mat_name, _dump_dir;
+    std::vector<std::string> _jnt_names;
 
     Eigen::VectorXd _stop_stiffness, _stop_damping, 
                     _cntrl_mode, 
@@ -71,10 +74,12 @@ private:
                     _q_p_cmd, _q_p_dot_cmd, _tau_cmd, 
                     _traj_time_vector, _traj_ref_time_vector,
                     _effort_lims,
-                    _approach_traj_target;
+                    _approach_traj_target, 
+                    _traj_dt_before_res;
 
-    Eigen::MatrixXd _q_p_ref, _q_p_dot_ref, _tau_ref;
-
+    Eigen::MatrixXd _q_p_ref, _q_p_dot_ref, _tau_ref, 
+                    _q_p_bf_res, _q_p_dot_bf_res, _tau_bf_res;
+                    
     bool _looped_traj = false, 
         _approach_traj_started = false, _approach_traj_finished = false, 
         _traj_started = false, _traj_finished = false, 
@@ -92,7 +97,7 @@ private:
         _pause_time, _traj_pause_time = 2.0,
         _epsi_stiffness = 10, _epsi_damping = 0.1;
 
-    int _n_jnts_model, 
+    int _n_jnts_robot, 
         _sample_index = 0;
 
     plugin_utils::PeisekahTrans _approach_traj;

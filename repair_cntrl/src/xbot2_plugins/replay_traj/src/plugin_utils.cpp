@@ -356,7 +356,7 @@ TrajLoader::TrajLoader(std::string data_path, bool column_major, double resample
     }
     else
     {
-        load_data_from_csv(data_path);
+        throw std::invalid_argument(std::string("Reading data from CSV files is not supported anymore. Use .mat files instead!\n"));
     }
     
     check_loaded_data_dims();
@@ -437,7 +437,7 @@ Eigen::VectorXd TrajLoader::get_sample_times()
     return _sample_times;
 }
 
-void TrajLoader::get_loaded_traj(Eigen::MatrixXd& q_p, Eigen::MatrixXd& q_p_dot, Eigen::MatrixXd& tau, Eigen::MatrixXd& dt_opt)
+void TrajLoader::get_loaded_traj(Eigen::MatrixXd& q_p, Eigen::MatrixXd& q_p_dot, Eigen::MatrixXd& tau, Eigen::VectorXd& dt_opt)
 {
 
     q_p = _q_p;
@@ -544,40 +544,40 @@ void TrajLoader::check_loaded_data_dims()
 
 }
 
-void TrajLoader::load_data_from_csv(std::string data_path)
-{
+// void TrajLoader::load_data_from_csv(std::string data_path)
+// {
 
-    std::string q_p_path = data_path + _q_p_name + std::string(".csv");
-    std::string q_p_dot_path = data_path + _q_p_dot_name + std::string(".csv");
-    std::string tau_path = data_path + _efforts_name + std::string(".csv");
-    std::string dt_path = data_path + _dt_name + std::string(".csv");
+//     std::string q_p_path = data_path + _q_p_name + std::string(".csv");
+//     std::string q_p_dot_path = data_path + _q_p_dot_name + std::string(".csv");
+//     std::string tau_path = data_path + _efforts_name + std::string(".csv");
+//     std::string dt_path = data_path + _dt_name + std::string(".csv");
 
-    _q_p = read_data_from_csv(q_p_path);
-    _q_p_dot = read_data_from_csv(q_p_dot_path);
-    _tau = read_data_from_csv(tau_path);
+//     _q_p = read_data_from_csv(q_p_path);
+//     _q_p_dot = read_data_from_csv(q_p_dot_path);
+//     _tau = read_data_from_csv(tau_path);
 
-    Eigen::MatrixXd dt_opt_aux1 = read_data_from_csv(dt_path);
-    Eigen::Map<Eigen::VectorXd> dt_opt_aux2(dt_opt_aux1.data(), dt_opt_aux1.size()); // converting to vector
-    _dt_opt = dt_opt_aux2;
+//     Eigen::MatrixXd dt_opt_aux1 = read_data_from_csv(dt_path);
+//     Eigen::Map<Eigen::VectorXd> dt_opt_aux2(dt_opt_aux1.data(), dt_opt_aux1.size()); // converting to vector
+//     _dt_opt = dt_opt_aux2;
 
-    if (_q_p.size() == 0)
-    { // reading failed    
-        throw std::runtime_error(std::string("load_data_from_csv: Failed to find q_p at ") + q_p_path);
-    }
-    if (_q_p_dot.size() == 0)
-    { // reading failed    
-        throw std::runtime_error(std::string("load_data_from_csv: Failed to find q_p_dot at ") + q_p_dot_path);
-    }
-    if (_tau.size() == 0)
-    { // reading failed    
-        throw std::runtime_error(std::string("load_data_from_csv: Failed to find tau at ") + tau_path);
-    }
-    if (_dt_opt.size() == 0)
-    { // reading failed    
-        throw std::runtime_error(std::string("load_data_from_csv: Failed to find dt_opt at ") + dt_path);
-    }
+//     if (_q_p.size() == 0)
+//     { // reading failed    
+//         throw std::runtime_error(std::string("load_data_from_csv: Failed to find q_p at ") + q_p_path);
+//     }
+//     if (_q_p_dot.size() == 0)
+//     { // reading failed    
+//         throw std::runtime_error(std::string("load_data_from_csv: Failed to find q_p_dot at ") + q_p_dot_path);
+//     }
+//     if (_tau.size() == 0)
+//     { // reading failed    
+//         throw std::runtime_error(std::string("load_data_from_csv: Failed to find tau at ") + tau_path);
+//     }
+//     if (_dt_opt.size() == 0)
+//     { // reading failed    
+//         throw std::runtime_error(std::string("load_data_from_csv: Failed to find dt_opt at ") + dt_path);
+//     }
 
-}
+// }
 
 void TrajLoader::load_data_from_mat(std::string math_path)
 {

@@ -1433,12 +1433,14 @@ class PostProcS3:
 
         final_solution_info = {"opt_cost": final_opt_cost, 
                                 "perf_index": final_man_measure,
-                                "dt_opt": self._task_dt,
+                                "dt_opt": np.full((1, len(final_opt_q[0, :] - 1)), self._task_dt).flatten(),
+                                # dt opt is build using replicated values of _task_dt (useful for sim. purposes) 
                                 "q":final_opt_q,
                                 "q_dot": final_opt_q_dot,
                                 "q_des": final_opt_q_des,
                                 "q_p": final_opt_q_jnt,
-                                "q_p_dot": final_opt_q_dot_jnt, 
+                                "q_p_dot": np.c_(final_opt_q_dot_jnt, np.zeros((len(final_opt_q_dot_jnt[:, 0]), 1))),
+                                # adding one column to make q and q_dot dimenions equal (useful for sim. purposes) 
                                 "tau": np.zeros((len(final_opt_q_jnt[:, 0]), len(final_opt_q_dot_jnt[0, :])))}
 
         third_step_dumper.add_storer(info_stuff, self._dump_path,\

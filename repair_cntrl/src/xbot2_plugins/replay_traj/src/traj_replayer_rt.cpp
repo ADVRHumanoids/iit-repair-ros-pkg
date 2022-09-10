@@ -1,5 +1,7 @@
 #include "traj_replayer.h"
 
+#include "matlogger2/mat_data.h"
+
 #include <math.h> 
 
 void TrajReplayerRt::init_clocks()
@@ -59,6 +61,7 @@ void TrajReplayerRt::get_params_from_config()
 
     _mat_path = getParamOrThrow<std::string>("~mat_path"); 
     _mat_name = getParamOrThrow<std::string>("~mat_name"); 
+    _dump_dir = getParamOrThrow<std::string>("~dump_dir"); 
     _stop_stiffness = getParamOrThrow<Eigen::VectorXd>("~stop_stiffness");
     _stop_damping = getParamOrThrow<Eigen::VectorXd>("~stop_damping");
     _delta_effort_lim = getParamOrThrow<double>("~delta_effort_lim");
@@ -91,29 +94,37 @@ void TrajReplayerRt::init_dump_logger()
     MatLogger2::Options opt;
     opt.default_buffer_size = 1e6; // set default buffer size
     opt.enable_compression = true; // enable ZLIB compression
-    _dump_logger = MatLogger2::MakeLogger("/tmp/TrajReplayerRt", opt); // date-time automatically appended
+    _dump_logger = MatLogger2::MakeLogger(_dump_dir + "TrajReplayerRt", opt); // date-time automatically appended
     _dump_logger->set_buffer_mode(XBot::VariableBuffer::Mode::circular_buffer);
 
     _dump_logger->add("plugin_dt", _plugin_dt);
+
+    _dump_logger->add("traj_dt_before_res", _traj_dt_before_res);
+     _dump_logger->add("q_p_bf_res", _q_p_bf_res);
+    _dump_logger->add("q_p_dot_bf_res", _q_p_dot_bf_res);
+    _dump_logger->add("tau_bf_res", _tau_bf_res);
+
     _dump_logger->add("stop_stiffness", _stop_stiffness);
     _dump_logger->add("stop_damping", _stop_damping);
 
     _dump_logger->create("plugin_time", 1);
-    _dump_logger->create("replay_stiffness", _n_jnts_model);
-    _dump_logger->create("replay_damping", _n_jnts_model);
-    _dump_logger->create("q_p_meas", _n_jnts_model);
-    _dump_logger->create("q_p_dot_meas", _n_jnts_model);
-    _dump_logger->create("tau_meas", _n_jnts_model);
-    _dump_logger->create("q_p_cmd", _n_jnts_model);
-    _dump_logger->create("q_p_dot_cmd", _n_jnts_model);
-    _dump_logger->create("tau_cmd", _n_jnts_model);
+    _dump_logger->create("replay_stiffness", _n_jnts_robot);
+    _dump_logger->create("replay_damping", _n_jnts_robot);
+    _dump_logger->create("q_p_meas", _n_jnts_robot);
+    _dump_logger->create("q_p_dot_meas", _n_jnts_robot);
+    _dump_logger->create("tau_meas", _n_jnts_robot);
+    _dump_logger->create("q_p_cmd", _n_jnts_robot);
+    _dump_logger->create("q_p_dot_cmd", _n_jnts_robot);
+    _dump_logger->create("tau_cmd", _n_jnts_robot);
 
-    auto dscrptn_files_cell = XBot::matlogger2::MatData::make_cell(4);
-    dscrptn_files_cell[0] = _mat_path;
-    dscrptn_files_cell[1] = _mat_name;
-    dscrptn_files_cell[2] = _robot->getUrdfPath();
-    dscrptn_files_cell[3] = _robot->getSrdfPath();
-    _dump_logger->save("description_files_path", dscrptn_files_cell);
+    
+    // auto jnt_names_cell = XBot::matlogger2::MatData::make_cell(_n_jnts_robot);
+    // for(int i = 0; i < _n_jnts_robot; i++)
+    // {
+    //     jnt_names_cell[i] = _jnt_names[i];
+    // }
+
+    // _dump_logger->save("jnt_names_cell", jnt_names_cell);
 
 }
 
@@ -189,10 +200,10 @@ void TrajReplayerRt::load_opt_data()
 
     int n_traj_jnts = _traj.get_n_jnts();
 
-    if(n_traj_jnts != _n_jnts_model) 
+    if(n_traj_jnts != _n_jnts_robot) 
     {
         jwarn("The loaded trajectory has {} joints, while the robot has {} .\n Make sure to somehow select the right components!!",
-        n_traj_jnts, _n_jnts_model);
+        n_traj_jnts, _n_jnts_robot);
     }
 
     // resample input data at the plugin frequency (for now it very crude implementation)
@@ -200,14 +211,14 @@ void TrajReplayerRt::load_opt_data()
     _traj.resample(_plugin_dt, _q_p_ref, _q_p_dot_ref, _tau_ref); // just brute for linear interpolation for now (for safety, better to always use the same plugin_dt as the loaded trajectory)
     _traj_ref_time_vector = _traj.compute_res_times(_plugin_dt); // used for post-processing
 
-
+    _traj.get_loaded_traj(_q_p_bf_res, _q_p_dot_bf_res, _tau_bf_res, _traj_dt_before_res);
 }
 
 void TrajReplayerRt::saturate_effort()
 {
     int input_sign = 1; // defaults to positive sign 
 
-    for(int i = 0; i < _n_jnts_model; i++)
+    for(int i = 0; i < _n_jnts_robot; i++)
     {
         if (abs(_tau_cmd[i]) >= abs(_effort_lims[i]))
         {
@@ -363,7 +374,14 @@ bool TrajReplayerRt::on_initialize()
     
     _plugin_dt = getPeriodSec();
 
-    _n_jnts_model = _robot->getJointNum();
+    _n_jnts_robot = _robot->getJointNum();
+
+    // std::map<std::string, XBot::KinematicChain::Ptr> chain_map = _robot->getChainMap();
+
+    // for (std::map<std::string, XBot::KinematicChain::Ptr>::iterator it = chain_map.begin(); it != chain_map.end(); ++it)
+    // {
+    //     _jnt_names.push_back(it->first);
+    // }
 
     _robot->getEffortLimits(_effort_lims);
 

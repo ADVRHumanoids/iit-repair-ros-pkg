@@ -388,10 +388,21 @@
         <visual name="arm_${id}_tcp_visual">
 
             <origin xyz="0 0 ${object_size}" rpy="0 0 0"/>
+            
+            <xacro:if value="${id == 1}">
 
-            <geometry>
-                <mesh filename="package://repair_urdf/meshes/link_7_sh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-            </geometry>
+                <geometry>
+                    <mesh filename="package://repair_urdf/meshes/link_7_sh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                </geometry>
+
+            </xacro:if>
+            <xacro:unless value="${id == 1}">
+
+                <geometry>
+                    <mesh filename="package://repair_urdf/meshes/link_7_rh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                </geometry>>
+
+            </xacro:unless>
 
             <material name="dark"/>
 
