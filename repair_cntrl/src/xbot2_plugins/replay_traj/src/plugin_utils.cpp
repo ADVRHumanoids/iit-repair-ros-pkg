@@ -463,6 +463,9 @@ void TrajLoader::resample(double res_dt, Eigen::MatrixXd& q_p_res, Eigen::Matrix
     tau_res.col(tau_res.cols() - 1) = Eigen::VectorXd::Zero(_n_jnts); // to be able to potentially send the whole trajectory concurrently
     // // a dummy null control input is added on the last sample time
 
+    // updating number of nodes
+    _n_nodes = get_n_samples(q_p_res);
+
 }
 
 std::string TrajLoader::get_file_extension(std::string file)

@@ -71,7 +71,7 @@ void TrajReplayerRt::get_params_from_config()
     _send_pos_ref = getParamOrThrow<bool>("~send_pos_ref");
     _send_vel_ref = getParamOrThrow<bool>("~send_vel_ref");
     _send_eff_ref = getParamOrThrow<bool>("~send_eff_ref");
-
+    
 }
 
 void TrajReplayerRt::update_state()
@@ -259,6 +259,9 @@ void TrajReplayerRt::send_approach_trajectory()
         _traj_started = true; // start to publish the loaded trajectory starting from the next control loop
         _sample_index = 0; // reset publish index (will be used to publish the loaded trajectory)
 
+        jhigh().jprint(fmt::fg(fmt::terminal_color::magenta),
+                   "\n Approach trajectory finished...\n");
+
     }
     else
     {
@@ -279,7 +282,9 @@ void TrajReplayerRt::send_trajectory()
         
         _sample_index = 0;
         _approach_traj_started = true; // flag signaling the start of the approach trajectory
-       
+        
+        jhigh().jprint(fmt::fg(fmt::terminal_color::magenta),
+                "\n Starting approach traj. ...\n");
     }
 
     // Loop again thorugh the trajectory, if it is finished and the associated flag is active
@@ -307,7 +312,8 @@ void TrajReplayerRt::send_trajectory()
     // from the current state
     if (_recompute_approach_traj)
     {
-        
+        jhigh().jprint(fmt::fg(fmt::terminal_color::magenta),
+                "\n Recomputing approach trajectory ...\n");
         compute_approach_traj(); // necessary if traj replay is stopped and started again from service (probably breaks rt performance)
     }
 
@@ -328,6 +334,8 @@ void TrajReplayerRt::send_trajectory()
             _traj_finished = true;
             _sample_index = 0; // reset publish index (will be used to publish the loaded trajectory)
             
+            jhigh().jprint(fmt::fg(fmt::terminal_color::magenta),
+                "\n Finished replaying trajectory ...\n");
 
         }
         else
