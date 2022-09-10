@@ -243,6 +243,10 @@ class LogPlotter:
 
         self.__make_interp_plot()
 
+        self.__make_vel_plots()
+
+        self.__make_effort_plots()
+
     def __make_interp_plot(self):
     
         # sol time
@@ -290,10 +294,9 @@ class LogPlotter:
             title = leg_title)
         leg_t.set_draggable(True)
         ax_sol_t[2].set_xlabel(r"time [s]")
-        ax_sol_t[2].set_ylabel(r"joint position [rad]")
+        ax_sol_t[2].set_ylabel(r"joint position [m]")
         ax_sol_t[2].set_title(r"Sliding guide raw VS linear interpolated positions", fontdict=None, loc='center')
         ax_sol_t[2].grid()
-    
 
     def __make_pos_plots(self):
 
@@ -342,8 +345,116 @@ class LogPlotter:
             title = leg_title)
         leg_t.set_draggable(True)
         ax_sol_t[2].set_xlabel(r"time [s]")
-        ax_sol_t[2].set_ylabel(r"joint position [rad]")
+        ax_sol_t[2].set_ylabel(r"joint position [m]")
         ax_sol_t[2].set_title(r"Sliding guide position VS reference", fontdict=None, loc='center')
+        ax_sol_t[2].grid()
+
+    def __make_vel_plots(self):
+
+        # sol time
+        leg_title = "Joint names:"
+        _, ax_sol_t = plt.subplots(3)
+        for i in range(self._n_arm_dofs):
+
+            ax_sol_t[0].plot(self._plugin_time, self._q_p_dot_meas1[i, :], label = self._joint_names1[i],\
+                linewidth=2)
+
+        for i in range(self._n_arm_dofs):
+
+            ax_sol_t[0].plot(self._plugin_time, self._q_p_dot_cmd1[i, :], label = self._joint_names1[i] + " reference",\
+                linestyle='dashed', linewidth=2)
+        leg_t = ax_sol_t[0].legend(loc="upper right", 
+            title = leg_title)
+        leg_t.set_draggable(True)
+        # ax_sol_t[0].set_xlabel(r"time [s]")
+        ax_sol_t[0].set_ylabel(r"joint velocities [rad]")
+        ax_sol_t[0].set_title(r"Arm 1 joint velocities VS references", fontdict=None, loc='center')
+        ax_sol_t[0].grid()
+
+        for i in range(self._n_arm_dofs):
+
+            ax_sol_t[1].plot(self._plugin_time, self._q_p_dot_meas2[i, :], label = self._joint_names2[i],\
+                linewidth=2, markersize=12)
+
+        for i in range(self._n_arm_dofs):
+
+            ax_sol_t[1].plot(self._plugin_time, self._q_p_dot_cmd2[i, :], label = self._joint_names2[i] + " reference",\
+                linestyle='dashed', linewidth=2)
+        leg_t = ax_sol_t[1].legend(loc="upper right", 
+            title = leg_title)
+        leg_t.set_draggable(True)
+        # ax_sol_t[1].set_xlabel(r"time [s]")
+        ax_sol_t[1].set_ylabel(r"joint velocities [rad]")
+        ax_sol_t[1].set_title(r"Arm 2 joint velocities VS references", fontdict=None, loc='center')
+        ax_sol_t[1].grid()
+
+        ax_sol_t[2].plot(self._plugin_time, self._q_p_dot_meas_x, label = self._joint_names[0],\
+            linewidth=2, markersize=12)
+        ax_sol_t[2].plot(self._plugin_time, self._q_p_cmd_x, label = self._joint_names[0] + " reference",\
+            linestyle='dashed', linewidth=2)
+        leg_t = ax_sol_t[2].legend(loc="upper right", 
+            title = leg_title)
+        leg_t.set_draggable(True)
+        ax_sol_t[2].set_xlabel(r"time [s]")
+        ax_sol_t[2].set_ylabel(r"joint velocity [rad]")
+        ax_sol_t[2].set_title(r"Sliding guide velocity VS reference", fontdict=None, loc='center')
+        ax_sol_t[2].grid()
+
+    def __make_effort_plots(self, show_refs = False):
+
+        # sol time
+        leg_title = "Joint names:"
+        _, ax_sol_t = plt.subplots(3)
+        for i in range(self._n_arm_dofs):
+
+            ax_sol_t[0].plot(self._plugin_time, self._tau_meas1[i, :], label = self._joint_names1[i],\
+                linewidth=2)
+
+        if show_refs:
+            for i in range(self._n_arm_dofs):
+
+                ax_sol_t[0].plot(self._plugin_time, self._tau_cmd1[i, :], label = self._joint_names1[i] + " reference",\
+                    linestyle='dashed', linewidth=2)
+
+        leg_t = ax_sol_t[0].legend(loc="upper right", 
+            title = leg_title)
+        leg_t.set_draggable(True)
+        # ax_sol_t[0].set_xlabel(r"time [s]")
+        ax_sol_t[0].set_ylabel(r"joint efforts [N m]")
+        ax_sol_t[0].set_title(r"Arm 1 imp. control joint efforts VS references", fontdict=None, loc='center')
+        ax_sol_t[0].grid()
+
+        for i in range(self._n_arm_dofs):
+
+            ax_sol_t[1].plot(self._plugin_time, self._tau_meas2[i, :], label = self._joint_names2[i],\
+                linewidth=2)
+
+        if show_refs:
+            for i in range(self._n_arm_dofs):
+
+                ax_sol_t[1].plot(self._plugin_time, self._tau_cmd2[i, :], label = self._joint_names2[i] + " reference",\
+                    linestyle='dashed', linewidth=2)
+        leg_t = ax_sol_t[1].legend(loc="upper right", 
+            title = leg_title)
+        leg_t.set_draggable(True)
+        # ax_sol_t[1].set_xlabel(r"time [s]")
+        ax_sol_t[1].set_ylabel(r"joint efforts [rad]")
+        ax_sol_t[1].set_title(r"Arm 2 imp.control joint efforts VS references", fontdict=None, loc='center')
+        ax_sol_t[1].grid()
+
+        ax_sol_t[2].plot(self._plugin_time, self._tau_meas_x, label = self._joint_names2[i],\
+                linewidth=2)
+        
+        if show_refs:
+            ax_sol_t[2].plot(self._plugin_time, self._tau_cmd_x, label = self._joint_names2[i] + " reference",\
+                linestyle='dashed', linewidth=2)
+
+        leg_t = ax_sol_t[2].legend(loc="upper right", 
+            title = leg_title)
+        leg_t.set_draggable(True)
+        ax_sol_t[2].set_xlabel(r"time [s]")
+        ax_sol_t[2].set_ylabel(r"joint effort [N]")
+        ax_sol_t[2].set_title(r"Sliding guide imp. control effort VS reference", fontdict=None, loc='center')
         ax_sol_t[2].grid()
 
     def show_plots(self):
