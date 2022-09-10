@@ -59,7 +59,6 @@ void TrajReplayerRt::get_params_from_config()
 
     _mat_path = getParamOrThrow<std::string>("~mat_path"); 
     _mat_name = getParamOrThrow<std::string>("~mat_name"); 
-    _resample = getParamOrThrow<bool>("~resample"); 
     _stop_stiffness = getParamOrThrow<Eigen::VectorXd>("~stop_stiffness");
     _stop_damping = getParamOrThrow<Eigen::VectorXd>("~stop_damping");
     _delta_effort_lim = getParamOrThrow<double>("~delta_effort_lim");
@@ -123,24 +122,16 @@ void TrajReplayerRt::add_data2dump_logger()
     
     _dump_logger->add("replay_stiffness", _replay_stiffness);
     _dump_logger->add("replay_damping", _replay_damping);
+
     _dump_logger->add("q_p_meas", _q_p_meas);
     _dump_logger->add("q_p_dot_meas", _q_p_dot_meas);
     _dump_logger->add("tau_meas", _tau_meas);
+
     _dump_logger->add("plugin_time", _loop_time);
 
-    if (_traj_started && !_traj_finished)
-    { // trajectory is being published
-        
-        if (_sample_index <= (_traj.get_n_nodes() - 1))
-        { // commands have been computed
-                
-            _dump_logger->add("q_p_cmd", _q_p_cmd.tail(_n_jnts_model));
-            _dump_logger->add("q_p_dot_cmd", _q_p_dot_cmd.tail(_n_jnts_model));
-            _dump_logger->add("tau_cmd", _tau_cmd.tail(_n_jnts_model));
-
-        }
-
-    }
+    _dump_logger->add("q_p_cmd", _q_p_cmd);
+    _dump_logger->add("q_p_dot_cmd", _q_p_dot_cmd);
+    _dump_logger->add("tau_cmd", _tau_cmd);
 
 }
 
@@ -204,23 +195,12 @@ void TrajReplayerRt::load_opt_data()
         n_traj_jnts, _n_jnts_model);
     }
 
-    if (_resample)
-    { // resample input data at the plugin frequency (for now it very crude implementation)
+    // resample input data at the plugin frequency (for now it very crude implementation)
 
-        _traj.resample(_plugin_dt, _q_p_ref, _q_p_dot_ref, _tau_ref); // just brute for linear interpolation for now (for safety, better to always use the same plugin_dt as the loaded trajectory)
+    _traj.resample(_plugin_dt, _q_p_ref, _q_p_dot_ref, _tau_ref); // just brute for linear interpolation for now (for safety, better to always use the same plugin_dt as the loaded trajectory)
+    _traj_ref_time_vector = _traj.compute_res_times(_plugin_dt); // used for post-processing
 
-    }
-    else
-    { // load raw data without changes
 
-        Eigen::MatrixXd dt_opt;
-
-        _traj.get_loaded_traj(_q_p_ref, _q_p_dot_ref, _tau_ref, dt_opt);
-
-        jwarn("The loaded trajectory was generated with a dt of {} s, while the rt plugin runs at {} .\n ",
-        dt_opt(0), _plugin_dt);
-
-    }
 }
 
 void TrajReplayerRt::saturate_effort()
@@ -369,6 +349,8 @@ void TrajReplayerRt::send_trajectory()
             saturate_effort(); // perform input torque saturation
 
             _robot->move(); // Send commands to the robot
+
+            add_data2dump_logger();
         
         }
 
@@ -392,6 +374,7 @@ bool TrajReplayerRt::on_initialize()
     load_opt_data(); // load trajectory from file (to be placed here in starting because otherwise
     // a seg fault will arise)
 
+
     return true;
 }
 
@@ -399,6 +382,12 @@ void TrajReplayerRt::starting()
 {
 
     init_dump_logger(); // needs to be here
+
+    _dump_logger->add("traj_ref_time_vector", _traj_ref_time_vector);
+    
+    _dump_logger->add("q_p_ref", _q_p_ref);
+    _dump_logger->add("q_p_dot_ref", _q_p_dot_ref);
+    _dump_logger->add("tau_ref", _tau_ref);
 
     reset_flags();
 
@@ -432,8 +421,6 @@ void TrajReplayerRt::run()
         send_trajectory();
     }
     
-    add_data2dump_logger(); // add data to the logger
-
     update_clocks(); // last, update the clocks (loop + any additional one)
 
     if (_first_run == true & _replay)

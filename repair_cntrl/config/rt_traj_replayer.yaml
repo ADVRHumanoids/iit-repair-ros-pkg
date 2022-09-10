@@ -38,11 +38,10 @@ xbotcore_plugins:
         params:
             mat_path: {value: /home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/replay_directory/opt/, type: string}
             mat_name: {value: prova.mat, type: string}
-            resample: {value: true, type: bool}
             stop_stiffness: {value: [4000.0, 
                                     4000.0, 4000.0, 4000.0, 4000.0, 4000.0, 4000.0, 4000.0, 
                                     4000.0, 4000.0, 4000.0, 4000.0, 4000.0, 4000.0, 4000.0], type: Eigen::VectorXd}
-            stop_damping: {value: [70, 
+            stop_damping: {value: [100, 
                                     70, 70, 70, 70, 70, 70, 70, 
                                     70, 70, 70, 70, 70, 70, 70], type: Eigen::VectorXd}
             delta_effort_lim: {value: 1e-6, type: double} 
@@ -50,7 +49,7 @@ xbotcore_plugins:
             replay_stiffness: {value: [4000.0, 
                                     4000.0, 4000.0, 4000.0, 4000.0, 4000.0, 4000.0, 4000.0, 
                                     4000.0, 4000.0, 4000.0, 4000.0, 4000.0, 4000.0, 4000.0], type: Eigen::VectorXd}
-            replay_damping: {value: [70, 
+            replay_damping: {value: [100, 
                                     70, 70, 70, 70, 70, 70, 70, 
                                     70, 70, 70, 70, 70, 70, 70], type: Eigen::VectorXd}
             send_pos_ref: {value: true, type: bool}
@@ -61,7 +60,7 @@ xbotcore_plugins:
 
 # global parameters
 xbotcore_param:
-    /jm/tx_filter_autostart: {value: false, type: bool}
+    /jm/tx_filter_autostart: {value: true, type: bool}
     /jm/tx_filter_cutoff: {value: 2.0, type: double}
     /jm/enable_safety: {value: false, type: bool}  # safety checks (can be disabled in running a simulation. DO NOT DO THIS ON A REAL PROTOTYPE)
 

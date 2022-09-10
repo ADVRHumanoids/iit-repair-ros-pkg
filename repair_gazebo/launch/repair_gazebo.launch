@@ -12,8 +12,9 @@
   <arg name="gen_coll" default="false"/>
   <arg name="load_sol" default="true"/>
   <arg name="xbot" default="true"/>
+  <arg name="self_collide_gz" default="false"/>
   <arg name="shorten_table_legs_coll" default="true"/>
-
+  
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find repair_gazebo)/worlds/repair.world"/>
     <arg name="debug" value="$(arg debug)" />
@@ -32,7 +33,8 @@
     show_coll:=$(arg gen_coll)
     load_sol:=$(arg load_sol)
     xbot:=$(arg xbot)
-    shorten_table_legs_coll:=$(arg shorten_table_legs_coll)" />
+    shorten_table_legs_coll:=$(arg shorten_table_legs_coll)
+    self_collide_gz:=$(arg self_collide_gz)" />
   
   <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
   <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" args="-urdf -model repair_full -param robot_description"/>

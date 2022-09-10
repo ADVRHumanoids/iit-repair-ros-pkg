@@ -1407,7 +1407,8 @@ class PostProcS3:
                     "best_weight_man_measure": self.best_second_lev_weight_man_measure,
                     "best_weight_qcodes": self.best_second_lev_weight_qcodes,
                     "rmse_man_meas": self._rmse_man_meas, 
-                    "rmse_opt_cost":self._rmse_opt_cost}
+                    "rmse_opt_cost":self._rmse_opt_cost, 
+                    "nodes_list": self._nodes_list}
 
         
         best_cost_index = self.__get_best_sol_index()

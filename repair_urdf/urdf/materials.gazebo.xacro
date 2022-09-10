@@ -8,25 +8,25 @@
 	<material>Gazebo/BlackTransparent   </material>
 </gazebo>
 <gazebo reference="arm_${id}_link_2">
-	<material>Gazebo/DarkMagentaTransparent   </material>
+	<material>Gazebo/GreenTransparent    </material>
 </gazebo>
 <gazebo reference="arm_${id}_link_3">
 	<material>Gazebo/BlackTransparent   </material>
 </gazebo>
 <gazebo reference="arm_${id}_link_4">
-	<material>Gazebo/DarkMagentaTransparent   </material>
+	<material>Gazebo/GreenTransparent    </material>
 </gazebo>
 <gazebo reference="arm_${id}_link_5">
 	<material>Gazebo/BlackTransparent  </material>
 </gazebo>
 <gazebo reference="arm_${id}_link_6">
-	<material>Gazebo/DarkMagentaTransparent   </material>
+	<material>Gazebo/GreenTransparent    </material>
 </gazebo>
 <gazebo reference="arm_${id}_link_7">
 	<material>Gazebo/BlackTransparent  </material>
 </gazebo>
 <gazebo reference="arm_${id}_tcp">
-	<material>Gazebo/BlackTransparent   </material>
+	<material>Gazebo/GreyTransparent    </material>
 </gazebo>
 
 </xacro:macro>

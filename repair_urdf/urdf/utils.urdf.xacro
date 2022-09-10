@@ -58,4 +58,15 @@ without problems.-->
     </inertial>
 </xacro:macro>
 
+<!-- just used to write more compactly the self collision gazebo ref tag -->
+<xacro:macro name="gz_self_collide" params="collide">
+
+    <xacro:if value="${collide == True}">
+
+        <self_collide>1</self_collide>
+
+    </xacro:if>
+
+</xacro:macro>
+
 </robot>

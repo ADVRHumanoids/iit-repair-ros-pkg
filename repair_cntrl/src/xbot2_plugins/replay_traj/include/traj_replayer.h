@@ -69,7 +69,7 @@ private:
                     _replay_stiffness, _replay_damping, 
                     _q_p_meas, _q_p_dot_meas, _tau_meas,
                     _q_p_cmd, _q_p_dot_cmd, _tau_cmd, 
-                    _traj_time_vector, 
+                    _traj_time_vector, _traj_ref_time_vector,
                     _effort_lims,
                     _approach_traj_target;
 
@@ -83,8 +83,7 @@ private:
         _send_pos_ref = true, _send_vel_ref = false,  _send_eff_ref = false,
         _replay = false,
         _recompute_approach_traj = true,
-        _is_first_jnt_passive = false, 
-        _resample = false;
+        _is_first_jnt_passive = false;
 
     double _delta_effort_lim,
         _nominal_traj_dt, _plugin_dt,
