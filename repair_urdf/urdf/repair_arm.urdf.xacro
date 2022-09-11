@@ -14,7 +14,7 @@
 
     <xacro:include filename="$(find repair_urdf)/urdf/repair_arm_coll.urdf.xacro"/>
 
-    <xacro:repair_coll load_sol="${load_sol}"/> 
+    <xacro:repair_arm_coll load_sol="${load_sol}"/> 
 
 </xacro:if>
 
@@ -56,13 +56,23 @@
 
         <collision name="arm_${id}_link_1_collision">
             <geometry>
-                <mesh filename="package://repair_urdf/meshes/link_1.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                <xacro:if value="$(arg load_sol)">
+                    <mesh filename="package://repair_urdf/meshes/optimized/link_1.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                </xacro:if>
+                <xacro:unless value="$(arg load_sol)">
+                    <mesh filename="package://repair_urdf/meshes/base_meshes/link_1.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                </xacro:unless>
             </geometry>
             <material name="dark"/>
         </collision>
         <visual name="arm_${id}_link_1_visual">
             <geometry>
-                <mesh filename="package://repair_urdf/meshes/link_1.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                <xacro:if value="$(arg load_sol)">
+                    <mesh filename="package://repair_urdf/meshes/optimized/link_1.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                </xacro:if>
+                <xacro:unless value="$(arg load_sol)">
+                    <mesh filename="package://repair_urdf/meshes/base_meshes/link_1.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                </xacro:unless>
             </geometry>
             <material name="dark"/>
         </visual>
@@ -73,13 +83,23 @@
 
         <collision name="arm_${id}_link_1_collision">
             <geometry>
-                <mesh filename="package://repair_urdf/meshes/link_1_mirror.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                <xacro:if value="$(arg load_sol)">
+                    <mesh filename="package://repair_urdf/meshes/optimized/link_1_mirror.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                </xacro:if>
+                <xacro:unless value="$(arg load_sol)">
+                    <mesh filename="package://repair_urdf/meshes/base_meshes/link_1_mirror.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                </xacro:unless>
             </geometry>
             <material name="dark"/>
         </collision>
         <visual name="arm_${id}_link_1_visual">
             <geometry>
-                <mesh filename="package://repair_urdf/meshes/link_1_mirror.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                <xacro:if value="$(arg load_sol)">
+                    <mesh filename="package://repair_urdf/meshes/optimized/link_1_mirror.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                </xacro:if>
+                <xacro:unless value="$(arg load_sol)">
+                    <mesh filename="package://repair_urdf/meshes/base_meshes/link_1_mirror.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                </xacro:unless>
             </geometry>
             <material name="dark"/>
         </visual>
@@ -119,13 +139,23 @@
 
     <collision name="arm_${id}_link_2_collision">
         <geometry>
-            <mesh filename="package://repair_urdf/meshes/link_2.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            <xacro:if value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/optimized/link_2.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:if>
+            <xacro:unless value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/base_meshes/link_2.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:unless>
         </geometry>
         <material name="dark"/>
     </collision>
     <visual name="arm_${id}_link_2_visual">
         <geometry>
-            <mesh filename="package://repair_urdf/meshes/link_2.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            <xacro:if value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/optimized/link_2.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:if>
+            <xacro:unless value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/base_meshes/link_2.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:unless>
         </geometry>
         <material name="dark"/>
     </visual>
@@ -162,14 +192,24 @@
 
     <collision name="arm_${id}_link_3_collision">
         <geometry>
-            <mesh filename="package://repair_urdf/meshes/link_3.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            <xacro:if value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/optimized/link_3.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:if>
+            <xacro:unless value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/base_meshes/link_3.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:unless>
         </geometry>
         <material name="dark"/>
     </collision>
     
     <visual name="arm_${id}_link_3_visual">
         <geometry>
-            <mesh filename="package://repair_urdf/meshes/link_3.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            <xacro:if value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/optimized/link_3.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:if>
+            <xacro:unless value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/base_meshes/link_3.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:unless>
         </geometry>
         <material name="dark"/>
     </visual>
@@ -196,14 +236,24 @@
 
     <collision name="arm_${id}_link_4_collision">
         <geometry>
-            <mesh filename="package://repair_urdf/meshes/link_4.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            <xacro:if value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/optimized/link_4.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:if>
+            <xacro:unless value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/base_meshes/link_4.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:unless>
         </geometry>
         <material name="dark"/>
     </collision>
 
     <visual name="arm_${id}_link_4_visual">
         <geometry>
-            <mesh filename="package://repair_urdf/meshes/link_4.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            <xacro:if value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/optimized/link_4.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:if>
+            <xacro:unless value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/base_meshes/link_4.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:unless>
         </geometry>
         <material name="dark"/>
     </visual>
@@ -228,13 +278,23 @@
 
     <collision name="arm_${id}_link_5_collision">
         <geometry>
-            <mesh filename="package://repair_urdf/meshes/link_5.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            <xacro:if value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/optimized/link_5.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:if>
+            <xacro:unless value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/base_meshes/link_5.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:unless>
         </geometry>
         <material name="dark"/>
     </collision>
     <visual name="arm_${id}_link_5_visual">
         <geometry>
-            <mesh filename="package://repair_urdf/meshes/link_5.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            <xacro:if value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/optimized/link_5.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:if>
+            <xacro:unless value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/base_meshes/link_5.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:unless>
         </geometry>
         <material name="dark"/>
     </visual>
@@ -303,14 +363,24 @@
 
     <collision name="arm_${id}_link_6_collision">
         <geometry>
-            <mesh filename="package://repair_urdf/meshes/link_6.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            <xacro:if value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/optimized/link_6.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:if>
+            <xacro:unless value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/base_meshes/link_6.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:unless>
         </geometry>
         <material name="dark"/>
     </collision>
 
     <visual name="arm_${id}_link_6_visual">
         <geometry>
-            <mesh filename="package://repair_urdf/meshes/link_6.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            <xacro:if value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/optimized/link_6.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:if>
+            <xacro:unless value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/base_meshes/link_6.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:unless>
         </geometry>
         <material name="dark"/>
     </visual>
@@ -348,7 +418,12 @@
 
     <collision name="arm_${id}_link_7_collision">
         <geometry>
-            <mesh filename="package://repair_urdf/meshes/link_7.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            <xacro:if value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/optimized/link_7_sh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:if>
+            <xacro:unless value="$(arg load_sol)">
+                <mesh filename="package://repair_urdf/meshes/base_meshes/link_7.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </xacro:unless>
         </geometry>
         <material name="dark"/>
     </collision>
@@ -359,7 +434,12 @@
 
                 <origin xyz="0 0 0" rpy="0 0 0"/>
                 <geometry>
-                    <mesh filename="package://repair_urdf/meshes/link_7.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                    <xacro:if value="$(arg load_sol)">
+                        <mesh filename="package://repair_urdf/meshes/optimized/link_7_rh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                    </xacro:if>
+                    <xacro:unless value="$(arg load_sol)">
+                        <mesh filename="package://repair_urdf/meshes/base_meshes/link_7.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                    </xacro:unless>
                 </geometry>
                 <material name="dark"/>
             
@@ -384,29 +464,37 @@
     </joint>
 
     <link name="arm_${id}_tcp">
+        
+        <xacro:unless value="$(arg load_sol)">
 
-        <visual name="arm_${id}_tcp_visual">
+            <visual name="arm_${id}_tcp_visual">
 
-            <origin xyz="0 0 ${object_size}" rpy="0 0 0"/>
-            
-            <xacro:if value="${id == 1}">
+                <origin xyz="0 0 ${object_size}" rpy="0 0 0"/>
+                
+                <xacro:if value="${id == 1}">
+                    
+                    <geometry>
+                        
+                        <mesh filename="package://repair_urdf/meshes/base_meshes/link_7_sh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                        
+                    </geometry>
 
-                <geometry>
-                    <mesh filename="package://repair_urdf/meshes/link_7_sh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-                </geometry>
+                </xacro:if>
+                <xacro:unless value="${id == 1}">
 
-            </xacro:if>
-            <xacro:unless value="${id == 1}">
+                        <geometry>
+                            
+                            <mesh filename="package://repair_urdf/meshes/base_meshes/link_7_rh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                            
+                        </geometry>
 
-                <geometry>
-                    <mesh filename="package://repair_urdf/meshes/link_7_rh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-                </geometry>>
+                </xacro:unless>
 
-            </xacro:unless>
+                <material name="dark"/>
 
-            <material name="dark"/>
+            </visual>
 
-        </visual>
+        </xacro:unless>
 
     </link>
 

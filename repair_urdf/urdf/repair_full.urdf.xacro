@@ -23,6 +23,16 @@
 
 </xacro:if>
 
+<xacro:if value="$(arg show_coll)">
+
+    <xacro:include filename="$(find repair_urdf)/urdf/repair_torso_coll_params.urdf.xacro"/>
+
+    <xacro:include filename="$(find repair_urdf)/urdf/repair_torso_coll.urdf.xacro"/>
+
+    <xacro:repair_torso_coll /> 
+
+</xacro:if>
+
 <xacro:if value="$(arg load_sol)">
 
     <joint name="x_joint" type="prismatic">
@@ -42,6 +52,48 @@
                   iyy="0" iyz="0"
                   izz="0" />
         </inertial> 
+        <xacro:if value="$(arg show_coll)">
+            <visual name="link0_coll_visual1">
+
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+    
+                <geometry>
+                    <sphere radius="${coll_radius_link1}"/>
+                </geometry>
+    
+                <material name="darkred"/>
+    
+            </visual>
+            <visual name="link0_coll_visual2">
+
+                <origin xyz="0 ${link2_coll_offset_y} 0" rpy="0 0 0"/>
+    
+                <geometry>
+                    <sphere radius="${coll_radius_link1}"/>
+                </geometry>
+    
+                <material name="darkred"/>
+    
+            </visual>
+            <visual name="link0_coll_visual3">
+
+                <origin xyz="0 ${- link2_coll_offset_y} 0" rpy="0 0 0"/>
+    
+                <geometry>
+                    <sphere radius="${coll_radius_link1}"/>
+                </geometry>
+    
+                <material name="darkred"/>
+    
+            </visual>
+        </xacro:if>
+    
+        <visual name="base_link_visual">
+            <geometry>
+                <mesh filename="package://repair_urdf/meshes/optimized/link_0.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+            </geometry>
+            <material name="dark"/>
+        </visual>
 
     </link>
 
@@ -108,6 +160,7 @@
     <!-- RePAIR assembly (two arms) -->
 
     <link name="base_link">
+        
     </link>
 
     <link name="dummy_r">

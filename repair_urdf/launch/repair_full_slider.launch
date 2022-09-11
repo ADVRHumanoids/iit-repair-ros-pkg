@@ -2,9 +2,9 @@
     <arg name="gui" default="true" />
     <arg name="rate" default="250.0"/>
     <arg name="is_sliding_wrist" default="true"/>
-    <arg name="show_softhand" default="false"/>
+    <arg name="show_softhand" default="true"/>
     <arg name="gen_coll" default="true"/>
-    <arg name="load_sol" default="true"/>
+    <arg name="load_sol" default="false"/>
 
     <!-- send the mirror robot XML to param server -->
     <param name="robot_description" command="xacro '$(find repair_urdf)/urdf/repair_full.urdf.xacro'
