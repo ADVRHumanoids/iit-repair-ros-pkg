@@ -218,5 +218,6 @@ show_softhand="$(arg show_softhand)" show_coll="$(arg show_coll)" load_sol="$(ar
 
 <xacro:repair_arm_materials id="1" />
 <xacro:repair_arm_materials id="2" />
+<xacro:repair_torso_materials />
 
 </robot>

@@ -31,6 +31,14 @@
 
 </xacro:macro>
 
+<xacro:macro name="repair_torso_materials" >
+
+<gazebo reference="base_link">
+	<material>Gazebo/GreenTransparent   </material>
+</gazebo>
+
+</xacro:macro>
+
 <xacro:macro name="repair_cage_materials">
 
 <gazebo reference="table_top_link">

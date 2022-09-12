@@ -377,6 +377,12 @@ fake inertia -> it is acceptable. -->
       <origin xyz="0 0 0"/>
       <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
     </inertial>
+    <visual name="base_link_visual">
+      <geometry>
+        <mesh filename="package://repair_urdf/meshes/optimized/link_0.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark"/>
+    </visual>
   </link>
   <joint name="r_arm_mount_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0.0 -0.2942172496425824 0.0"/>
@@ -614,10 +620,6 @@ fake inertia -> it is acceptable. -->
     <child link="arm_1_tcp"/>
   </joint>
   <link name="arm_1_tcp">
-    <visual name="arm_1_tcp_visual">
-      <origin rpy="0 0 0" xyz="0 0 0.02"/>
-      <material name="dark"/>
-    </visual>
   </link>
   <!-- id: 1 for right arm, everything else is considered left arm -->
   <!-- base_link: name of base link a the single arm -->
@@ -815,10 +817,6 @@ fake inertia -> it is acceptable. -->
     <child link="arm_2_tcp"/>
   </joint>
   <link name="arm_2_tcp">
-    <visual name="arm_2_tcp_visual">
-      <origin rpy="0 0 0" xyz="0 0 0.02"/>
-      <material name="dark"/>
-    </visual>
   </link>
   <gazebo reference="arm_1_link_1">
     <material>Gazebo/BlackTransparent   </material>
@@ -867,5 +865,8 @@ fake inertia -> it is acceptable. -->
   </gazebo>
   <gazebo reference="arm_2_tcp">
     <material>Gazebo/GreyTransparent    </material>
+  </gazebo>
+  <gazebo reference="base_link">
+    <material>Gazebo/GreenTransparent   </material>
   </gazebo>
 </robot>

@@ -49,7 +49,8 @@ namespace plugin_utils{
 
             TrajLinInterp(); // default constructor
 
-            TrajLinInterp(Eigen::VectorXd sample_time, Eigen::MatrixXd input_traj, int interp_dir = 1, double time_check_tol = 0.0001);
+            TrajLinInterp(Eigen::VectorXd sample_time, Eigen::MatrixXd input_traj, int interp_dir = 1,
+                        double time_check_tol = 0.01);
 
             Eigen::MatrixXd eval_at(Eigen::VectorXd interp_times);
 
