@@ -7,7 +7,7 @@ import numpy as np
 import csv	
 from numpy import genfromtxt
 
-mat_path = "/home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/replay_directory/opt/"
+mat_path = "/home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/test_results_07-09-2022-16_52_10/l2_postproc/"
 mat_name = "prova.mat"
 
 dump_path = mat_path

@@ -36,9 +36,9 @@ xbotcore_plugins:
         thread: rt_main
         type: traj_replayer_rt
         params:
-            mat_path: {value: /home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/replay_directory/opt/, type: string}
-            mat_name: {value: prova.mat, type: string}
-            dump_dir: {value: /home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/replay_directory/opt/, type: string}
+            mat_path: {value: /home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/test_results_07-09-2022-16_52_10/l2_postproc, type: string}
+            mat_name: {value: final_opt_solution_07-09-2022-16_52_10.mat, type: string}
+            dump_dir: {value: /home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/test_results_07-09-2022-16_52_10/l2_postproc, type: string}
             stop_stiffness: {value: [7000.0, 
                                     2000.0, 2000.0, 2000.0, 2000.0, 2000.0, 2000.0, 2000.0, 
                                     2000.0, 2000.0, 2000.0, 2000.0, 2000.0, 2000.0, 2000.0], type: Eigen::VectorXd}

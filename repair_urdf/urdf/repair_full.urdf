@@ -363,6 +363,15 @@ fake inertia -> it is acceptable. -->
     <material>Gazebo/Grey </material>
   </gazebo>
   <!-- Reading some parameters from a YAML config file -->
+  <!-- <xacro:if value="$(arg show_coll)">
+
+    <xacro:include filename="$(find repair_urdf)/urdf/repair_torso_coll_params.urdf.xacro"/>
+
+    <xacro:include filename="$(find repair_urdf)/urdf/repair_torso_coll.urdf.xacro"/>
+
+    <xacro:repair_torso_coll /> 
+
+</xacro:if> -->
   <joint name="x_joint" type="prismatic">
     <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.3034329527232317"/>
     <parent link="working_surface_link"/>

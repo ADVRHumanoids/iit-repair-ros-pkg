@@ -95,7 +95,7 @@ class PostProcS1:
         self.__read_info_data()
         self.__read_opt_data()
 
-        self._man_cost = self.__get_man_cost()
+        # self._man_cost = self.__get_man_cost()
         self._man_index = self.__get_man_index(self._man_cost)
 
         self.__compute_solver_stats()
@@ -813,31 +813,31 @@ class PostProcS1:
         ax_opt_c_box.grid()
 
         # man. cost
-        leg_title = "average: " + str(round(self._avrg_man_cost, round2)) + "\n" + \
-                    "RMSE: " + str(round(self._rmse_man_cost, round2)) + "\n" + \
-                    "max: " + str(round(self._max_man_cost, round2)) + "\n" + \
-                    "min: " + str(round(self._min_man_cost, round2)) + "\n" 
+        # leg_title = "average: " + str(round(self._avrg_man_cost, round2)) + "\n" + \
+        #             "RMSE: " + str(round(self._rmse_man_cost, round2)) + "\n" + \
+        #             "max: " + str(round(self._max_man_cost, round2)) + "\n" + \
+        #             "min: " + str(round(self._min_man_cost, round2)) + "\n" 
 
-        _, ax_opt_m_hist = plt.subplots(1)
-        ax_opt_m_hist.hist(self._man_cost, bins = int(len(self._man_cost)/bin_scale_factor))
-        leg_opt_m = ax_opt_m_hist.legend(loc="upper right", 
-            title = leg_title)
-        leg_opt_m.set_draggable(True)
-        ax_opt_m_hist.set_xlabel(r"man. cost")
-        ax_opt_m_hist.set_ylabel(r"N samples")
-        ax_opt_m_hist.set_title(r"Man. cost", fontdict=None, loc='center')
-        ax_opt_m_hist.grid()
+        # _, ax_opt_m_hist = plt.subplots(1)
+        # ax_opt_m_hist.hist(self._man_cost, bins = int(len(self._man_cost)/bin_scale_factor))
+        # leg_opt_m = ax_opt_m_hist.legend(loc="upper right", 
+        #     title = leg_title)
+        # leg_opt_m.set_draggable(True)
+        # ax_opt_m_hist.set_xlabel(r"man. cost")
+        # ax_opt_m_hist.set_ylabel(r"N samples")
+        # ax_opt_m_hist.set_title(r"Man. cost", fontdict=None, loc='center')
+        # ax_opt_m_hist.grid()
         
-        _, ax_opt_c_box = plt.subplots(1)
-        ax_opt_c_box.boxplot(self._man_cost, flierprops = green_diamond, vert=True, 
-                        # whis = (0, 100),
-                        autorange = True)
-        leg_opt_m_box = ax_opt_c_box.legend(loc="upper right", 
-            title = leg_title)
-        leg_opt_m_box.set_draggable(True)
-        ax_opt_c_box.set_ylabel(r"man. cost")
-        ax_opt_c_box.set_title(r"Man. cost", fontdict=None, loc='center')
-        ax_opt_c_box.grid()
+        # _, ax_opt_c_box = plt.subplots(1)
+        # ax_opt_c_box.boxplot(self._man_cost, flierprops = green_diamond, vert=True, 
+        #                 # whis = (0, 100),
+        #                 autorange = True)
+        # leg_opt_m_box = ax_opt_c_box.legend(loc="upper right", 
+        #     title = leg_title)
+        # leg_opt_m_box.set_draggable(True)
+        # ax_opt_c_box.set_ylabel(r"man. cost")
+        # ax_opt_c_box.set_title(r"Man. cost", fontdict=None, loc='center')
+        # ax_opt_c_box.grid()
 
         # man. index
         leg_title = "average: " + str(round(self._avrg_man_index, round2)) + "\n" + \
@@ -917,7 +917,7 @@ class PostProcS1:
 
                 ax[i, j].hist(self._q_design[counter, :], bins = int(len(self._q_design[counter, :])/bin_scale_factor))
                 # ax[i, j].legend(loc="upper left")
-                ax[i, j].set_xlabel(design_var_names[counter] + " " + si_units[counter], loc = "center")
+                ax[i, j].set_xlabel(design_var_names[counter] + " " + si_units[counter])
                 ax[i, j].set_ylabel(r"N. sol.")
                 ax[i, j].set_title(design_var_description[counter], fontdict=None, loc='center')
                 ax[i, j].grid()
@@ -1439,7 +1439,7 @@ class PostProcS3:
                                 "q_dot": final_opt_q_dot,
                                 "q_des": final_opt_q_des,
                                 "q_p": final_opt_q_jnt,
-                                "q_p_dot": np.c_(final_opt_q_dot_jnt, np.zeros((len(final_opt_q_dot_jnt[:, 0]), 1))),
+                                "q_p_dot": np.c_[final_opt_q_dot_jnt, np.zeros((len(final_opt_q_dot_jnt[:, 0]), 1))],
                                 # adding one column to make q and q_dot dimenions equal (useful for sim. purposes) 
                                 "tau": np.zeros((len(final_opt_q_jnt[:, 0]), len(final_opt_q_dot_jnt[0, :])))}
 

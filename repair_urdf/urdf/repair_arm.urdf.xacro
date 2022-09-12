@@ -261,7 +261,7 @@
 </link>
 
 <joint name="arm_${id}_joint_5" type="revolute">
-    <origin xyz="${5 * mmTom} 0 0" rpy="${-PI_2} 0 ${-PI_2}"/>
+    <origin xyz="${5 * mmTom} 0 0" rpy="0 0 ${-PI_2}"/>
     <parent link="arm_${id}_link_4"/>
     <child link="arm_${id}_link_5"/>
     <axis xyz="0 0 1"/>
@@ -318,7 +318,7 @@
 
     <joint name="arm_${id}_joint_6" type="revolute">
 
-            <origin xyz="0 0 ${321.000 * mmTom}" rpy="0 ${-PI_2} 0"/>
+            <origin xyz="0 ${321.000 * mmTom} 0" rpy="${PI + PI_2} ${PI + PI_2} ${0}"/>
             <parent link="arm_${id}_link_5"/>
             <child link="dummy_sliding_wrist${id}_link"/>
             <axis xyz="0 0 1"/>
@@ -417,6 +417,7 @@
     </inertial>
 
     <collision name="arm_${id}_link_7_collision">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
             <xacro:if value="$(arg load_sol)">
                 <mesh filename="package://repair_urdf/meshes/optimized/link_7_sh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
@@ -428,7 +429,7 @@
         <material name="dark"/>
     </collision>
 
-    <xacro:unless value="${show_softhand == True}">
+    <xacro:if value="${show_softhand == True}">
 
         <visual name="arm_${id}_link_7_visual">
 
@@ -445,7 +446,7 @@
             
         </visual>
         
-    </xacro:unless>
+    </xacro:if>
 
 
 </link>
