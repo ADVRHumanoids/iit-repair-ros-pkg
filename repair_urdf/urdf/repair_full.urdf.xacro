@@ -23,7 +23,7 @@
 
 </xacro:if>
 
-<xacro:if value="$(arg show_coll)">
+<!-- <xacro:if value="$(arg show_coll)">
 
     <xacro:include filename="$(find repair_urdf)/urdf/repair_torso_coll_params.urdf.xacro"/>
 
@@ -31,7 +31,7 @@
 
     <xacro:repair_torso_coll /> 
 
-</xacro:if>
+</xacro:if> -->
 
 <xacro:if value="$(arg load_sol)">
 

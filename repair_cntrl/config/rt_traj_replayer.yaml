@@ -39,18 +39,18 @@ xbotcore_plugins:
             mat_path: {value: /home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/replay_directory/opt/, type: string}
             mat_name: {value: prova.mat, type: string}
             dump_dir: {value: /home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/replay_directory/opt/, type: string}
-            stop_stiffness: {value: [4000.0, 
+            stop_stiffness: {value: [7000.0, 
                                     2000.0, 2000.0, 2000.0, 2000.0, 2000.0, 2000.0, 2000.0, 
                                     2000.0, 2000.0, 2000.0, 2000.0, 2000.0, 2000.0, 2000.0], type: Eigen::VectorXd}
-            stop_damping: {value: [200.0, 
+            stop_damping: {value: [400.0, 
                                     50, 50, 50, 50, 50, 50, 50, 
                                     50, 50, 50, 50, 50, 50, 50], type: Eigen::VectorXd}
             delta_effort_lim: {value: 1e-6, type: double} 
             approach_traj_exec_time: {value: 6.0, type: double} 
-            replay_stiffness: {value: [4000.0, 
+            replay_stiffness: {value: [7000.0, 
                                     2000.0, 2000.0, 2000.0, 2000.0, 2000.0, 2000.0, 2000.0, 
                                     2000.0, 2000.0, 2000.0, 2000.0, 2000.0, 2000.0, 2000.0], type: Eigen::VectorXd}
-            replay_damping: {value: [200.0, 
+            replay_damping: {value: [400.0, 
                                     50, 50, 50, 50, 50, 50, 50, 
                                     50, 50, 50, 50, 50, 50, 50], type: Eigen::VectorXd}
             send_pos_ref: {value: true, type: bool}
