@@ -299,10 +299,10 @@ class PostProcS1:
         self._min_trial_idxs = np.min(np.array(self._trial_idxs))
         self._rmse_trial_idxs = self.__rmse(self._avrg_trial_idxs, self._trial_idxs)
 
-        self._avrg_man_cost = np.mean(np.array(self._man_cost))
-        self._max_man_cost = np.max(np.array(self._man_cost))
-        self._min_man_cost = np.min(np.array(self._man_cost))
-        self._rmse_man_cost = self.__rmse(self._avrg_man_cost, self._man_cost)
+        # self._avrg_man_cost = np.mean(np.array(self._man_cost))
+        # self._max_man_cost = np.max(np.array(self._man_cost))
+        # self._min_man_cost = np.min(np.array(self._man_cost))
+        # self._rmse_man_cost = self.__rmse(self._avrg_man_cost, self._man_cost)
 
         # self._avrg_man_index = np.mean(np.array(self._man_index))
         # self._max_man_index = np.max(np.array(self._man_index))
@@ -657,27 +657,27 @@ class PostProcS1:
 
         print(colored(" rmse_opt_costs:", "white"), np.round(self._rmse_opt_costs, round2))
 
-        print("\n")
+        # print("\n")
 
-        print(colored(" avrg_man_cost:", "white"), np.round(self._avrg_man_cost, round2))
+        # print(colored(" avrg_man_cost:", "white"), np.round(self._avrg_man_cost, round2))
 
-        print(colored(" max_man_cost:", "white"), np.round(self._max_man_cost, round2))
+        # print(colored(" max_man_cost:", "white"), np.round(self._max_man_cost, round2))
 
-        print(colored(" min_man_cost:", "white"), np.round(self._min_man_cost, round2))
+        # print(colored(" min_man_cost:", "white"), np.round(self._min_man_cost, round2))
 
-        print(colored(" rmse_man_cost:", "white"), np.round(self._rmse_man_cost, round2))
+        # print(colored(" rmse_man_cost:", "white"), np.round(self._rmse_man_cost, round2))
 
-        print("\n")
+        # print("\n")
 
-        print(colored(" avrg_man_index:", "white"), np.round(self._avrg_man_index, round2))
+        # print(colored(" avrg_man_index:", "white"), np.round(self._avrg_man_index, round2))
 
-        print(colored(" max_man_index:", "white"), np.round(self._max_man_index, round2))
+        # print(colored(" max_man_index:", "white"), np.round(self._max_man_index, round2))
 
-        print(colored(" min_man_index:", "white"), np.round(self._min_man_index, round2))
+        # print(colored(" min_man_index:", "white"), np.round(self._min_man_index, round2))
 
-        print(colored(" rmse_man_index:", "white"), np.round(self._rmse_man_index, round2))
+        # print(colored(" rmse_man_index:", "white"), np.round(self._rmse_man_index, round2))
 
-        print("\n")
+        # print("\n")
         
         if self.cl_man_post_proc:
 
@@ -794,9 +794,9 @@ class PostProcS1:
         leg_opt_c = ax_opt_c_hist.legend(loc="upper right", 
             title = leg_title)
         leg_opt_c.set_draggable(True)
-        ax_opt_c_hist.set_xlabel(r"opt cost")
+        ax_opt_c_hist.set_xlabel("opt. cost " + r"$[\mathrm{rad^2/s^2}$]")
         ax_opt_c_hist.set_ylabel(r"N samples")
-        ax_opt_c_hist.set_title(r"Opt. cost", fontdict=None, loc='center')
+        ax_opt_c_hist.set_title(r"First step optimal costs distribution across solution samples", fontdict=None, loc='center')
         ax_opt_c_hist.grid()
         
         _, ax_opt_c_box = plt.subplots(1)

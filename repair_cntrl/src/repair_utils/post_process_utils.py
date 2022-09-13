@@ -421,7 +421,7 @@ class LogPlotter:
         leg_t.set_draggable(True)
         # ax_sol_t[0].set_xlabel(r"time [s]")
         ax_sol_t[0].set_ylabel(r"joint efforts [N m]")
-        ax_sol_t[0].set_title(r"Arm 1 imp. control joint efforts VS references", fontdict=None, loc='center')
+        ax_sol_t[0].set_title(r"Arm 1 imp. control joint efforts", fontdict=None, loc='center')
         ax_sol_t[0].grid()
 
         for i in range(self._n_arm_dofs):
@@ -439,7 +439,7 @@ class LogPlotter:
         leg_t.set_draggable(True)
         # ax_sol_t[1].set_xlabel(r"time [s]")
         ax_sol_t[1].set_ylabel(r"joint efforts [rad]")
-        ax_sol_t[1].set_title(r"Arm 2 imp.control joint efforts VS references", fontdict=None, loc='center')
+        ax_sol_t[1].set_title(r"Arm 2 imp.control joint efforts", fontdict=None, loc='center')
         ax_sol_t[1].grid()
 
         ax_sol_t[2].plot(self._plugin_time, self._tau_meas_x, label = self._joint_names2[i],\
@@ -454,7 +454,7 @@ class LogPlotter:
         leg_t.set_draggable(True)
         ax_sol_t[2].set_xlabel(r"time [s]")
         ax_sol_t[2].set_ylabel(r"joint effort [N]")
-        ax_sol_t[2].set_title(r"Sliding guide imp. control effort VS reference", fontdict=None, loc='center')
+        ax_sol_t[2].set_title(r"Sliding guide imp. control effort", fontdict=None, loc='center')
         ax_sol_t[2].grid()
 
     def show_plots(self):
