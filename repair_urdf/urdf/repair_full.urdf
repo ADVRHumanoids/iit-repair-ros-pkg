@@ -363,7 +363,7 @@ fake inertia -> it is acceptable. -->
     <material>Gazebo/Grey </material>
   </gazebo>
   <!-- Reading some parameters from a YAML config file -->
-  <!-- <xacro:if value="$(arg show_coll)">
+  <!-- <xacro:if value="$(arg gen_coll)">
 
     <xacro:include filename="$(find repair_urdf)/urdf/repair_torso_coll_params.urdf.xacro"/>
 
@@ -386,11 +386,26 @@ fake inertia -> it is acceptable. -->
       <origin xyz="0 0 0"/>
       <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
     </inertial>
-    <visual name="base_link_visual">
+    <visual name="link0_coll_visual1">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_0.stl" scale="0.001 0.001 0.001"/>
+        <sphere radius="0.07"/>
       </geometry>
-      <material name="dark"/>
+      <material name="darkred"/>
+    </visual>
+    <visual name="link0_coll_visual2">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <sphere radius="0.07"/>
+      </geometry>
+      <material name="darkred"/>
+    </visual>
+    <visual name="link0_coll_visual3">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <sphere radius="0.07"/>
+      </geometry>
+      <material name="darkred"/>
     </visual>
   </link>
   <joint name="r_arm_mount_joint" type="fixed">
@@ -433,11 +448,105 @@ fake inertia -> it is acceptable. -->
       <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
     </inertial>
   </link>
+  <joint name="arm_1_link_1_coll_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+    <parent link="arm_1_link_1"/>
+    <child link="arm_1_link1_coll"/>
+  </joint>
+  <link name="arm_1_link1_coll">
+    <visual name="arm_1_link1_coll_visual">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <sphere radius="0.07"/>
+      </geometry>
+      <material name="darkred"/>
+    </visual>
+  </link>
+  <joint name="arm_1_link_2_coll_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0 0.03"/>
+    <parent link="arm_1_link_2"/>
+    <child link="arm_1_link2_coll"/>
+  </joint>
+  <link name="arm_1_link2_coll">
+    <visual name="arm_1_link2_coll_visual">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <sphere radius="0.053"/>
+      </geometry>
+      <material name="darkred"/>
+    </visual>
+  </link>
+  <joint name="arm_1_link_3_coll_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.22"/>
+    <parent link="arm_1_link_3"/>
+    <child link="arm_1_link3_coll"/>
+  </joint>
+  <link name="arm_1_link3_coll">
+    <visual name="arm_1_link3_coll_visual">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <sphere radius="0.08"/>
+      </geometry>
+      <material name="darkred"/>
+    </visual>
+  </link>
+  <joint name="arm_1_link_4_coll_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.1 0.0 0.0"/>
+    <parent link="arm_1_link_4"/>
+    <child link="arm_1_link4_coll"/>
+  </joint>
+  <link name="arm_1_link4_coll">
+    <visual name="arm_1_link4_coll_visual">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <sphere radius="0.08"/>
+      </geometry>
+      <material name="darkred"/>
+    </visual>
+  </link>
+  <joint name="arm_1_link_5_coll_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="-0.004109236058802465 0.0 0.321"/>
+    <parent link="arm_1_link_5"/>
+    <child link="arm_1_link5_coll"/>
+  </joint>
+  <link name="arm_1_link5_coll">
+    <visual name="arm_1_link5_coll_visual">
+      <geometry>
+        <sphere radius="0.05"/>
+      </geometry>
+      <material name="darkred"/>
+    </visual>
+  </link>
+  <joint name="arm_1_link_6_coll_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+    <parent link="arm_1_link_6"/>
+    <child link="arm_1_link6_coll"/>
+  </joint>
+  <link name="arm_1_link6_coll">
+    <visual name="arm_1_link6_coll_visual">
+      <geometry>
+        <sphere radius="0.07"/>
+      </geometry>
+      <material name="darkred"/>
+    </visual>
+  </link>
+  <joint name="arm_1_link7_coll_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0.0 -0.06"/>
+    <parent link="arm_1_link_7"/>
+    <child link="arm_1_link7_coll"/>
+  </joint>
+  <link name="arm_1_link7_coll">
+    <visual name="arm_1_link7_coll_visual">
+      <geometry>
+        <sphere radius="0.05"/>
+      </geometry>
+      <material name="darkred"/>
+    </visual>
+  </link>
   <!-- id: 1 for right arm, everything else is considered left arm -->
   <!-- base_link: name of base link a the single arm -->
   <!-- is_sliding_wrist: whether to add a sliding joint along the axis of wrist's second d.o.f.
     (true -> yes), everything else -> no -->
-  <!-- show_softhand: whether to use softhand or not at the TCP -->
   <joint name="arm_1_joint_1" type="revolute">
     <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
     <parent link="r_arm_mount_frame"/>
@@ -453,13 +562,13 @@ fake inertia -> it is acceptable. -->
     </inertial>
     <collision name="arm_1_link_1_collision">
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_1.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_1.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </collision>
     <visual name="arm_1_link_1_visual">
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_1.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_1.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </visual>
@@ -479,13 +588,13 @@ fake inertia -> it is acceptable. -->
     </inertial>
     <collision name="arm_1_link_2_collision">
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_2.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_2.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </collision>
     <visual name="arm_1_link_2_visual">
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_2.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_2.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </visual>
@@ -506,13 +615,13 @@ fake inertia -> it is acceptable. -->
     </inertial>
     <collision name="arm_1_link_3_collision">
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_3.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_3.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </collision>
     <visual name="arm_1_link_3_visual">
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_3.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_3.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </visual>
@@ -532,13 +641,13 @@ fake inertia -> it is acceptable. -->
     </inertial>
     <collision name="arm_1_link_4_collision">
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_4.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_4.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </collision>
     <visual name="arm_1_link_4_visual">
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_4.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_4.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </visual>
@@ -557,32 +666,26 @@ fake inertia -> it is acceptable. -->
       <origin xyz="-0.005 0.0 0.2"/>
     </inertial>
     <collision name="arm_1_link_5_collision">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_5.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_5.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </collision>
     <visual name="arm_1_link_5_visual">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_5.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_5.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </visual>
   </link>
   <joint name="arm_1_joint_6" type="revolute">
-    <origin rpy="0 -1.57079632679 0" xyz="0 0 0.321"/>
+    <origin rpy="0 -1.57079632679 0" xyz="0.096 0.321 0"/>
     <parent link="arm_1_link_5"/>
-    <child link="dummy_sliding_wrist1_link"/>
+    <child link="arm_1_link_6"/>
     <axis xyz="0 0 1"/>
     <limit effort="200.0" lower="-2.6179938779916667" upper="2.6179938779916667" velocity="10.0"/>
-  </joint>
-  <link name="dummy_sliding_wrist1_link">
-    
-    </link>
-  <joint name="dummy_sliding_wrist1_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0.0 0.0 -0.09589076394119754"/>
-    <parent link="dummy_sliding_wrist1_link"/>
-    <child link="arm_1_link_6"/>
   </joint>
   <link name="arm_1_link_6">
     <inertial>
@@ -591,14 +694,16 @@ fake inertia -> it is acceptable. -->
       <origin xyz="0.0 0.0 0.0"/>
     </inertial>
     <collision name="arm_1_link_6_collision">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_6.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_6.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </collision>
     <visual name="arm_1_link_6_visual">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_6.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_6.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </visual>
@@ -616,12 +721,6 @@ fake inertia -> it is acceptable. -->
       <inertia ixx="0.024999999999999998" ixy="0.0" ixz="0.0" iyy="0.024999999999999998" iyz="9.999999999999999e-05" izz="0.023"/>
       <origin xyz="0.0 0.0 0.0"/>
     </inertial>
-    <collision name="arm_1_link_7_collision">
-      <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_7_sh.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-      <material name="dark"/>
-    </collision>
   </link>
   <joint name="arm_1_tcp_joint" type="fixed">
     <origin rpy="0 -2.3561944901874483 -1.57079632679" xyz="0 -0.014142135623730949 0.02414213562373095"/>
@@ -629,12 +728,113 @@ fake inertia -> it is acceptable. -->
     <child link="arm_1_tcp"/>
   </joint>
   <link name="arm_1_tcp">
+    <visual name="arm_1_tcp_visual">
+      <origin rpy="0 0 0" xyz="0 0 0.02"/>
+      <geometry>
+        <mesh filename="package://repair_urdf/meshes/link_7_sh.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark"/>
+    </visual>
+  </link>
+  <joint name="arm_2_link_1_coll_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+    <parent link="arm_2_link_1"/>
+    <child link="arm_2_link1_coll"/>
+  </joint>
+  <link name="arm_2_link1_coll">
+    <visual name="arm_2_link1_coll_visual">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <sphere radius="0.07"/>
+      </geometry>
+      <material name="darkred"/>
+    </visual>
+  </link>
+  <joint name="arm_2_link_2_coll_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0 0.03"/>
+    <parent link="arm_2_link_2"/>
+    <child link="arm_2_link2_coll"/>
+  </joint>
+  <link name="arm_2_link2_coll">
+    <visual name="arm_2_link2_coll_visual">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <sphere radius="0.053"/>
+      </geometry>
+      <material name="darkred"/>
+    </visual>
+  </link>
+  <joint name="arm_2_link_3_coll_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.22"/>
+    <parent link="arm_2_link_3"/>
+    <child link="arm_2_link3_coll"/>
+  </joint>
+  <link name="arm_2_link3_coll">
+    <visual name="arm_2_link3_coll_visual">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <sphere radius="0.08"/>
+      </geometry>
+      <material name="darkred"/>
+    </visual>
+  </link>
+  <joint name="arm_2_link_4_coll_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.1 0.0 0.0"/>
+    <parent link="arm_2_link_4"/>
+    <child link="arm_2_link4_coll"/>
+  </joint>
+  <link name="arm_2_link4_coll">
+    <visual name="arm_2_link4_coll_visual">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <sphere radius="0.08"/>
+      </geometry>
+      <material name="darkred"/>
+    </visual>
+  </link>
+  <joint name="arm_2_link_5_coll_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="-0.004109236058802465 0.0 0.321"/>
+    <parent link="arm_2_link_5"/>
+    <child link="arm_2_link5_coll"/>
+  </joint>
+  <link name="arm_2_link5_coll">
+    <visual name="arm_2_link5_coll_visual">
+      <geometry>
+        <sphere radius="0.05"/>
+      </geometry>
+      <material name="darkred"/>
+    </visual>
+  </link>
+  <joint name="arm_2_link_6_coll_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+    <parent link="arm_2_link_6"/>
+    <child link="arm_2_link6_coll"/>
+  </joint>
+  <link name="arm_2_link6_coll">
+    <visual name="arm_2_link6_coll_visual">
+      <geometry>
+        <sphere radius="0.07"/>
+      </geometry>
+      <material name="darkred"/>
+    </visual>
+  </link>
+  <joint name="arm_2_link7_coll_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0.0 -0.06"/>
+    <parent link="arm_2_link_7"/>
+    <child link="arm_2_link7_coll"/>
+  </joint>
+  <link name="arm_2_link7_coll">
+    <visual name="arm_2_link7_coll_visual">
+      <geometry>
+        <sphere radius="0.05"/>
+      </geometry>
+      <material name="darkred"/>
+    </visual>
   </link>
   <!-- id: 1 for right arm, everything else is considered left arm -->
   <!-- base_link: name of base link a the single arm -->
   <!-- is_sliding_wrist: whether to add a sliding joint along the axis of wrist's second d.o.f.
     (true -> yes), everything else -> no -->
-  <!-- show_softhand: whether to use softhand or not at the TCP -->
   <joint name="arm_2_joint_1" type="revolute">
     <origin rpy="-1.57079632679 0 0" xyz="0 0 0"/>
     <parent link="l_arm_mount_frame"/>
@@ -650,13 +850,13 @@ fake inertia -> it is acceptable. -->
     </inertial>
     <collision name="arm_2_link_1_collision">
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_1_mirror.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_1_mirror.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </collision>
     <visual name="arm_2_link_1_visual">
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_1_mirror.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_1_mirror.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </visual>
@@ -676,13 +876,13 @@ fake inertia -> it is acceptable. -->
     </inertial>
     <collision name="arm_2_link_2_collision">
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_2.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_2.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </collision>
     <visual name="arm_2_link_2_visual">
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_2.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_2.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </visual>
@@ -702,13 +902,13 @@ fake inertia -> it is acceptable. -->
     </inertial>
     <collision name="arm_2_link_3_collision">
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_3.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_3.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </collision>
     <visual name="arm_2_link_3_visual">
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_3.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_3.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </visual>
@@ -728,13 +928,13 @@ fake inertia -> it is acceptable. -->
     </inertial>
     <collision name="arm_2_link_4_collision">
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_4.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_4.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </collision>
     <visual name="arm_2_link_4_visual">
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_4.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_4.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </visual>
@@ -753,32 +953,26 @@ fake inertia -> it is acceptable. -->
       <origin xyz="-0.005 0.0 0.2"/>
     </inertial>
     <collision name="arm_2_link_5_collision">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_5.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_5.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </collision>
     <visual name="arm_2_link_5_visual">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_5.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_5.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </visual>
   </link>
   <joint name="arm_2_joint_6" type="revolute">
-    <origin rpy="0 -1.57079632679 0" xyz="0 0 0.321"/>
+    <origin rpy="0 -1.57079632679 0" xyz="0.096 0.321 0"/>
     <parent link="arm_2_link_5"/>
-    <child link="dummy_sliding_wrist2_link"/>
+    <child link="arm_2_link_6"/>
     <axis xyz="0 0 1"/>
     <limit effort="200.0" lower="-2.6179938779916667" upper="2.6179938779916667" velocity="10.0"/>
-  </joint>
-  <link name="dummy_sliding_wrist2_link">
-    
-    </link>
-  <joint name="dummy_sliding_wrist2_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0.0 0.0 -0.09589076394119754"/>
-    <parent link="dummy_sliding_wrist2_link"/>
-    <child link="arm_2_link_6"/>
   </joint>
   <link name="arm_2_link_6">
     <inertial>
@@ -787,14 +981,16 @@ fake inertia -> it is acceptable. -->
       <origin xyz="0.0 0.0 0.0"/>
     </inertial>
     <collision name="arm_2_link_6_collision">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_6.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_6.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </collision>
     <visual name="arm_2_link_6_visual">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_6.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://repair_urdf/meshes/base_meshes/link_6.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </visual>
@@ -813,12 +1009,6 @@ fake inertia -> it is acceptable. -->
       <inertia ixx="0.024999999999999998" ixy="0.0" ixz="0.0" iyy="0.024999999999999998" iyz="9.999999999999999e-05" izz="0.023"/>
       <origin xyz="0.0 0.0 0.0"/>
     </inertial>
-    <collision name="arm_2_link_7_collision">
-      <geometry>
-        <mesh filename="package://repair_urdf/meshes/optimized/link_7_sh.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-      <material name="dark"/>
-    </collision>
   </link>
   <joint name="arm_2_tcp_joint" type="fixed">
     <origin rpy="0 -2.3561944901874483 -1.57079632679" xyz="0 -0.014142135623730949 0.02414213562373095"/>
@@ -826,6 +1016,13 @@ fake inertia -> it is acceptable. -->
     <child link="arm_2_tcp"/>
   </joint>
   <link name="arm_2_tcp">
+    <visual name="arm_2_tcp_visual">
+      <origin rpy="0 0 0" xyz="0 0 0.02"/>
+      <geometry>
+        <mesh filename="package://repair_urdf/meshes/link_7_rh.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark"/>
+    </visual>
   </link>
   <gazebo reference="arm_1_link_1">
     <material>Gazebo/BlackTransparent   </material>

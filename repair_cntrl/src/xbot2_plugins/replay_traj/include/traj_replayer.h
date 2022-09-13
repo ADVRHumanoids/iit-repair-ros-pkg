@@ -74,11 +74,11 @@ private:
                     _q_p_cmd, _q_p_dot_cmd, _tau_cmd, 
                     _traj_time_vector, _traj_ref_time_vector,
                     _effort_lims,
-                    _approach_traj_target, 
-                    _traj_dt_before_res;
+                    _approach_traj_target;
 
     Eigen::MatrixXd _q_p_ref, _q_p_dot_ref, _tau_ref, 
-                    _q_p_bf_res, _q_p_dot_bf_res, _tau_bf_res;
+                    _q_p_bf_res, _q_p_dot_bf_res, _tau_bf_res, 
+                    _traj_dt_before_res;
                     
     bool _looped_traj = false, 
         _approach_traj_started = false, _approach_traj_finished = false, 

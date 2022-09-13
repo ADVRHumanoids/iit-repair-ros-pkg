@@ -39,8 +39,7 @@ refinement_scale = 10
 def main(args):
 
     sliding_wrist_command = "is_sliding_wrist:=" + "true"
-    show_softhand_command = "show_softhand:=" + str(args.show_softhand).lower()
-    gen_coll_command = "show_coll:=" + str(args.gen_coll).lower()
+    gen_coll_command = "gen_coll:=" + str(args.gen_coll).lower()
     # preliminary ops
 
     try:
@@ -50,7 +49,6 @@ def main(args):
         xacro_gen = subprocess.check_call(["xacro",\
                                         xacro_full_path, \
                                         sliding_wrist_command, \
-                                        show_softhand_command, \
                                         gen_coll_command, \
                                         "-o", 
                                         urdf_full_path])
@@ -66,7 +64,6 @@ def main(args):
                                         "repair_urdf",\
                                         "repair_full.launch", \
                                         sliding_wrist_command,\
-                                        show_softhand_command,
                                         gen_coll_command])
 
     except:
@@ -172,8 +169,6 @@ if __name__ == '__main__':
                         help = 'whether to only the best solution', default = True)
     parser.add_argument('--gen_coll', '-coll', type=str2bool,\
                         help = 'whether to generate collisions', default = True)
-    parser.add_argument('--show_softhand', '-show_soft', type=str2bool,\
-                        help = 'whether to show softhand', default = True)
 
     args = parser.parse_args()
 

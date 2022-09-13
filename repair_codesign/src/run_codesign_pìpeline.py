@@ -102,8 +102,7 @@ if __name__ == '__main__':
     urdf_full_path = urdfs_path + "/" + urdf_name + ".urdf"
     xacro_full_path = urdfs_path + "/" + urdf_name + ".urdf.xacro"
     sliding_wrist_command = "is_sliding_wrist:=" + "true"
-    show_softhand_command = "show_softhand:=" + "true"
-    show_coll_command = "show_coll:=" + "true"
+    gen_coll_command = "gen_coll:=" + "true"
 
     coll_yaml_name = "arm_coll.yaml"
     coll_yaml_path = rospackage.get_path("repair_urdf") + "/config/" + coll_yaml_name
@@ -114,8 +113,7 @@ if __name__ == '__main__':
         xacro_gen = subprocess.check_call(["xacro",\
                                         xacro_full_path, \
                                         sliding_wrist_command, \
-                                        show_softhand_command, \
-                                        show_coll_command, \
+                                        gen_coll_command, \
                                         "-o", 
                                         urdf_full_path])
 

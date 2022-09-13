@@ -2,9 +2,9 @@
 <robot name = "repair_full" xmlns:xacro="http://ros.org/wiki/xacro">
 
 <xacro:arg name="is_sliding_wrist" default="false" />
-<xacro:arg name="show_softhand" default="false" />
-<xacro:arg name="show_coll" default="false" />
+<xacro:arg name="gen_coll" default="false" />
 <xacro:arg name="load_sol" default="false" />
+<xacro:arg name="use_updated_wrist" default="false" />
 <xacro:arg name="xbot" default="false" />
 <xacro:arg name="shorten_table_legs_coll" default="false" /> <!-- just to avoid flickering contact when loading into Gazebo -->
 <xacro:arg name="self_collide_gz" default="true" />
@@ -23,7 +23,7 @@
 
 </xacro:if>
 
-<!-- <xacro:if value="$(arg show_coll)">
+<!-- <xacro:if value="$(arg gen_coll)">
 
     <xacro:include filename="$(find repair_urdf)/urdf/repair_torso_coll_params.urdf.xacro"/>
 
@@ -52,7 +52,7 @@
                   iyy="0" iyz="0"
                   izz="0" />
         </inertial> 
-        <xacro:if value="$(arg show_coll)">
+        <xacro:if value="$(arg gen_coll)">
             <visual name="link0_coll_visual1">
 
                 <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -88,12 +88,14 @@
             </visual>
         </xacro:if>
     
-        <visual name="base_link_visual">
-            <geometry>
-                <mesh filename="package://repair_urdf/meshes/optimized/link_0.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-            </geometry>
-            <material name="dark"/>
-        </visual>
+        <xacro:if value="$(arg use_updated_wrist)">
+            <visual name="base_link_visual">
+                <geometry>
+                    <mesh filename="package://repair_urdf/meshes/optimized/link_0.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                </geometry>
+                <material name="dark"/>
+            </visual>
+        </xacro:if>
 
     </link>
 
@@ -160,6 +162,59 @@
     <!-- RePAIR assembly (two arms) -->
 
     <link name="base_link">
+        <!-- torso inertias + stuff attached to the sliding guide -->
+        <inertial>
+            <mass value="${full_torso_mass}" />
+            <origin xyz="0 0 0" />
+            <inertia ixx="0" ixy="0"  ixz="0"
+                    iyy="0" iyz="0"
+                    izz="0" />
+          </inertial>
+
+          <xacro:if value="$(arg gen_coll)">
+            <visual name="link0_coll_visual1">
+
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+    
+                <geometry>
+                    <sphere radius="${coll_radius_link1}"/>
+                </geometry>
+    
+                <material name="darkred"/>
+    
+            </visual>
+            <visual name="link0_coll_visual2">
+
+                <origin xyz="0 ${link2_coll_offset_y} 0" rpy="0 0 0"/>
+    
+                <geometry>
+                    <sphere radius="${coll_radius_link1}"/>
+                </geometry>
+    
+                <material name="darkred"/>
+    
+            </visual>
+            <visual name="link0_coll_visual3">
+
+                <origin xyz="0 ${- link2_coll_offset_y} 0" rpy="0 0 0"/>
+    
+                <geometry>
+                    <sphere radius="${coll_radius_link1}"/>
+                </geometry>
+    
+                <material name="darkred"/>
+    
+            </visual>
+        </xacro:if>
+
+        <xacro:if value="$(arg use_updated_wrist)">
+            <visual name="base_link_visual">
+                <geometry>
+                    <mesh filename="package://repair_urdf/meshes/optimized/link_0.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                </geometry>
+                <material name="dark"/>
+            </visual>
+        </xacro:if>
         
     </link>
 
@@ -211,10 +266,10 @@
 </xacro:unless>
 
 <xacro:repair_arm base_link="r_arm_mount_frame" id="1" is_sliding_wrist="$(arg is_sliding_wrist)"
-show_softhand="$(arg show_softhand)" show_coll="$(arg show_coll)" load_sol="$(arg load_sol)"/> 
+gen_coll="$(arg gen_coll)" load_sol="$(arg load_sol)" use_updated_wrist = "$(arg use_updated_wrist)"/> 
 
 <xacro:repair_arm base_link="l_arm_mount_frame" id="2" is_sliding_wrist="$(arg is_sliding_wrist)"
-show_softhand="$(arg show_softhand)" show_coll="$(arg show_coll)" load_sol="$(arg load_sol)"/>
+gen_coll="$(arg gen_coll)" load_sol="$(arg load_sol)" use_updated_wrist = "$(arg use_updated_wrist)"/>
 
 <xacro:repair_arm_materials id="1" />
 <xacro:repair_arm_materials id="2" />

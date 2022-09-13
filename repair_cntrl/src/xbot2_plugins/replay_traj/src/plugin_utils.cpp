@@ -367,7 +367,7 @@ TrajLoader::TrajLoader(std::string data_path, bool column_major, double resample
     _sample_times = Eigen::VectorXd::Zero(_n_nodes);
     for (int i = 0; i < (_n_nodes - 1); i++)
     {
-        _sample_times(i + 1) = _sample_times(i) + _dt_opt(i);
+        _sample_times(i + 1) = _sample_times(i) + _dt_opt(0, i);
     }
     _exec_time = _sample_times(_n_nodes - 1) - _sample_times(0);
 
@@ -437,7 +437,7 @@ Eigen::VectorXd TrajLoader::get_sample_times()
     return _sample_times;
 }
 
-void TrajLoader::get_loaded_traj(Eigen::MatrixXd& q_p, Eigen::MatrixXd& q_p_dot, Eigen::MatrixXd& tau, Eigen::VectorXd& dt_opt)
+void TrajLoader::get_loaded_traj(Eigen::MatrixXd& q_p, Eigen::MatrixXd& q_p_dot, Eigen::MatrixXd& tau, Eigen::MatrixXd& dt_opt)
 {
 
     q_p = _q_p;

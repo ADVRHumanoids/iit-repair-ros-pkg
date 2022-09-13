@@ -96,7 +96,7 @@ class PostProcS1:
         self.__read_opt_data()
 
         # self._man_cost = self.__get_man_cost()
-        self._man_index = self.__get_man_index(self._man_cost)
+        # self._man_index = self.__get_man_index(self._man_cost)
 
         self.__compute_solver_stats()
 
@@ -304,10 +304,10 @@ class PostProcS1:
         self._min_man_cost = np.min(np.array(self._man_cost))
         self._rmse_man_cost = self.__rmse(self._avrg_man_cost, self._man_cost)
 
-        self._avrg_man_index = np.mean(np.array(self._man_index))
-        self._max_man_index = np.max(np.array(self._man_index))
-        self._min_man_index = np.min(np.array(self._man_index))
-        self._rmse_man_index = self.__rmse(self._avrg_man_index, self._man_index)
+        # self._avrg_man_index = np.mean(np.array(self._man_index))
+        # self._max_man_index = np.max(np.array(self._man_index))
+        # self._min_man_index = np.min(np.array(self._man_index))
+        # self._rmse_man_index = self.__rmse(self._avrg_man_index, self._man_index)
 
         self._avrg_opt_costs = np.mean(np.array(self._opt_costs))
         self._max_opt_costs = np.max(np.array(self._opt_costs))
@@ -341,8 +341,7 @@ class PostProcS1:
     def __gen_urdf(self):
 
         sliding_wrist_command = "is_sliding_wrist:=" + "true"
-        show_softhand_command = "show_softhand:=" + "true"
-        show_coll_command = "show_coll:=" + "true"
+        gen_coll_command = "gen_coll:=" + "true"
 
         try:
         
@@ -350,8 +349,7 @@ class PostProcS1:
             xacro_gen = subprocess.check_call(["xacro",\
                                             self._xacro_full_path, \
                                             sliding_wrist_command, \
-                                            show_softhand_command, \
-                                            show_coll_command, \
+                                            gen_coll_command, \
                                             "-o", 
                                             self._urdf_full_path])
 
@@ -840,31 +838,31 @@ class PostProcS1:
         # ax_opt_c_box.grid()
 
         # man. index
-        leg_title = "average: " + str(round(self._avrg_man_index, round2)) + "\n" + \
-                    "RMSE: " + str(round(self._rmse_man_index, round2)) + "\n" + \
-                    "max: " + str(round(self._max_man_index, round2)) + "\n" + \
-                    "min: " + str(round(self._min_man_index, round2)) + "\n" 
+        # leg_title = "average: " + str(round(self._avrg_man_index, round2)) + "\n" + \
+        #             "RMSE: " + str(round(self._rmse_man_index, round2)) + "\n" + \
+        #             "max: " + str(round(self._max_man_index, round2)) + "\n" + \
+        #             "min: " + str(round(self._min_man_index, round2)) + "\n" 
 
-        _, ax_opt_mi_hist = plt.subplots(1)
-        ax_opt_mi_hist.hist(self._man_index, bins = int(len(self._man_index)/bin_scale_factor))
-        leg_opt_m = ax_opt_mi_hist.legend(loc="upper right", 
-            title = leg_title)
-        leg_opt_m.set_draggable(True)
-        ax_opt_mi_hist.set_xlabel(r"man. index")
-        ax_opt_mi_hist.set_ylabel(r"N samples")
-        ax_opt_mi_hist.set_title(r"Man. index", fontdict=None, loc='center')
-        ax_opt_mi_hist.grid()
+        # _, ax_opt_mi_hist = plt.subplots(1)
+        # ax_opt_mi_hist.hist(self._man_index, bins = int(len(self._man_index)/bin_scale_factor))
+        # leg_opt_m = ax_opt_mi_hist.legend(loc="upper right", 
+        #     title = leg_title)
+        # leg_opt_m.set_draggable(True)
+        # ax_opt_mi_hist.set_xlabel(r"man. index")
+        # ax_opt_mi_hist.set_ylabel(r"N samples")
+        # ax_opt_mi_hist.set_title(r"Man. index", fontdict=None, loc='center')
+        # ax_opt_mi_hist.grid()
         
-        _, ax_opt_mi_box = plt.subplots(1)
-        ax_opt_mi_box.boxplot(self._man_index, flierprops = green_diamond, vert=True, 
-                        # whis = (0, 100),
-                        autorange = True)
-        leg_opt_m_box = ax_opt_mi_box.legend(loc="upper right", 
-            title = leg_title)
-        leg_opt_m_box.set_draggable(True)
-        ax_opt_mi_box.set_xlabel(r"man. index")
-        ax_opt_mi_box.set_title(r"Man. index", fontdict=None, loc='center')
-        ax_opt_mi_box.grid()
+        # _, ax_opt_mi_box = plt.subplots(1)
+        # ax_opt_mi_box.boxplot(self._man_index, flierprops = green_diamond, vert=True, 
+        #                 # whis = (0, 100),
+        #                 autorange = True)
+        # leg_opt_m_box = ax_opt_mi_box.legend(loc="upper right", 
+        #     title = leg_title)
+        # leg_opt_m_box.set_draggable(True)
+        # ax_opt_mi_box.set_xlabel(r"man. index")
+        # ax_opt_mi_box.set_title(r"Man. index", fontdict=None, loc='center')
+        # ax_opt_mi_box.grid()
 
         # cl. man. index
 
@@ -1433,7 +1431,7 @@ class PostProcS3:
 
         final_solution_info = {"opt_cost": final_opt_cost, 
                                 "perf_index": final_man_measure,
-                                "dt_opt": np.full((1, len(final_opt_q[0, :] - 1)), self._task_dt).flatten(),
+                                "dt_opt": np.full((1, len(final_opt_q[0, :]) - 1), self._task_dt).flatten(),
                                 # dt opt is build using replicated values of _task_dt (useful for sim. purposes) 
                                 "q":final_opt_q,
                                 "q_dot": final_opt_q_dot,

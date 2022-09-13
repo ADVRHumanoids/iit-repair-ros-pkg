@@ -100,7 +100,7 @@ void TrajReplayerRt::init_dump_logger()
     _dump_logger->add("plugin_dt", _plugin_dt);
 
     _dump_logger->add("traj_dt_before_res", _traj_dt_before_res);
-     _dump_logger->add("q_p_bf_res", _q_p_bf_res);
+    _dump_logger->add("q_p_bf_res", _q_p_bf_res);
     _dump_logger->add("q_p_dot_bf_res", _q_p_dot_bf_res);
     _dump_logger->add("tau_bf_res", _tau_bf_res);
 

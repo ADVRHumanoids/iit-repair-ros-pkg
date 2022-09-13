@@ -111,7 +111,7 @@
 
     <joint name="arm_${id}_link_5_coll_joint" type="fixed">
 
-         <origin xyz="${link5_coll_offset_x + wrist_off} ${link5_coll_offset_y} ${link5_coll_offset_z}" rpy="0 0 0"/>
+        <origin xyz="${link5_coll_offset_x + wrist_off} ${link5_coll_offset_y} ${link5_coll_offset_z}" rpy="0 0 0"/>
 
         <parent link="arm_${id}_link_5"/>
 
@@ -124,7 +124,7 @@
 
     <joint name="arm_${id}_link_5_coll_joint" type="prismatic">
 
-        <origin xyz="${link5_coll_offset_x} ${link5_coll_offset_y} ${link5_coll_offset_z}" rpy="0 0 0"/>
+        <origin xyz="${link5_coll_offset_x } ${link5_coll_offset_y} ${link5_coll_offset_z}" rpy="0 0 0"/>
 
         <parent link="arm_${id}_link_5"/>
 

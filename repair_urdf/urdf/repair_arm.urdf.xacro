@@ -8,9 +8,9 @@
 
 <xacro:include filename="$(find repair_urdf)/urdf/repair_arm_coll_params.urdf.xacro"/>
 
-<xacro:macro name="repair_arm" params="id base_link is_sliding_wrist show_softhand show_coll load_sol" >
+<xacro:macro name="repair_arm" params="id base_link is_sliding_wrist gen_coll load_sol use_updated_wrist" >
 
-<xacro:if value="${show_coll == True}">
+<xacro:if value="${gen_coll == True}">
 
     <xacro:include filename="$(find repair_urdf)/urdf/repair_arm_coll.urdf.xacro"/>
 
@@ -22,7 +22,6 @@
 <!-- base_link: name of base link a the single arm -->
 <!-- is_sliding_wrist: whether to add a sliding joint along the axis of wrist's second d.o.f.
     (true -> yes), everything else -> no -->
-    <!-- show_softhand: whether to use softhand or not at the TCP -->
 
 <joint name="arm_${id}_joint_1" type="revolute">
 
@@ -56,10 +55,10 @@
 
         <collision name="arm_${id}_link_1_collision">
             <geometry>
-                <xacro:if value="$(arg load_sol)">
+                <xacro:if value="$(arg use_updated_wrist)">
                     <mesh filename="package://repair_urdf/meshes/optimized/link_1.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
                 </xacro:if>
-                <xacro:unless value="$(arg load_sol)">
+                <xacro:unless value="$(arg use_updated_wrist)">
                     <mesh filename="package://repair_urdf/meshes/base_meshes/link_1.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
                 </xacro:unless>
             </geometry>
@@ -67,10 +66,10 @@
         </collision>
         <visual name="arm_${id}_link_1_visual">
             <geometry>
-                <xacro:if value="$(arg load_sol)">
+                <xacro:if value="$(arg use_updated_wrist)">
                     <mesh filename="package://repair_urdf/meshes/optimized/link_1.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
                 </xacro:if>
-                <xacro:unless value="$(arg load_sol)">
+                <xacro:unless value="$(arg use_updated_wrist)">
                     <mesh filename="package://repair_urdf/meshes/base_meshes/link_1.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
                 </xacro:unless>
             </geometry>
@@ -83,10 +82,10 @@
 
         <collision name="arm_${id}_link_1_collision">
             <geometry>
-                <xacro:if value="$(arg load_sol)">
+                <xacro:if value="$(arg use_updated_wrist)">
                     <mesh filename="package://repair_urdf/meshes/optimized/link_1_mirror.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
                 </xacro:if>
-                <xacro:unless value="$(arg load_sol)">
+                <xacro:unless value="$(arg use_updated_wrist)">
                     <mesh filename="package://repair_urdf/meshes/base_meshes/link_1_mirror.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
                 </xacro:unless>
             </geometry>
@@ -94,10 +93,10 @@
         </collision>
         <visual name="arm_${id}_link_1_visual">
             <geometry>
-                <xacro:if value="$(arg load_sol)">
+                <xacro:if value="$(arg use_updated_wrist)">
                     <mesh filename="package://repair_urdf/meshes/optimized/link_1_mirror.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
                 </xacro:if>
-                <xacro:unless value="$(arg load_sol)">
+                <xacro:unless value="$(arg use_updated_wrist)">
                     <mesh filename="package://repair_urdf/meshes/base_meshes/link_1_mirror.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
                 </xacro:unless>
             </geometry>
@@ -139,10 +138,10 @@
 
     <collision name="arm_${id}_link_2_collision">
         <geometry>
-            <xacro:if value="$(arg load_sol)">
+            <xacro:if value="$(arg use_updated_wrist)">
                 <mesh filename="package://repair_urdf/meshes/optimized/link_2.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
             </xacro:if>
-            <xacro:unless value="$(arg load_sol)">
+            <xacro:unless value="$(arg use_updated_wrist)">
                 <mesh filename="package://repair_urdf/meshes/base_meshes/link_2.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
             </xacro:unless>
         </geometry>
@@ -150,10 +149,10 @@
     </collision>
     <visual name="arm_${id}_link_2_visual">
         <geometry>
-            <xacro:if value="$(arg load_sol)">
+            <xacro:if value="$(arg use_updated_wrist)">
                 <mesh filename="package://repair_urdf/meshes/optimized/link_2.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
             </xacro:if>
-            <xacro:unless value="$(arg load_sol)">
+            <xacro:unless value="$(arg use_updated_wrist)">
                 <mesh filename="package://repair_urdf/meshes/base_meshes/link_2.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
             </xacro:unless>
         </geometry>
@@ -192,10 +191,10 @@
 
     <collision name="arm_${id}_link_3_collision">
         <geometry>
-            <xacro:if value="$(arg load_sol)">
+            <xacro:if value="$(arg use_updated_wrist)">
                 <mesh filename="package://repair_urdf/meshes/optimized/link_3.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
             </xacro:if>
-            <xacro:unless value="$(arg load_sol)">
+            <xacro:unless value="$(arg use_updated_wrist)">
                 <mesh filename="package://repair_urdf/meshes/base_meshes/link_3.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
             </xacro:unless>
         </geometry>
@@ -204,10 +203,10 @@
     
     <visual name="arm_${id}_link_3_visual">
         <geometry>
-            <xacro:if value="$(arg load_sol)">
+            <xacro:if value="$(arg use_updated_wrist)">
                 <mesh filename="package://repair_urdf/meshes/optimized/link_3.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
             </xacro:if>
-            <xacro:unless value="$(arg load_sol)">
+            <xacro:unless value="$(arg use_updated_wrist)">
                 <mesh filename="package://repair_urdf/meshes/base_meshes/link_3.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
             </xacro:unless>
         </geometry>
@@ -236,10 +235,10 @@
 
     <collision name="arm_${id}_link_4_collision">
         <geometry>
-            <xacro:if value="$(arg load_sol)">
+            <xacro:if value="$(arg use_updated_wrist)">
                 <mesh filename="package://repair_urdf/meshes/optimized/link_4.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
             </xacro:if>
-            <xacro:unless value="$(arg load_sol)">
+            <xacro:unless value="$(arg use_updated_wrist)">
                 <mesh filename="package://repair_urdf/meshes/base_meshes/link_4.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
             </xacro:unless>
         </geometry>
@@ -248,10 +247,10 @@
 
     <visual name="arm_${id}_link_4_visual">
         <geometry>
-            <xacro:if value="$(arg load_sol)">
+            <xacro:if value="$(arg use_updated_wrist)">
                 <mesh filename="package://repair_urdf/meshes/optimized/link_4.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
             </xacro:if>
-            <xacro:unless value="$(arg load_sol)">
+            <xacro:unless value="$(arg use_updated_wrist)">
                 <mesh filename="package://repair_urdf/meshes/base_meshes/link_4.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
             </xacro:unless>
         </geometry>
@@ -261,7 +260,9 @@
 </link>
 
 <joint name="arm_${id}_joint_5" type="revolute">
-    <origin xyz="${5 * mmTom} 0 0" rpy="0 0 ${-PI_2}"/>
+
+    <origin xyz="${5 * mmTom} 0 0" rpy="${-PI_2} ${0} ${-PI_2}"/>
+
     <parent link="arm_${id}_link_4"/>
     <child link="arm_${id}_link_5"/>
     <axis xyz="0 0 1"/>
@@ -277,51 +278,48 @@
     </inertial>
 
     <collision name="arm_${id}_link_5_collision">
-        <geometry>
-            <xacro:if value="$(arg load_sol)">
+        <xacro:if value="$(arg use_updated_wrist)">
+            <origin xyz="0 0 0" rpy="${PI_2} ${0} ${0}"/>
+            <geometry>
                 <mesh filename="package://repair_urdf/meshes/optimized/link_5.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-            </xacro:if>
-            <xacro:unless value="$(arg load_sol)">
+            </geometry>
+        </xacro:if>
+        <xacro:unless value="$(arg use_updated_wrist)">
+            <origin xyz="0 0 0" rpy="${0} ${0} ${0}"/>
+            <geometry>
                 <mesh filename="package://repair_urdf/meshes/base_meshes/link_5.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-            </xacro:unless>
-        </geometry>
+            </geometry>
+        </xacro:unless>
+        
         <material name="dark"/>
     </collision>
     <visual name="arm_${id}_link_5_visual">
-        <geometry>
-            <xacro:if value="$(arg load_sol)">
+        <xacro:if value="$(arg use_updated_wrist)">
+            <origin xyz="0 0 0" rpy="${PI_2} ${0} ${0}"/>
+            <geometry>
                 <mesh filename="package://repair_urdf/meshes/optimized/link_5.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-            </xacro:if>
-            <xacro:unless value="$(arg load_sol)">
+            </geometry>
+        </xacro:if>
+        <xacro:unless value="$(arg use_updated_wrist)">
+            <origin xyz="0 0 0" rpy="${0} ${0} ${0}"/>
+            <geometry>
                 <mesh filename="package://repair_urdf/meshes/base_meshes/link_5.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-            </xacro:unless>
-        </geometry>
+            </geometry>
+        </xacro:unless>
         <material name="dark"/>
     </visual>
 </link>
 
-<xacro:if value="${is_sliding_wrist != True}">
-
-    <joint name="arm_${id}_joint_6" type="revolute">
-    
-        <origin xyz="${96.000 * mmTom} ${321.000 * mmTom} 0" rpy="0 ${-PI_2} 0"/>
-        <parent link="arm_${id}_link_5"/>
-        <child link="arm_${id}_link_6"/>
-        <axis xyz="0 0 1"/>
-        <limit lower="${-150.0 * DEG2RAD}" upper="${150.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
-    
-    </joint>
-
-</xacro:if>
-
-<xacro:unless value="${is_sliding_wrist != True}">
+<xacro:if value="${is_sliding_wrist == True}">
 
     <joint name="arm_${id}_joint_6" type="revolute">
 
-            <origin xyz="${96.000 * mmTom} ${321.000 * mmTom} 0" rpy="${PI} ${0} ${PI_2}"/>
+            <origin xyz="0 ${0.000 * mmTom} ${321.000 * mmTom} " rpy="${0} ${-PI_2} ${0}"/>
+            <axis xyz="0 0 1"/>
+        
             <parent link="arm_${id}_link_5"/>
             <child link="dummy_sliding_wrist${id}_link"/>
-            <axis xyz="0 0 1"/>
+            
             <limit lower="${-150.0 * DEG2RAD}" upper="${150.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
             
     </joint> 
@@ -351,6 +349,20 @@
 
     </xacro:unless>
 
+</xacro:if>
+
+<xacro:unless value="${is_sliding_wrist == True}">
+
+    <joint name="arm_${id}_joint_6" type="revolute">
+    
+        <origin xyz="${96.000 * mmTom} ${321.000 * mmTom} 0" rpy="0 ${-PI_2} 0"/>
+        <parent link="arm_${id}_link_5"/>
+        <child link="arm_${id}_link_6"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="${-150.0 * DEG2RAD}" upper="${150.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
+    
+    </joint>
+
 </xacro:unless>
 
 <link name="arm_${id}_link_6">
@@ -362,26 +374,34 @@
     </inertial>
 
     <collision name="arm_${id}_link_6_collision">
-        <geometry>
-            <xacro:if value="$(arg load_sol)">
+        <xacro:if value="$(arg use_updated_wrist)">
+            <origin xyz="0 0 0" rpy="${PI_2} ${0} ${0}"/>
+            <geometry>
                 <mesh filename="package://repair_urdf/meshes/optimized/link_6.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-            </xacro:if>
-            <xacro:unless value="$(arg load_sol)">
+            </geometry>
+        </xacro:if>
+        <xacro:unless value="$(arg use_updated_wrist)">
+            <origin xyz="0 0 0" rpy="${0} ${0} ${0}"/>
+            <geometry>
                 <mesh filename="package://repair_urdf/meshes/base_meshes/link_6.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-            </xacro:unless>
-        </geometry>
+            </geometry>
+        </xacro:unless>
         <material name="dark"/>
     </collision>
 
     <visual name="arm_${id}_link_6_visual">
-        <geometry>
-            <xacro:if value="$(arg load_sol)">
+        <xacro:if value="$(arg use_updated_wrist)">
+            <origin xyz="0 0 0" rpy="${PI_2} ${0} ${0}"/>
+            <geometry>
                 <mesh filename="package://repair_urdf/meshes/optimized/link_6.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-            </xacro:if>
-            <xacro:unless value="$(arg load_sol)">
+            </geometry>
+        </xacro:if>
+        <xacro:unless value="$(arg use_updated_wrist)">
+            <origin xyz="0 0 0" rpy="${0} ${0} ${0}"/>
+            <geometry>
                 <mesh filename="package://repair_urdf/meshes/base_meshes/link_6.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-            </xacro:unless>
-        </geometry>
+            </geometry>
+        </xacro:unless>
         <material name="dark"/>
     </visual>
 
@@ -416,106 +436,49 @@
         <origin xyz="${0 * mmTom} ${0 * mmTom} ${0 * mmTom}"/>
     </inertial>
 
-    <collision name="arm_${id}_link_7_collision">
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-            <xacro:if value="$(arg load_sol)">
-                <mesh filename="package://repair_urdf/meshes/optimized/link_7_sh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-            </xacro:if>
-            <xacro:unless value="$(arg load_sol)">
-                <mesh filename="package://repair_urdf/meshes/base_meshes/link_7.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-            </xacro:unless>
-        </geometry>
-        <material name="dark"/>
-    </collision>
-
-    <xacro:if value="${show_softhand == True}">
-
-        <visual name="arm_${id}_link_7_visual">
-
-                <origin xyz="0 0 0" rpy="0 0 0"/>
-                <geometry>
-                    <xacro:if value="$(arg load_sol)">
-                        <mesh filename="package://repair_urdf/meshes/optimized/link_7_rh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-                    </xacro:if>
-                    <xacro:unless value="$(arg load_sol)">
-                        <mesh filename="package://repair_urdf/meshes/base_meshes/link_7.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-                    </xacro:unless>
-                </geometry>
-                <material name="dark"/>
-            
-        </visual>
-        
-    </xacro:if>
-
-
 </link>
-
-<xacro:if value="${show_softhand == True}">
     
-    <joint name="arm_${id}_tcp_joint" type="fixed">
+<joint name="arm_${id}_tcp_joint" type="fixed">
 
-        <origin xyz="0 ${- object_size *  sin(softhand_mount_angle)} ${10.0 * mmTom + object_size *  cos(softhand_mount_angle)}" 
-                rpy="0 ${-(PI_2 + softhand_mount_angle)} ${-(PI_2)}"/>
+    <origin xyz="0 ${- object_size *  sin(softhand_mount_angle)} ${10.0 * mmTom + object_size *  cos(softhand_mount_angle)}" 
+            rpy="0 ${-(PI_2 + softhand_mount_angle)} ${-(PI_2)}"/>
 
-        <parent link="arm_${id}_link_7"/>
+    <parent link="arm_${id}_link_7"/>
 
-        <child link="arm_${id}_tcp"/>
+    <child link="arm_${id}_tcp"/>
 
-    </joint>
+</joint>
 
-    <link name="arm_${id}_tcp">
+<link name="arm_${id}_tcp">
+    
+    <visual name="arm_${id}_tcp_visual">
+
+        <origin xyz="0 0 ${object_size}" rpy="0 0 0"/>
         
-        <xacro:unless value="$(arg load_sol)">
-
-            <visual name="arm_${id}_tcp_visual">
-
-                <origin xyz="0 0 ${object_size}" rpy="0 0 0"/>
+        <xacro:if value="${id == 1}">
+            
+            <geometry>
                 
-                <xacro:if value="${id == 1}">
+                <mesh filename="package://repair_urdf/meshes/link_7_sh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                
+            </geometry>
+
+        </xacro:if>
+        <xacro:unless value="${id == 1}">
+
+                <geometry>
                     
-                    <geometry>
-                        
-                        <mesh filename="package://repair_urdf/meshes/base_meshes/link_7_sh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-                        
-                    </geometry>
-
-                </xacro:if>
-                <xacro:unless value="${id == 1}">
-
-                        <geometry>
-                            
-                            <mesh filename="package://repair_urdf/meshes/base_meshes/link_7_rh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
-                            
-                        </geometry>
-
-                </xacro:unless>
-
-                <material name="dark"/>
-
-            </visual>
+                    <mesh filename="package://repair_urdf/meshes/link_7_rh.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+                    
+                </geometry>
 
         </xacro:unless>
 
-    </link>
+        <material name="dark"/>
 
-</xacro:if>
+    </visual>
 
-<xacro:unless value="${show_softhand == True}">
-    
-    <joint name="arm_${id}_tcp_joint" type="fixed">
-
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-
-        <parent link="arm_${id}_link_7"/>
-
-        <child link="arm_${id}_tcp"/>
-
-    </joint>
-
-    <link name="arm_${id}_tcp"/>
-
-</xacro:unless>
+</link>
 
 </xacro:macro>
 
