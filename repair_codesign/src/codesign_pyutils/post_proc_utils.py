@@ -4,8 +4,7 @@ from codesign_pyutils.math_utils import compute_man_index
 from codesign_pyutils.task_utils import gen_task_copies, compute_ms_cl_man
 from codesign_pyutils.miscell_utils import correct_list, extract_q_design, extract_q_joint
 from codesign_pyutils.clustering_utils import Clusterer
-
-from codesign_pyutils.misc_definitions import get_design_map
+from codesign_pyutils.misc_definitions import get_design_map, super_high_cost
 
 from horizon.utils import mat_storer
 
@@ -1044,10 +1043,10 @@ class PostProcS3:
         self._task_dt = self._info_data["dt"][0][0]
         self._filling_nnodes = self._info_data["filling_nodes"][0][0]
 
-        self._s2_cl_cand_inds = self._info_data["l2_cl_cand_inds"][0]
-        self._s2_cl_cands_opt_cost = self._info_data["l2_cl_opt_costs"][0]
-        self._s2_cl_candidates = self._info_data["l2_cl_best_candidates"]
-        self._s2_cl_cands_man_measure = self._info_data["l2_cl_cand_man_measure"]
+        self._s2_cl_cand_inds = self._info_data["2nd_step_cand_inds"][0]
+        self._s2_cl_cands_opt_cost = self._info_data["2nd_step_cand_opt_costs"][0]
+        self._s2_cl_candidates = self._info_data["2nd_step_best_candidates"]
+        self._s2_cl_cands_man_measure = self._info_data["2nd_step_can_man_measure"]
 
         self._integrator = self._info_data["integrator"][0]
         self._ig_seed = self._info_data["ig_seed"][0][0]
@@ -1281,7 +1280,10 @@ class PostProcS3:
 
         for cl in range(self._n_clust):
             
-            min_second_lev_cl = np.min(np.array(self._second_lev_opt_costs[cl]))
+            min_second_lev_cl = super_high_cost
+            if len(self._second_lev_opt_costs[cl]) > 0:
+
+                min_second_lev_cl = np.min(np.array(self._second_lev_opt_costs[cl]))
 
             self._second_lev_true_costs[cl] = \
                 min_second_lev_cl if (min_second_lev_cl<=self._s2_cl_cands_opt_cost[cl]) else self._s2_cl_cands_opt_cost[cl]
@@ -1311,8 +1313,8 @@ class PostProcS3:
                 sum_sqrd_man = sum_sqrd_man + (self._second_lev_man_measure[cl][ms_sample] - min_man_cl)**2
                 sum_sqrd_cost = sum_sqrd_cost + (self._second_lev_opt_costs[cl][ms_sample] - min_man_cl)**2
 
-            self._rmse_man_meas[cl] = np.sqrt(sum_sqrd_man / n_opt_ms_cl)
-            self._rmse_opt_cost[cl] = np.sqrt(sum_sqrd_cost / n_opt_ms_cl)
+            self._rmse_man_meas[cl] = np.sqrt(sum_sqrd_man / n_opt_ms_cl) if n_opt_ms_cl != 0 else -1.0 
+            self._rmse_opt_cost[cl] = np.sqrt(sum_sqrd_cost / n_opt_ms_cl) if n_opt_ms_cl != 0 else -1.0 
 
     def __compute_second_lev_best_sol(self, use_weighted = False):
 

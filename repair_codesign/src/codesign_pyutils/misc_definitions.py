@@ -7,6 +7,7 @@ epsi_default = 0.000001
 rot2trasl_man_scl_fact = 5.0 # man_trasl * rot2trasl_man_scl_fact will scale 
 # man_trasl so that man_rot and man_trasl have comparable magnitude 
 
+super_high_cost = 1e25
 def get_design_map():
 
     # THIS DEFINITIONS CAN CHANGE IF THE URDF CHANGES --> MIND THE URDF!!!
