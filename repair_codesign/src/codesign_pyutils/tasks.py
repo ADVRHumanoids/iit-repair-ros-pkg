@@ -809,8 +809,8 @@ class TaskGen:
               
 
         # TCPs inside working volume (assumed to be a box)
-        ws_ub = np.array([1.2, 0.8, 1.0])
-        ws_lb = np.array([-1.2, -0.8, 0.0])
+        ws_ub = np.array([1.25, 0.5, 1.0])
+        ws_lb = np.array([-1.25, -0.5, 0.0])
 
         keep_tcp_in_ws_rght = self.prb.createConstraint("keep_tcp_in_ws_rght",\
                                                            self.rght_tcp_pos_wrt_ws)

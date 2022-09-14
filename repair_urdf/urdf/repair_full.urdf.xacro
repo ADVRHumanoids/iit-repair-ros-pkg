@@ -52,41 +52,6 @@
                   iyy="0" iyz="0"
                   izz="0" />
         </inertial> 
-        <xacro:if value="$(arg gen_coll)">
-            <visual name="link0_coll_visual1">
-
-                <origin xyz="0 0 0" rpy="0 0 0"/>
-    
-                <geometry>
-                    <sphere radius="${coll_radius_link1}"/>
-                </geometry>
-    
-                <material name="darkred"/>
-    
-            </visual>
-            <visual name="link0_coll_visual2">
-
-                <origin xyz="0 ${link2_coll_offset_y} 0" rpy="0 0 0"/>
-    
-                <geometry>
-                    <sphere radius="${coll_radius_link1}"/>
-                </geometry>
-    
-                <material name="darkred"/>
-    
-            </visual>
-            <visual name="link0_coll_visual3">
-
-                <origin xyz="0 ${- link2_coll_offset_y} 0" rpy="0 0 0"/>
-    
-                <geometry>
-                    <sphere radius="${coll_radius_link1}"/>
-                </geometry>
-    
-                <material name="darkred"/>
-    
-            </visual>
-        </xacro:if>
     
         <xacro:if value="$(arg use_updated_wrist)">
             <visual name="base_link_visual">
@@ -170,42 +135,6 @@
                     iyy="0" iyz="0"
                     izz="0" />
           </inertial>
-
-          <xacro:if value="$(arg gen_coll)">
-            <visual name="link0_coll_visual1">
-
-                <origin xyz="0 0 0" rpy="0 0 0"/>
-    
-                <geometry>
-                    <sphere radius="${coll_radius_link1}"/>
-                </geometry>
-    
-                <material name="darkred"/>
-    
-            </visual>
-            <visual name="link0_coll_visual2">
-
-                <origin xyz="0 ${link2_coll_offset_y} 0" rpy="0 0 0"/>
-    
-                <geometry>
-                    <sphere radius="${coll_radius_link1}"/>
-                </geometry>
-    
-                <material name="darkred"/>
-    
-            </visual>
-            <visual name="link0_coll_visual3">
-
-                <origin xyz="0 ${- link2_coll_offset_y} 0" rpy="0 0 0"/>
-    
-                <geometry>
-                    <sphere radius="${coll_radius_link1}"/>
-                </geometry>
-    
-                <material name="darkred"/>
-    
-            </visual>
-        </xacro:if>
 
         <xacro:if value="$(arg use_updated_wrist)">
             <visual name="base_link_visual">

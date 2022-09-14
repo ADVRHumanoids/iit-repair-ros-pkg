@@ -40,6 +40,7 @@ def main(args):
 
     sliding_wrist_command = "is_sliding_wrist:=" + "true"
     gen_coll_command = "gen_coll:=" + str(args.gen_coll).lower()
+    use_updated_meshes = "use_updated_wrist:=" + str(args.use_updated_meshes).lower()
     # preliminary ops
 
     try:
@@ -50,6 +51,7 @@ def main(args):
                                         xacro_full_path, \
                                         sliding_wrist_command, \
                                         gen_coll_command, \
+                                        use_updated_meshes, \
                                         "-o", 
                                         urdf_full_path])
 
@@ -64,7 +66,8 @@ def main(args):
                                         "repair_urdf",\
                                         "repair_full.launch", \
                                         sliding_wrist_command,\
-                                        gen_coll_command])
+                                        gen_coll_command, \
+                                        use_updated_meshes])
 
     except:
 
@@ -169,6 +172,8 @@ if __name__ == '__main__':
                         help = 'whether to only the best solution', default = True)
     parser.add_argument('--gen_coll', '-coll', type=str2bool,\
                         help = 'whether to generate collisions', default = True)
+    parser.add_argument('--use_updated_meshes', '-uum', type=str2bool,\
+                        help = 'whether to use updated meshes', default = False)
 
     args = parser.parse_args()
 

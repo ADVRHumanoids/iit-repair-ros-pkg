@@ -386,27 +386,6 @@ fake inertia -> it is acceptable. -->
       <origin xyz="0 0 0"/>
       <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
     </inertial>
-    <visual name="link0_coll_visual1">
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <sphere radius="0.07"/>
-      </geometry>
-      <material name="darkred"/>
-    </visual>
-    <visual name="link0_coll_visual2">
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <sphere radius="0.07"/>
-      </geometry>
-      <material name="darkred"/>
-    </visual>
-    <visual name="link0_coll_visual3">
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <sphere radius="0.07"/>
-      </geometry>
-      <material name="darkred"/>
-    </visual>
   </link>
   <joint name="r_arm_mount_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0.0 -0.2942172496425824 0.0"/>
@@ -512,7 +491,7 @@ fake inertia -> it is acceptable. -->
   <link name="arm_1_link5_coll">
     <visual name="arm_1_link5_coll_visual">
       <geometry>
-        <sphere radius="0.05"/>
+        <sphere radius="0.06"/>
       </geometry>
       <material name="darkred"/>
     </visual>
@@ -800,7 +779,7 @@ fake inertia -> it is acceptable. -->
   <link name="arm_2_link5_coll">
     <visual name="arm_2_link5_coll_visual">
       <geometry>
-        <sphere radius="0.05"/>
+        <sphere radius="0.06"/>
       </geometry>
       <material name="darkred"/>
     </visual>
