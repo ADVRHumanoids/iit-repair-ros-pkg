@@ -765,6 +765,8 @@ class TaskGen:
         # lower and upper bounds for design variables and joint variables
         self.q.setBounds(self.lbs, self.ubs)
         
+        # add also velocity bounds? 
+        
         # adapt link5 coll model to the wrist offset so that future design 
         # changes of link5 are accounted for in the optimzation
 
