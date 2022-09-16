@@ -247,6 +247,9 @@ class LogPlotter:
 
         self.__make_effort_plots()
 
+    # def __filter_outliers(self, input: np.ndarray):
+
+
     def __make_interp_plot(self):
     
         # sol time
@@ -456,6 +459,25 @@ class LogPlotter:
         ax_sol_t[2].set_ylabel(r"joint effort [N]")
         ax_sol_t[2].set_title(r"Sliding guide imp. control effort", fontdict=None, loc='center')
         ax_sol_t[2].grid()
+
+        green_diamond = dict(markerfacecolor='g', marker='D')
+        
+        _, ax_sol_t_box = plt.subplots(1)
+        cut_index = np.argwhere(np.logical_and(self._plugin_time <= 6 + 0.01, self._plugin_time >= 6 - 0.01))[0][0]
+        
+        ax_sol_t_box.boxplot(np.concatenate((np.expand_dims(self._tau_meas_x, 0)[:, 0: cut_index + 1],\
+                                                            self._tau_meas1[:, 0: cut_index + 1],\
+                                                            self._tau_meas2[:, 0: cut_index + 1])).T,\
+                                                            flierprops = green_diamond, vert=True, 
+                        # whis = (0, 100),
+                        autorange = True, 
+                        labels = [self._joint_names[0]] + [""] * (2 * self._n_arm_dofs))
+        # leg_box_t = ax_sol_t_box.legend(loc="upper right", 
+        #     title = leg_title)
+        # leg_box_t.set_draggable(True)                
+        ax_sol_t_box.set_ylabel("joint effort")
+        ax_sol_t_box.set_title(r"Impedance control effort distribution", fontdict=None, loc='center')
+        ax_sol_t_box.grid()
 
     def show_plots(self):
 
