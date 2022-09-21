@@ -1043,10 +1043,16 @@ class PostProcS3:
         self._task_dt = self._info_data["dt"][0][0]
         self._filling_nnodes = self._info_data["filling_nodes"][0][0]
 
-        self._s2_cl_cand_inds = self._info_data["2nd_step_cand_inds"][0]
-        self._s2_cl_cands_opt_cost = self._info_data["2nd_step_cand_opt_costs"][0]
-        self._s2_cl_candidates = self._info_data["2nd_step_best_candidates"]
-        self._s2_cl_cands_man_measure = self._info_data["2nd_step_can_man_measure"]
+        self._s2_cl_cand_inds = self._info_data["s2_cl_cand_inds"][0]
+        self._s2_cl_cands_opt_cost = self._info_data["s2_cl_opt_costs"][0]
+        self._s2_cl_candidates = self._info_data["s2_cl_best_candidates"]
+        self._s2_cl_cands_man_measure = self._info_data["s2_cl_man_measure"]
+
+        # #old names --> DEPRECATED
+        # self._s2_cl_cand_inds = self._info_data["l2_cl_cand_inds"][0]
+        # self._s2_cl_cands_opt_cost = self._info_data["l2_cl_opt_costs"][0]
+        # self._s2_cl_candidates = self._info_data["l2_cl_best_candidates"]
+        # self._s2_cl_cands_man_measure = self._info_data["l2_cl_cand_man_measure"]
 
         self._integrator = self._info_data["integrator"][0]
         self._ig_seed = self._info_data["ig_seed"][0][0]
@@ -1409,7 +1415,6 @@ class PostProcS3:
                     "rmse_man_meas": self._rmse_man_meas, 
                     "rmse_opt_cost":self._rmse_opt_cost, 
                     "nodes_list": self._nodes_list}
-
         
         best_cost_index = self.__get_best_sol_index()
 
@@ -1431,6 +1436,9 @@ class PostProcS3:
             final_opt_q_jnt = self._3rd_step_opt_data[self._best_second_lev_cl_index]["q_jnt"][best_cost_index]
             final_opt_q_dot_jnt = self._3rd_step_opt_data[self._best_second_lev_cl_index]["q_dot_jnt"][best_cost_index]
 
+        print("AAAAAAAAAAAAAAAAAAAAAAA")
+
+        
         final_solution_info = {"opt_cost": final_opt_cost, 
                                 "perf_index": final_man_measure,
                                 "dt_opt": np.full((1, len(final_opt_q[0, :]) - 1), self._task_dt).flatten(),
@@ -1443,16 +1451,17 @@ class PostProcS3:
                                 # adding one column to make q and q_dot dimenions equal (useful for sim. purposes) 
                                 "tau": np.zeros((len(final_opt_q_jnt[:, 0]), len(final_opt_q_dot_jnt[0, :])))}
 
+        
+
         third_step_dumper.add_storer(info_stuff, self._dump_path,\
                                 "3rd_step_postproc_results_" + str(self._unique_id),\
                                 False)    
-
         third_step_dumper.add_storer(final_solution_info, self._dump_path,\
                                 "final_opt_solution_" + str(self._unique_id),\
                                 False) 
 
         third_step_dumper.dump()
-
+        
     def print_best_sol(self, weighted= False):
 
         if not weighted:

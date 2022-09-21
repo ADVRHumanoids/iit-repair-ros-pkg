@@ -14,4 +14,4 @@ import numpy as np
 # postprl1.show_plots()
 
 
-postprl2 = PostProcS3("/home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/test_results_12-09-2022-17_44_36") 
+postprl2 = PostProcS3("/home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/test_results_07-09-2022-16_52_10") 

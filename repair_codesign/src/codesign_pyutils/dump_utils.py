@@ -51,8 +51,7 @@ class SolDumper():
                       self.backend_list) 
 
   def dump(self):
-    
+
     for i in range(len(self.sols)):
 
       self.storers[i].store(self.sols[i])
-  
