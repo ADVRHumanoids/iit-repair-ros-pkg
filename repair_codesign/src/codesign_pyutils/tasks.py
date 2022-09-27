@@ -1,4 +1,3 @@
-
 from codesign_pyutils.math_utils import quat2rot
 
 from codesign_pyutils.misc_definitions import epsi_default, get_bimanual_frame_rot,\
@@ -1305,14 +1304,14 @@ class TaskGen:
 
         if j == 1: # ARM 1: goes to pick position | ARM 2: goes to pick position
                 
-                # exchange has to happen with vertial hands
+                # exchange has to happen with vertical hands
                 add_pose_cnstrnt(cnstrnt_id_rght, self.prb, cnstrnt_node_index, \
                                     self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
                                     self.object_pos_rght[i] + np.array([0.0, - self.object_size[0]/2, self.contact_heights[i]]),\
                                     cs.DM([[0.0, 1.0, 0.0],\
                                             [0.0, 0.0, -1.0],\
                                             [-1.0, 0.0, 0.0]]), \
-                                    pos_selection = ["x", "y", "z"],\
+                                    pos_selection = ["x", "y"],\
                                     rot_selection = ["x", "y", "z"],\
                                     weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                     is_soft = is_soft_pose_cnstr, epsi = epsi)
