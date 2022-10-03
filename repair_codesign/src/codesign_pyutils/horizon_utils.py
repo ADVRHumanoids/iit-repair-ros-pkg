@@ -325,14 +325,14 @@ class SimpleCollHandler:
 
     def get_link_abs_pos(self, link_name):
 
-        fk_link = cs.Function.deserialize(self.kindyn.fk(link_name)) 
+        fk_link = self.kindyn.fk(link_name)
         frame_pos = fk_link(q = self.q_p)["ee_pos"]
 
         return frame_pos
     
     def get_ws_abs_pos(self, ws_name = "working_surface_link"):
 
-        fk_link = cs.Function.deserialize(self.kindyn.fk(ws_name)) 
+        fk_link = self.kindyn.fk(ws_name)
         frame_pos = fk_link(q = self.q_p)["ee_pos"]
 
         return frame_pos

@@ -392,7 +392,7 @@ if __name__ == '__main__':
                                         t_exec_task,
                                         rot_error_epsi,
                                         args.use_classical_man,
-                                        args.use_statict_tau,
+                                        args.use_static_tau,
                                         is_sliding_wrist,
                                         coll_yaml_path,
                                         is_second_lev_opt, 

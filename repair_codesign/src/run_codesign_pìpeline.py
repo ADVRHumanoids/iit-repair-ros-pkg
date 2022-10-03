@@ -22,7 +22,7 @@ if __name__ == '__main__':
         description='Pipeline script for the co-design of RePAIR project')
 
     # first level specific arguments
-    parser.add_argument('--multistart_n_l1', '-msn_l1', type = int,\
+    parser.add_argument('--multistart_n_s1', '-msn_s1', type = int,\
                         help = '', default = 108)
     parser.add_argument('--max_trials_factor_s1', '-mtfs1', type=int,\
                         help = 'for each multistart node, at best max_trials_factor new solutions will be tried to obtain an optimal solution',
@@ -129,62 +129,62 @@ if __name__ == '__main__':
 
     os.chdir(exec_path) # change current path, so that executable can be run with check_call
 
-    if args.multistart_n_l1 > 0:
+    if args.multistart_n_s1 > 0:
 
-        try:
+        # try:
 
-            print(colored("\n--> STARTING FIRST LEVEL OPTIMIZATION....\n", "blue"))
-            reset_term = subprocess.check_call(["reset"])
-            # run first level (blocking --> we have to wait for data to be dumped to file)
-            first_level_proc = subprocess.check_call(["./run_1st_step_opt_on_workstation.py", \
-                                        "-mst", \
-                                        str(args.multistart_n_l1), \
-                                        "-mtf", \
-                                        str(args.max_trials_factor_s1), \
-                                        "-igs", \
-                                        str(args.ig_seed_s1),  \
-                                        "-fnn", \
-                                        str(args.filling_nnodes), \
-                                        "-ipopt_v", \
-                                        str(args.ipopt_verb_lev), \
-                                        "-run_ext", \
-                                        str(True), \
-                                        "-id", \
-                                        str(unique_id), \
-                                        "-ma57", \
-                                        str(args.use_ma57), \
-                                        "-wo", \
-                                        str(args.wrist_offset), \
-                                        "-isw", \
-                                        str(args.is_sliding_wrist), \
-                                        "-nysf", \
-                                        str(args.n_y_samples_flip),\
-                                        "-nysb", \
-                                        str(args.n_y_samples_biman),\
-                                        "-yubf", \
-                                        str(args.y_sampl_ub_flip), \
-                                        "-yubb", \
-                                        str(args.y_sampl_ub_biman), \
-                                        "-dfn", \
-                                        l1_dump_folder_name, \
-                                        "-rdbs", \
-                                        res_dir_basename, \
-                                        "-iplf", \
-                                        str(args.is_in_place_flip), \
-                                        "-ibp", \
-                                        str(args.is_biman_pick), \
-                                        "-urdf", \
-                                        urdf_full_path, \
-                                        "-coll", \
-                                        coll_yaml_path, 
-                                        "-ustau", 
-                                        args.use_static_tau])
+        print(colored("\n--> STARTING FIRST LEVEL OPTIMIZATION....\n", "blue"))
+        reset_term = subprocess.check_call(["reset"])
+        # run first level (blocking --> we have to wait for data to be dumped to file)
+        first_level_proc = subprocess.check_call(["./run_1st_step_opt_on_workstation.py", \
+                                    "-mst", \
+                                    str(args.multistart_n_s1), \
+                                    "-mtf", \
+                                    str(args.max_trials_factor_s1), \
+                                    "-igs", \
+                                    str(args.ig_seed_s1),  \
+                                    "-fnn", \
+                                    str(args.filling_nnodes), \
+                                    "-ipopt_v", \
+                                    str(args.ipopt_verb_lev), \
+                                    "-run_ext", \
+                                    str(True), \
+                                    "-id", \
+                                    str(unique_id), \
+                                    "-ma57", \
+                                    str(args.use_ma57), \
+                                    "-wo", \
+                                    str(args.wrist_offset), \
+                                    "-isw", \
+                                    str(args.is_sliding_wrist), \
+                                    "-nysf", \
+                                    str(args.n_y_samples_flip),\
+                                    "-nysb", \
+                                    str(args.n_y_samples_biman),\
+                                    "-yubf", \
+                                    str(args.y_sampl_ub_flip), \
+                                    "-yubb", \
+                                    str(args.y_sampl_ub_biman), \
+                                    "-dfn", \
+                                    l1_dump_folder_name, \
+                                    "-rdbs", \
+                                    res_dir_basename, \
+                                    "-iplf", \
+                                    str(args.is_in_place_flip), \
+                                    "-ibp", \
+                                    str(args.is_biman_pick), \
+                                    "-urdf", \
+                                    urdf_full_path, \
+                                    "-coll", \
+                                    coll_yaml_path, 
+                                    "-ustau", 
+                                    str(args.use_static_tau)])
 
-            print(colored("\n--> FIRST LEVEL OPTIMIZATION FINISHED SUCCESSFULLY. \n", "blue"))
+        print(colored("\n--> FIRST LEVEL OPTIMIZATION FINISHED SUCCESSFULLY. \n", "blue"))
 
-        except:
+        # except:
 
-            print(colored('\n An exception occurred while running the first level of the codesign pipeline. Muy malo!!! \n', "red"))
+            # print(colored('\n An exception occurred while running the first level of the codesign pipeline. Muy malo!!! \n', "red"))
     
 
     if args.multistart_n_s3 > 0:
