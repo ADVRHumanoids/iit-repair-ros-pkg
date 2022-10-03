@@ -104,6 +104,7 @@ class PostProcS1:
             self.__gen_urdf()
             print(colored("\nGenerating task copy...\n", "magenta"))
             self._task_copy = gen_task_copies(self._man_w_base, self._class_man_w_base,
+                                            self._static_tau_w_base,
                                             self._filling_nnodes, 
                                             self._wrist_off,
                                             self._ny_sampl,
@@ -112,6 +113,7 @@ class PostProcS1:
                                             self._t_exec_task, 
                                             self._rot_error_epsi, 
                                             self._is_class_man, 
+                                            self._use_static_tau,
                                             self._is_sliding_wrist, 
                                             self._coll_yaml_path, 
                                             is_second_lev_opt=False)
@@ -153,10 +155,13 @@ class PostProcS1:
         self._transcription_method = self._prb_info_data["transcription_method"][0]
         self._unique_id = self._prb_info_data["unique_id"][0]
         self._is_class_man = bool(self._prb_info_data["use_classical_man"][0][0])
+        self._use_static_tau = bool(self._prb_info_data["use_static_tau"][0][0])
         self._class_man_w_base = self._prb_info_data["w_clman_base"][0][0]
         self._class_man_w_a = self._prb_info_data["w_clman_actual"][0][0]
         self._man_w_base = self._prb_info_data["w_man_base"][0][0]
         self._man_w_a = self._prb_info_data["w_man_actual"][0][0]
+        self._static_tau_w_base = self._prb_info_data["w_stau_base"][0][0]
+        self._static_tau_w_a = self._prb_info_data["w_stau_actual"][0][0]
         self._wrist_off = self._prb_info_data["sliding_wrist_offset"][0][0]
         self._is_sliding_wrist = bool(self._prb_info_data["is_sliding_wrist"][0][0])
 

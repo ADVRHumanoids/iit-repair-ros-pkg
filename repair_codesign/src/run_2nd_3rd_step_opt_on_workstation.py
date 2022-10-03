@@ -264,41 +264,40 @@ if __name__ == '__main__':
     solution_base_name = args.solution_base_name
 
     # loading solution and extracting data
-    postprl1 = PostProcS1(load_path, l1_dirname=args.load_dir_name)
-    postprl1.clusterize(args.n_clust)
+    postprc_s1 = PostProcS1(load_path, l1_dirname=args.load_dir_name)
+    postprc_s1.clusterize(args.n_clust)
 
-    n_opt_sol = postprl1._n_opt_sols
-    n_int = postprl1._n_int 
-    first_lev_cand_inds = postprl1._clusterer.get_l1_cl_cands_idx()
-    fist_lev_cand_man_measure = postprl1._clusterer.get_l1_cl_cands_man_measure()
-    fist_lev_cand_opt_costs = postprl1._clusterer.get_l1_cl_cands_opt_cost()
-    n_clust = postprl1._clusterer.get_n_clust()
+    n_opt_sol = postprc_s1._n_opt_sols
+    n_int = postprc_s1._n_int 
+    first_lev_cand_inds = postprc_s1._clusterer.get_l1_cl_cands_idx()
+    fist_lev_cand_man_measure = postprc_s1._clusterer.get_l1_cl_cands_man_measure()
+    fist_lev_cand_opt_costs = postprc_s1._clusterer.get_l1_cl_cands_opt_cost()
+    n_clust = postprc_s1._clusterer.get_n_clust()
     # unique id used for generation of results
-    unique_id = postprl1._unique_id
+    unique_id = postprc_s1._unique_id
     # task-specific options
-    right_arm_picks = postprl1._right_arm_picks
-    filling_n_nodes = postprl1._filling_nnodes
-    rot_error_epsi = postprl1._rot_error_epsi
+    right_arm_picks = postprc_s1._right_arm_picks
+    filling_n_nodes = postprc_s1._filling_nnodes
+    rot_error_epsi = postprc_s1._rot_error_epsi
     # samples
-    n_y_samples = postprl1._ny_sampl
-    y_sampl_ub = postprl1._y_sampl_ub
+    n_y_samples = postprc_s1._ny_sampl
+    y_sampl_ub = postprc_s1._y_sampl_ub
     # chosen task
-    is_in_place_flip = postprl1._is_in_place_flip
-    is_biman_pick = postprl1._is_biman_pick
+    is_in_place_flip = postprc_s1._is_in_place_flip
+    is_biman_pick = postprc_s1._is_biman_pick
 
     # number of solution tries with different (random) initializations
     n_msrt_trgt = args.n_msrt_trgt
 
     # solver options
-    solver_type = postprl1._solver_type
+    solver_type = postprc_s1._solver_type
 
-    slvr_opt = {
-            "ipopt.tol": postprl1._slvr_opts_tol, 
-            "ipopt.max_iter": postprl1._slvr_opts_maxiter,
-            "ipopt.constr_viol_tol": postprl1._slvr_opts_cnstr_viol,
-            "ipopt.print_level": postprl1._slvr_opts_print_l,\
+    slvr_opt = {"ipopt.tol": postprc_s1._slvr_opts_tol, 
+            "ipopt.max_iter": postprc_s1._slvr_opts_maxiter,
+            "ipopt.constr_viol_tol": postprc_s1._slvr_opts_cnstr_viol,
+            "ipopt.print_level": postprc_s1._slvr_opts_print_l,\
             "ilqr.verbose": True, 
-            "ipopt.linear_solver": postprl1._slvr_opts_lin_solv}
+            "ipopt.linear_solver": postprc_s1._slvr_opts_lin_solv}
 
     full_file_paths = None # not used
 
@@ -306,15 +305,15 @@ if __name__ == '__main__':
     ig_seed = args.ig_seed
 
     # single task execution time
-    t_exec_task = postprl1._t_exec_task
+    t_exec_task = postprc_s1._t_exec_task
 
     # transcription options (if used)
-    transcription_method = postprl1._transcription_method
-    intgrtr = postprl1._integrator
+    transcription_method = postprc_s1._transcription_method
+    intgrtr = postprc_s1._integrator
     transcription_opts = dict(integrator = intgrtr)
 
-    sliding_wrist_offset = postprl1._wrist_off
-    is_sliding_wrist = postprl1._is_sliding_wrist
+    sliding_wrist_offset = postprc_s1._wrist_off
+    is_sliding_wrist = postprc_s1._is_sliding_wrist
 
     max_retry_n = args.max_trials_factor - 1
     max_ig_trials = n_msrt_trgt * args.max_trials_factor
@@ -349,9 +348,11 @@ if __name__ == '__main__':
             os.makedirs(fail_path[i])
 
 
-    use_classical_man = postprl1._is_class_man
-    weight_global_manip = postprl1._man_w_base
-    weight_class_manip = postprl1._class_man_w_base
+    use_classical_man = postprc_s1._is_class_man
+    use_static_tau = postprc_s1._use_static_tau
+    weight_global_manip = postprc_s1._man_w_base
+    weight_class_manip = postprc_s1._class_man_w_base
+    weight_static_tau = postprc_s1._static_tau_w_base
 
     task_copies = [None] * len(proc_sol_divs)
     slvr_copies = [None] * len(proc_sol_divs)
@@ -362,6 +363,7 @@ if __name__ == '__main__':
 
         task_copies[p] = gen_task_copies(weight_global_manip,
                                         weight_class_manip,
+                                        weight_static_tau,
                                         filling_n_nodes,
                                         sliding_wrist_offset, 
                                         n_y_samples, y_sampl_ub,
@@ -369,6 +371,7 @@ if __name__ == '__main__':
                                         t_exec_task,
                                         rot_error_epsi,
                                         use_classical_man,
+                                        use_static_tau,
                                         is_sliding_wrist,
                                         coll_yaml_path,
                                         is_second_lev_opt, 
@@ -388,12 +391,12 @@ if __name__ == '__main__':
                                     False)
     
     real_first_level_cand_inds = [-1] * n_clust
-    first_level_q_design_opt = np.zeros((len(postprl1._q_design[:, 0]), n_clust))
+    first_level_q_design_opt = np.zeros((len(postprc_s1._q_design[:, 0]), n_clust))
 
     for cl in range(n_clust): # for each cluster
 
-        first_level_q_design_opt[:, cl] = postprl1._q_design[:, first_lev_cand_inds[cl]]
-        real_first_level_cand_inds[cl] = postprl1._ms_indxs[first_lev_cand_inds[cl]]
+        first_level_q_design_opt[:, cl] = postprc_s1._q_design[:, first_lev_cand_inds[cl]]
+        real_first_level_cand_inds[cl] = postprc_s1._ms_indxs[first_lev_cand_inds[cl]]
 
     # inizialize a dumper object for post-processing
 

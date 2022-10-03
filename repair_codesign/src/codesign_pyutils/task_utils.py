@@ -11,6 +11,7 @@ from horizon.transcriptions.transcriptor import Transcriptor
 from horizon.solvers import solver
 
 def gen_task_copies(weight_global_manip: np.double, weight_class_manip: np.double, 
+                    weight_static_tau: np.double,
                     filling_nodes: int,
                     wrist_offset: np.double, 
                     y_samples: list, y_ub: list, 
@@ -18,6 +19,7 @@ def gen_task_copies(weight_global_manip: np.double, weight_class_manip: np.doubl
                     t_exec: np.double,
                     rot_err_epsi: np.double,
                     use_classical_man = False,
+                    use_static_tau = False, 
                     sliding_wrist = False, 
                     coll_path = "", 
                     is_second_lev_opt = False, 
@@ -53,8 +55,9 @@ def gen_task_copies(weight_global_manip: np.double, weight_class_manip: np.doubl
 
     # initialize problem
     task.init_prb(urdf_path,
-                    weight_glob_man = weight_global_manip, weight_class_man = weight_class_manip,\
-                    tf_single_task = t_exec)
+                weight_glob_man = weight_global_manip, weight_class_man = weight_class_manip,\
+                weight_static_tau = weight_static_tau,
+                tf_single_task = t_exec)
 
     print(colored("Task node list: " + str(task.nodes_list), "magenta"))
     print(colored("Task list: " + str(task.task_list), "magenta"))
@@ -65,7 +68,8 @@ def gen_task_copies(weight_global_manip: np.double, weight_class_manip: np.doubl
 
     # set constraints and costs
     task.setup_prb(rot_err_epsi, is_classical_man = use_classical_man,
-                    is_second_lev_opt=is_second_lev_opt)
+                    is_second_lev_opt=is_second_lev_opt, 
+                    is_static_tau = use_static_tau)
 
     return task
 

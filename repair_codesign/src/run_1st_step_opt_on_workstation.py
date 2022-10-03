@@ -202,8 +202,14 @@ if __name__ == '__main__':
                         help = 'weight for global manipulability cost function', default = 0.01)
     parser.add_argument('--weight_class_manip', '-wclass', type = np.double,\
                         help = 'weight for classical manipulability cost function', default = 1)
+    parser.add_argument('--weight_static_tau', '-wstau', type = np.double,\
+                        help = 'weight static torque minimization term', default = 0.01)
+
     parser.add_argument('--use_classical_man', '-ucm', type=str2bool,\
                         help = 'whether to use the classical manipulability index', default = False)
+
+    parser.add_argument('--use_static_tau', '-ustau', type=str2bool,\
+                        help = 'whether to use the static tau minimization cost', default = False)
 
     parser.add_argument('--urdf_full_path', '-urdf', type=str,\
                         help = 'full path to URDF', default = "")
@@ -378,6 +384,7 @@ if __name__ == '__main__':
 
         task_copies[p] = gen_task_copies(args.weight_global_manip,
                                         args.weight_class_manip,
+                                        args.weight_static_tau,
                                         filling_n_nodes,
                                         sliding_wrist_offset, 
                                         n_y_samples, y_sampl_ub,
@@ -385,6 +392,7 @@ if __name__ == '__main__':
                                         t_exec_task,
                                         rot_error_epsi,
                                         args.use_classical_man,
+                                        args.use_statict_tau,
                                         is_sliding_wrist,
                                         coll_yaml_path,
                                         is_second_lev_opt, 
@@ -413,10 +421,13 @@ if __name__ == '__main__':
                     "task_base_nnodes": task_copies[0].task_base_n_nodes_dict,
                     "right_arm_picks": task_copies[0].rght_arm_picks, 
                     "use_classical_man": args.use_classical_man,
+                    "use_static_tau": args.use_static_tau,
                     "w_man_base": args.weight_global_manip, 
                     "w_clman_base": args.weight_class_manip,
+                    "w_stau_base": args.weight_static_tau,
                     "w_man_actual": task_copies[0].weight_glob_man, 
                     "w_clman_actual": task_copies[0].weight_classical_man, 
+                    "w_stau_actual": task_copies[0].weight_static_tau,
                     "nodes_list": task_copies[0].nodes_list, 
                     "tasks_list": task_copies[0].task_list,
                     "tasks_dict": task_copies[0].task_dict, 

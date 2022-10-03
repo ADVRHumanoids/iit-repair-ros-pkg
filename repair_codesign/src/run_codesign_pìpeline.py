@@ -54,7 +54,10 @@ if __name__ == '__main__':
                         help = 'number of y-axis samples on which tasks(flipping task) are placed', default = 3)
     parser.add_argument('--y_sampl_ub_biman', '-yubb', type = np.double,\
                         help = 'upper bound of the y sampling (bimanual task)', default = 0.2)
-                        
+    
+    parser.add_argument('--use_static_tau', '-ustau', type=str2bool,\
+                        help = 'whether to use the static tau minimization cost', default = False)
+
     # second level-specific arguments
     parser.add_argument('--multistart_n_l2', '-msn_l2', type=int,\
                         help = 'number of multistarts (per cluster) to use',
@@ -173,7 +176,9 @@ if __name__ == '__main__':
                                         "-urdf", \
                                         urdf_full_path, \
                                         "-coll", \
-                                        coll_yaml_path])
+                                        coll_yaml_path, 
+                                        "-ustau", 
+                                        args.use_static_tau])
 
             print(colored("\n--> FIRST LEVEL OPTIMIZATION FINISHED SUCCESSFULLY. \n", "blue"))
 

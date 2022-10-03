@@ -10,8 +10,9 @@ from codesign_pyutils.ros_utils import MarkerGen, ReplaySol
 from codesign_pyutils.misc_definitions import get_design_map, get_coll_joint_map
 
 from horizon import problem
+from horizon.utils import kin_dyn
 
-from casadi_kin_dyn import pycasadi_kin_dyn as cas_kin_dyn
+import casadi_kin_dyn
 
 import numpy as np
 
@@ -60,7 +61,7 @@ class DoubleArmCartTask:
         self.joint_names = None
         self.nq = 0
         self.nv = 0
-        self.kindyn = None
+        self.urdf_kin_dyn = None
         self.lbs = None
         self.ubs = None
 
@@ -187,19 +188,19 @@ class DoubleArmCartTask:
         self.prb = problem.Problem(n_int) 
 
         self.urdf = open(urdf_full_path, 'r').read()
-        self.kindyn = cas_kin_dyn.CasadiKinDyn(self.urdf)
+        self.urdf_kin_dyn = casadi_kin_dyn.pycasadi_kin_dyn.CasadiKinDyn(self.urdf)
         self.tf = tf_task * len(self.nodes_list)
         self.dt = self.tf / n_int
         
-        self.joint_names = self.kindyn.joint_names()
+        self.joint_names = self.urdf_kin_dyn.joint_names()
         if 'universe' in self.joint_names: self.joint_names.remove('universe')
         if 'floating_base_joint' in self.joint_names: self.joint_names.remove('floating_base_joint')
         
-        self.nq = self.kindyn.nq()
-        self.nv = self.kindyn.nv()
+        self.nq = self.urdf_kin_dyn.nq()
+        self.nv = self.urdf_kin_dyn.nv()
 
-        self.lbs = self.kindyn.q_min() 
-        self.ubs = self.kindyn.q_max()
+        self.lbs = self.urdf_kin_dyn.q_min() 
+        self.ubs = self.urdf_kin_dyn.q_max()
 
         self.q = self.prb.createStateVariable('q', self.nq)
         self.q_dot = self.prb.createInputVariable('q_dot', self.nv)
@@ -228,24 +229,24 @@ class DoubleArmCartTask:
         self.prb.setDt(self.dt)  
 
         # getting useful kinematic quantities
-        fk_ws = cs.Function.deserialize(self.kindyn.fk("working_surface_link"))
+        fk_ws = cs.Function.deserialize(self.urdf_kin_dyn.fk("working_surface_link"))
         self.ws_link_pos = fk_ws(q = np.zeros((self.nq, 1)).flatten())["ee_pos"] # w.r.t. world
         self.ws_link_rot = fk_ws(q = np.zeros((self.nq, 1)).flatten())["ee_rot"] # w.r.t. world (3x3 rot matrix)
 
-        fk_ws_arm1_link6 = cs.Function.deserialize(self.kindyn.fk("arm_1_link_6"))
+        fk_ws_arm1_link6 = cs.Function.deserialize(self.urdf_kin_dyn.fk("arm_1_link_6"))
         arm1_link6_pos = fk_ws_arm1_link6(q = self.q)["ee_pos"] # w.r.t. world
         arm1_link6_rot = fk_ws_arm1_link6(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
         
-        fk_ws_arm2_link6 = cs.Function.deserialize(self.kindyn.fk("arm_2_link_6"))
+        fk_ws_arm2_link6 = cs.Function.deserialize(self.urdf_kin_dyn.fk("arm_2_link_6"))
         arm2_link6_pos = fk_ws_arm2_link6(q = self.q)["ee_pos"] # w.r.t. world
         arm2_link6_rot = fk_ws_arm2_link6(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
 
-        fk_arm_r = cs.Function.deserialize(self.kindyn.fk("arm_1_tcp")) 
+        fk_arm_r = cs.Function.deserialize(self.urdf_kin_dyn.fk("arm_1_tcp")) 
         rarm_tcp_pos = fk_arm_r(q = self.q)["ee_pos"] # w.r.t. world
         rarm_tcp_rot = fk_arm_r(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
         self.rarm_tcp_pos_rel_ws = rarm_tcp_pos - self.ws_link_pos # pos w.r.t. working surface in world frame
 
-        fk_arm_l = cs.Function.deserialize(self.kindyn.fk("arm_2_tcp"))  
+        fk_arm_l = cs.Function.deserialize(self.urdf_kin_dyn.fk("arm_2_tcp"))  
         larm_tcp_pos = fk_arm_l(q = self.q)["ee_pos"] # w.r.t. world
         larm_tcp_rot = fk_arm_l(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
         self.larm_tcp_pos_rel_ws = larm_tcp_pos - self.ws_link_pos # pos w.r.t. working surface in world frame
@@ -449,12 +450,13 @@ class TaskGen:
         self.weight_rot = 0 # actual weight assigned to the orientation error cost (if using soft constraints)
         self.weight_glob_man = 0 # actual weight assigned to the global manipulability cost
         self.weight_classical_man = 0 # actual weight assigned to the classical manipulability cost
+        self.weight_static_tau = 0 
 
         self.urdf = None # opened urdf file
         self.joint_names = None # joint names
         self.nq = 0 # number of positional states
         self.nv = 0 # number of velocity  states
-        self.kindyn = None # CasadiKinDyn object
+        self.urdf_kin_dyn = None # CasadiKinDyn object
         self.lbs = None # holds the lower (positional) bounds on state variables
         self.ubs = None # holds the upper (positional) bounds on state variables
 
@@ -610,6 +612,14 @@ class TaskGen:
 
         return node_man
 
+    def compute_static_tau_cost(self):
+        
+        static_tau = kin_dyn.InverseDynamics(self.urdf_kin_dyn, [], \
+                casadi_kin_dyn.py3casadi_kin_dyn.CasadiKinDyn.LOCAL_WORLD_ALIGNED).call(self.q_p,\
+                                                        np.array([0] * self.n_q), np.array([0] * self.n_v)) 
+        
+        return static_tau
+
     def add_cl_man_cost(self):
 
         Jl = self.larm_tcp_jacobian_sym
@@ -654,9 +664,15 @@ class TaskGen:
         if is_classical_man:
 
             self.add_cl_man_cost()           
-            
+
+    def add_static_tau_cost(self):
+        
+        # min inputs
+        self.prb.createIntermediateCost("min_static_torque",\
+                        self.weight_static_tau * self.compute_static_tau_cost(self.weight_static_tau, self.q))         
+
     def init_prb(self, urdf_full_path: str, weight_pos = 0.001, weight_rot = 0.001,\
-                weight_glob_man = 0.0001, weight_class_man = 0.0001,\
+                weight_glob_man = 0.0001, weight_class_man = 0.0001, weight_static_tau = 0.0001,\
                 is_soft_pose_cnstr = False,\
                 tf_single_task = 10):
 
@@ -670,27 +686,28 @@ class TaskGen:
         self.weight_rot = weight_rot / ( self.total_nnodes )
         self.weight_glob_man = weight_glob_man / ( self.total_nnodes )
         self.weight_classical_man = weight_class_man / ( self.total_nnodes )
+        self.weight_static_tau = weight_static_tau / ( self.total_nnodes )
 
         self.n_int = self.total_nnodes - 1 # adding addditional filling nodes between nodes of two successive tasks
         self.prb = problem.Problem(self.n_int) 
 
         self.urdf = open(urdf_full_path, 'r').read()
-        self.kindyn = cas_kin_dyn.CasadiKinDyn(self.urdf)
+        self.urdf_kin_dyn = casadi_kin_dyn.pycasadi_kin_dyn.CasadiKinDyn(self.urdf)
         self.tf = tf_single_task * len(self.nodes_list)
         self.dt = self.tf / self.n_int
         
-        self.joint_names = self.kindyn.joint_names()
+        self.joint_names = self.urdf_kin_dyn.joint_names()
         if 'universe' in self.joint_names: self.joint_names.remove('universe')
         if 'floating_base_joint' in self.joint_names: self.joint_names.remove('floating_base_joint')
         
         print(self.joint_names)
         print("\n")
 
-        self.nq = self.kindyn.nq()
-        self.nv = self.kindyn.nv()
+        self.nq = self.urdf_kin_dyn.nq()
+        self.nv = self.urdf_kin_dyn.nv()
 
-        self.lbs = self.kindyn.q_min() 
-        self.ubs = self.kindyn.q_max()
+        self.lbs = self.urdf_kin_dyn.q_min() 
+        self.ubs = self.urdf_kin_dyn.q_max()
 
         self.q = self.prb.createStateVariable('q', self.nq)
         self.q_dot = self.prb.createInputVariable('q_dot', self.nv)
@@ -713,26 +730,26 @@ class TaskGen:
         self.prb.setDt(self.dt)  
 
         # getting useful kinematic quantities
-        fk_ws = cs.Function.deserialize(self.kindyn.fk("working_surface_link"))
+        fk_ws = cs.Function.deserialize(self.urdf_kin_dyn.fk("working_surface_link"))
         ws_link_pos = fk_ws(q = np.zeros((self.nq, 1)).flatten())["ee_pos"] # w.r.t. world
         ws_link_rot = fk_ws(q = np.zeros((self.nq, 1)).flatten())["ee_rot"] # w.r.t. world (3x3 rot matrix)
         
-        fk_arm_r = cs.Function.deserialize(self.kindyn.fk("arm_1_tcp")) 
+        fk_arm_r = cs.Function.deserialize(self.urdf_kin_dyn.fk("arm_1_tcp")) 
         rarm_tcp_pos = fk_arm_r(q = self.q)["ee_pos"] # w.r.t. world
         rarm_tcp_rot = fk_arm_r(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
         self.rarm_tcp_pos_rel_ws = rarm_tcp_pos - ws_link_pos # pos vector relative to working surface in world frame (w.r.t. world)
         
-        self.jac_arm_r = cs.Function.deserialize(self.kindyn.jacobian("arm_1_tcp",\
-                        cas_kin_dyn.CasadiKinDyn.LOCAL_WORLD_ALIGNED))
+        self.jac_arm_r = cs.Function.deserialize(self.urdf_kin_dyn.jacobian("arm_1_tcp",\
+                        casadi_kin_dyn.pycasadi_kin_dyn.CasadiKinDyn.LOCAL_WORLD_ALIGNED))
         self.rarm_tcp_jacobian_sym = self.jac_arm_r(q = self.q)["J"]
 
-        fk_arm_l = cs.Function.deserialize(self.kindyn.fk("arm_2_tcp"))  
+        fk_arm_l = cs.Function.deserialize(self.urdf_kin_dyn.fk("arm_2_tcp"))  
         larm_tcp_pos = fk_arm_l(q = self.q)["ee_pos"] # w.r.t. world
         larm_tcp_rot = fk_arm_l(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
         self.larm_tcp_pos_rel_ws = larm_tcp_pos - ws_link_pos # pos vector relative to working surface in world frame (w.r.t. world)
 
-        self.jac_arm_l = cs.Function.deserialize(self.kindyn.jacobian("arm_2_tcp",\
-                        cas_kin_dyn.CasadiKinDyn.LOCAL_WORLD_ALIGNED))
+        self.jac_arm_l = cs.Function.deserialize(self.urdf_kin_dyn.jacobian("arm_2_tcp",\
+                        casadi_kin_dyn.pycasadi_kin_dyn.CasadiKinDyn.LOCAL_WORLD_ALIGNED))
         self.larm_tcp_jacobian_sym = self.jac_arm_l(q = self.q)["J"]
 
         self.rght_tcp_rot_wrt_ws = ws_link_rot.T @ rarm_tcp_rot
@@ -747,7 +764,8 @@ class TaskGen:
     def setup_prb(self,\
                 epsi = epsi_default,\
                 q_ig = None, q_dot_ig = None, 
-                is_classical_man = False, 
+                is_classical_man = False,
+                is_static_tau = False, 
                 is_second_lev_opt = False):
          
         ## All the constraints and costs are set here ##
@@ -823,11 +841,15 @@ class TaskGen:
         # min inputs 
         self.add_manip_cost(is_classical_man = is_classical_man)
 
+        if is_static_tau:
+
+            self.add_static_tau_cost()
+
         # here the "custom" task is added to the problem
         self.build_tasks(is_soft_pose_cnstr = self.is_soft_pose_cnstrnt, epsi = epsi)
 
         # Simple p2p collision avoidance cnstraints 
-        self.coll_handler = SimpleCollHandler(self.kindyn, self.q, self.prb, \
+        self.coll_handler = SimpleCollHandler(self.urdf_kin_dyn, self.q, self.prb, \
                                             self.coll_yaml_path,\
                                             tcp_contact_nodes = self.tcp_contact_nodes)
     
@@ -1060,7 +1082,7 @@ class TaskGen:
                                 self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
                                 self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
                                 quat2rot(self.object_q_rght[i]),\
-                                pos_selection = ["z"],\
+                                pos_selection = [],\
                                 rot_selection = [], \
                                 weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                 is_soft = is_soft_pose_cnstr, epsi = epsi)
@@ -1071,7 +1093,7 @@ class TaskGen:
                                 self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
                                 self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
                                 quat2rot(self.object_q_lft[i]),\
-                                pos_selection = ["z"],\
+                                pos_selection = [],\
                                 rot_selection = [], \
                                 weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                 is_soft = is_soft_pose_cnstr, epsi = epsi)
@@ -1084,7 +1106,7 @@ class TaskGen:
                                 self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
                                 self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
                                 quat2rot(self.object_q_rght[i]),\
-                                pos_selection = ["z"],\
+                                pos_selection = [],\
                                 rot_selection = [], \
                                 weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                 is_soft = is_soft_pose_cnstr, epsi = epsi)
@@ -1093,7 +1115,7 @@ class TaskGen:
                                 self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,
                                 self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
                                 quat2rot(self.object_q_lft[i]),\
-                                pos_selection = ["z"],\
+                                pos_selection = [],\
                                 rot_selection = [], \
                                 weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                 is_soft = is_soft_pose_cnstr, epsi = epsi)
@@ -1150,7 +1172,8 @@ class TaskGen:
                                     self.object_pos_rght[i] + np.array([0.0, 0.0, -self.contact_heights[i]]),\
                                     quat2rot(self.object_q_rght[i]),\
                                     pos_selection = [],\
-                                    rot_selection = ["x", "y"],\
+                                    # rot_selection = ["x", "y"],\
+                                    rot_selection = [],\
                                     weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                     is_soft = is_soft_pose_cnstr, epsi = epsi)
 
@@ -1171,7 +1194,8 @@ class TaskGen:
                                     self.object_pos_lft[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
                                     quat2rot(self.object_q_lft[i]),\
                                     pos_selection = [],\
-                                    rot_selection = ["x", "y"],\
+                                    # rot_selection = ["x", "y"],\
+                                    rot_selection = [],\
                                     weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                     is_soft = is_soft_pose_cnstr, epsi = epsi)
 
@@ -1239,7 +1263,7 @@ class TaskGen:
                                 self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
                                 self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
                                 quat2rot(self.object_q_rght[i]),\
-                                pos_selection = ["z"],\
+                                pos_selection = [],\
                                 rot_selection = [], \
                                 weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                 is_soft = is_soft_pose_cnstr, epsi = epsi)
@@ -1248,7 +1272,7 @@ class TaskGen:
                                 self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
                                 self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
                                 quat2rot(self.object_q_lft[i]),\
-                                pos_selection = ["z"],\
+                                pos_selection = [],\
                                 rot_selection = [], \
                                 weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                 is_soft = is_soft_pose_cnstr, epsi = epsi)
@@ -1260,7 +1284,7 @@ class TaskGen:
                                 self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
                                 self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[i], self.contact_heights[i]]),\
                                 quat2rot(self.object_q_rght[i]),\
-                                pos_selection = ["z"],\
+                                pos_selection = [],\
                                 rot_selection = [], \
                                 weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                 is_soft = is_soft_pose_cnstr, epsi = epsi)
@@ -1269,7 +1293,7 @@ class TaskGen:
                                 self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
                                 self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[i], self.contact_heights[i]]),\
                                 quat2rot(self.object_q_lft[i]),\
-                                pos_selection = ["z"],\
+                                pos_selection = [],\
                                 rot_selection = [], \
                                 weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                 is_soft = is_soft_pose_cnstr, epsi = epsi)
@@ -1286,7 +1310,8 @@ class TaskGen:
                                 self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
                                 self.object_pos_rght[i] + np.array([0.0, - self.hor_offsets[0], self.contact_heights[i]]),\
                                 quat2rot(self.object_q_rght[i]),\
-                                pos_selection = ["z"],\
+                                # pos_selection = ["z"],\
+                                pos_selection = ["x", "y"],\
                                 rot_selection = [], \
                                 weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                 is_soft = is_soft_pose_cnstr, epsi = epsi)
@@ -1297,7 +1322,8 @@ class TaskGen:
                                 self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
                                 self.object_pos_lft[i] + np.array([0.0, self.hor_offsets[0], self.contact_heights[i]]),\
                                 quat2rot(self.object_q_lft[i]),\
-                                pos_selection = ["z"],\
+                                # pos_selection = ["z"],\
+                                pos_selection = ["x", "y"],\
                                 rot_selection = [], \
                                 weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                 is_soft = is_soft_pose_cnstr, epsi = epsi)
@@ -1311,7 +1337,7 @@ class TaskGen:
                                     cs.DM([[0.0, 1.0, 0.0],\
                                             [0.0, 0.0, -1.0],\
                                             [-1.0, 0.0, 0.0]]), \
-                                    pos_selection = ["x", "y"],\
+                                    pos_selection = ["x", "y", "z"],\
                                     rot_selection = ["x", "y", "z"],\
                                     weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                     is_soft = is_soft_pose_cnstr, epsi = epsi)
@@ -1334,7 +1360,7 @@ class TaskGen:
                                     cs.DM([[0.0, 1.0, 0.0],\
                                             [0.0, 0.0, -1.0],\
                                             [-1.0, 0.0, 0.0]]), \
-                                    pos_selection = ["y", "z"],\
+                                    pos_selection = ["x", "y"],\
                                     rot_selection = ["x", "y", "z"],\
                                     weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                     is_soft = is_soft_pose_cnstr, epsi = epsi)
@@ -1364,7 +1390,7 @@ class HighClManGen:
         self.joint_names = None # joint names
         self.nq = 0 # number of positional states
         self.nv = 0 # number of velocity  states
-        self.kindyn = None # CasadiKinDyn object
+        self.urdf_kin_dyn = None # CasadiKinDyn object
         self.lbs = None # holds the lower (positional) bounds on state variables
         self.ubs = None # holds the upper (positional) bounds on state variables
 
@@ -1495,22 +1521,22 @@ class HighClManGen:
         self.prb = problem.Problem(self.n_int) 
 
         self.urdf = open(urdf_full_path, 'r').read()
-        self.kindyn = cas_kin_dyn.CasadiKinDyn(self.urdf)
+        self.urdf_kin_dyn = casadi_kin_dyn.pycasadi_kin_dyn.CasadiKinDyn(self.urdf)
         self.tf = tf_single_task
         self.dt = self.tf / self.n_int
         
-        self.joint_names = self.kindyn.joint_names()
+        self.joint_names = self.urdf_kin_dyn.joint_names()
         if 'universe' in self.joint_names: self.joint_names.remove('universe')
         if 'floating_base_joint' in self.joint_names: self.joint_names.remove('floating_base_joint')
         
         print(self.joint_names)
         print("\n")
 
-        self.nq = self.kindyn.nq()
-        self.nv = self.kindyn.nv()
+        self.nq = self.urdf_kin_dyn.nq()
+        self.nv = self.urdf_kin_dyn.nv()
 
-        self.lbs = self.kindyn.q_min() 
-        self.ubs = self.kindyn.q_max()
+        self.lbs = self.urdf_kin_dyn.q_min() 
+        self.ubs = self.urdf_kin_dyn.q_max()
 
         self.q = self.prb.createStateVariable('q', self.nq)
         self.q_dot = self.prb.createInputVariable('q_dot', self.nv)
@@ -1533,26 +1559,26 @@ class HighClManGen:
         self.prb.setDt(self.dt)  
 
         # getting useful kinematic quantities
-        fk_ws = cs.Function.deserialize(self.kindyn.fk("working_surface_link"))
+        fk_ws = cs.Function.deserialize(self.urdf_kin_dyn.fk("working_surface_link"))
         ws_link_pos = fk_ws(q = np.zeros((self.nq, 1)).flatten())["ee_pos"] # w.r.t. world
         ws_link_rot = fk_ws(q = np.zeros((self.nq, 1)).flatten())["ee_rot"] # w.r.t. world (3x3 rot matrix)
         
-        fk_arm_r = cs.Function.deserialize(self.kindyn.fk("arm_1_tcp")) 
+        fk_arm_r = cs.Function.deserialize(self.urdf_kin_dyn.fk("arm_1_tcp")) 
         rarm_tcp_pos = fk_arm_r(q = self.q)["ee_pos"] # w.r.t. world
         rarm_tcp_rot = fk_arm_r(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
         self.rarm_tcp_pos_rel_ws = rarm_tcp_pos - ws_link_pos # pos vector relative to working surface in world frame (w.r.t. world)
         
-        self.jac_arm_r = cs.Function.deserialize(self.kindyn.jacobian("arm_1_tcp",\
-                        cas_kin_dyn.CasadiKinDyn.LOCAL_WORLD_ALIGNED))
+        self.jac_arm_r = cs.Function.deserialize(self.urdf_kin_dyn.jacobian("arm_1_tcp",\
+                        casadi_kin_dyn.pycasadi_kin_dyn.CasadiKinDyn.LOCAL_WORLD_ALIGNED))
         self.rarm_tcp_jacobian_sym = self.jac_arm_r(q = self.q)["J"]
 
-        fk_arm_l = cs.Function.deserialize(self.kindyn.fk("arm_2_tcp"))  
+        fk_arm_l = cs.Function.deserialize(self.urdf_kin_dyn.fk("arm_2_tcp"))  
         larm_tcp_pos = fk_arm_l(q = self.q)["ee_pos"] # w.r.t. world
         larm_tcp_rot = fk_arm_l(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
         self.larm_tcp_pos_rel_ws = larm_tcp_pos - ws_link_pos # pos vector relative to working surface in world frame (w.r.t. world)
 
-        self.jac_arm_l = cs.Function.deserialize(self.kindyn.jacobian("arm_2_tcp",\
-                        cas_kin_dyn.CasadiKinDyn.LOCAL_WORLD_ALIGNED))
+        self.jac_arm_l = cs.Function.deserialize(self.urdf_kin_dyn.jacobian("arm_2_tcp",\
+                        casadi_kin_dyn.pycasadi_kin_dyn.CasadiKinDyn.LOCAL_WORLD_ALIGNED))
         self.larm_tcp_jacobian_sym = self.jac_arm_l(q = self.q)["J"]
 
         self.rght_tcp_rot_wrt_ws = ws_link_rot.T @ rarm_tcp_rot
