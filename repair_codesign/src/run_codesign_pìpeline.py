@@ -56,7 +56,7 @@ if __name__ == '__main__':
                         help = 'upper bound of the y sampling (bimanual task)', default = 0.2)
     
     parser.add_argument('--use_static_tau', '-ustau', type=str2bool,\
-                        help = 'whether to use the static tau minimization cost', default = False)
+                        help = 'whether to use the static tau minimization cost', default = True)
 
     # second level-specific arguments
     parser.add_argument('--multistart_n_s3', '-msn_s3', type=int,\
