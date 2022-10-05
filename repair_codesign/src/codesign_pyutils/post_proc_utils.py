@@ -963,7 +963,7 @@ class PostProcS3:
     def __init__(self, load_path, 
                 clust_dir_basename = "clust", 
                 additional_info_pattern = "info", 
-                dump_dirname = "l2_postproc", 
+                dump_dirname = "s3_postproc", 
                 ):
 
         self._load_path = load_path + "/second_level/"
@@ -1440,9 +1440,6 @@ class PostProcS3:
             final_opt_q_des = self._3rd_step_opt_data[self._best_second_lev_cl_index]["q_design"]
             final_opt_q_jnt = self._3rd_step_opt_data[self._best_second_lev_cl_index]["q_jnt"][best_cost_index]
             final_opt_q_dot_jnt = self._3rd_step_opt_data[self._best_second_lev_cl_index]["q_dot_jnt"][best_cost_index]
-
-        print("AAAAAAAAAAAAAAAAAAAAAAA")
-
         
         final_solution_info = {"opt_cost": final_opt_cost, 
                                 "perf_index": final_man_measure,
