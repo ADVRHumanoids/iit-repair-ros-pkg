@@ -370,7 +370,7 @@ class LogPlotter:
             title = leg_title)
         leg_t.set_draggable(True)
         # ax_sol_t[0].set_xlabel(r"time [s]")
-        ax_sol_t[0].set_ylabel(r"joint velocities [rad]")
+        ax_sol_t[0].set_ylabel(r"joint velocities [rad/s]")
         ax_sol_t[0].set_title(r"Arm 1 joint velocities VS references", fontdict=None, loc='center')
         ax_sol_t[0].grid()
 
@@ -387,7 +387,7 @@ class LogPlotter:
             title = leg_title)
         leg_t.set_draggable(True)
         # ax_sol_t[1].set_xlabel(r"time [s]")
-        ax_sol_t[1].set_ylabel(r"joint velocities [rad]")
+        ax_sol_t[1].set_ylabel(r"joint velocities [rad/s]")
         ax_sol_t[1].set_title(r"Arm 2 joint velocities VS references", fontdict=None, loc='center')
         ax_sol_t[1].grid()
 
@@ -399,7 +399,7 @@ class LogPlotter:
             title = leg_title)
         leg_t.set_draggable(True)
         ax_sol_t[2].set_xlabel(r"time [s]")
-        ax_sol_t[2].set_ylabel(r"joint velocity [rad]")
+        ax_sol_t[2].set_ylabel(r"joint velocity [rad/s]")
         ax_sol_t[2].set_title(r"Sliding guide velocity VS reference", fontdict=None, loc='center')
         ax_sol_t[2].grid()
 
