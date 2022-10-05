@@ -198,13 +198,20 @@ if __name__ == '__main__':
 
     # parser.add_argument('--load_initial_guess', '-lig', type=str2bool,\
     #                     help = 'whether to load ig from files', default = False)
+
+    # ANNOTATION ON WEIGHTS; the average max. joint velocity resulting from the optimization 
+    # is of the order of 0.1 rad/s the max. joint torque necessary to execute the motion is of the order
+    # of 10 Nm since the costs are squared, this gives a ratio of the costs, if  using unit weights,
+    # of 0.01/100 = 1e-4 so, to balance static torque and non-local man weights, the first should be approximately
+    # 1e-4 smaller than the second. 
+
     parser.add_argument('--weight_global_manip', '-wman', type = np.double,\
                         help = 'weight for global manipulability cost function', default = 0.01)
     parser.add_argument('--weight_class_manip', '-wclass', type = np.double,\
                         help = 'weight for classical manipulability cost function', default = 1)
     parser.add_argument('--weight_static_tau', '-wstau', type = np.double,\
-                        help = 'weight static torque minimization term', default = 0.00005)
-
+                        help = 'weight static torque minimization term', default = 0.000001)
+    
     parser.add_argument('--use_classical_man', '-ucm', type=str2bool,\
                         help = 'whether to use the classical manipulability index', default = False)
 
