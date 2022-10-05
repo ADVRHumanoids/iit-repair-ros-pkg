@@ -617,8 +617,8 @@ class TaskGen:
     def compute_static_tau_cost(self):
         
         static_tau = kin_dyn.InverseDynamics(self.urdf_kin_dyn, [], \
-                casadi_kin_dyn.py3casadi_kin_dyn.CasadiKinDyn.LOCAL_WORLD_ALIGNED).call(self.q_p,\
-                                                        np.array([0] * self.n_q), np.array([0] * self.n_v)) 
+                casadi_kin_dyn.py3casadi_kin_dyn.CasadiKinDyn.LOCAL_WORLD_ALIGNED).call(self.q,\
+                                                        np.array([0] * self.nq), np.array([0] * self.nv)) 
         
         return static_tau
 

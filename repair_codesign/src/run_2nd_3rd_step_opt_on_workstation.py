@@ -437,7 +437,7 @@ if __name__ == '__main__':
                     }
 
     task_info_dumper.add_storer(other_stuff, dump_basepath,\
-                            "second_level_info_t" + unique_id,\
+                            "second_step_info_t" + unique_id,\
                             False)
 
     task_info_dumper.dump()
