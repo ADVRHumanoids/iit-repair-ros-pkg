@@ -203,7 +203,7 @@ if __name__ == '__main__':
     parser.add_argument('--weight_class_manip', '-wclass', type = np.double,\
                         help = 'weight for classical manipulability cost function', default = 1)
     parser.add_argument('--weight_static_tau', '-wstau', type = np.double,\
-                        help = 'weight static torque minimization term', default = 0.00001)
+                        help = 'weight static torque minimization term', default = 0.00005)
 
     parser.add_argument('--use_classical_man', '-ucm', type=str2bool,\
                         help = 'whether to use the classical manipulability index', default = False)
