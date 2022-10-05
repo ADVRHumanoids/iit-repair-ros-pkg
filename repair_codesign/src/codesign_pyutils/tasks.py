@@ -671,7 +671,7 @@ class TaskGen:
         
         # min inputs
         self.prb.createIntermediateCost("min_static_torque",\
-                        self.weight_static_tau * self.compute_static_tau_cost())         
+                        self.weight_static_tau * cs.sumsqr(self.compute_static_tau_cost()))         
 
     def init_prb(self, urdf_full_path: str, weight_pos = 0.001, weight_rot = 0.001,\
                 weight_glob_man = 0.0001, weight_class_man = 0.0001, weight_static_tau = 0.0001,\
@@ -1079,7 +1079,8 @@ class TaskGen:
                                 cnstrnt_node_index: int,\
                                 cnstrnt_id_rght: int, cnstrnt_id_lft: int,\
                                 is_soft_pose_cnstr = True, epsi = epsi_default):
-        
+
+     
         if j == 0: # ARM 1: waiting | ARM 2: waiting (starting from a reference height)
                                 
             if (self.rght_arm_picks[i]): # right arm picks
@@ -1176,9 +1177,9 @@ class TaskGen:
                 # exchange has to happen with horizontal hands
                 add_pose_cnstrnt(cnstrnt_id_rght, self.prb, cnstrnt_node_index, \
                                     self.rght_tcp_pos_wrt_ws, self.rght_tcp_rot_wrt_ws,\
-                                    self.object_pos_rght[i] + np.array([0.0, 0.0, -self.contact_heights[i]]),\
+                                    self.object_pos_rght[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
                                     quat2rot(self.object_q_rght[i]),\
-                                    pos_selection = ["z"],\
+                                    pos_selection = [],\
                                     rot_selection = ["x", "y"],\
                                     weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                     is_soft = is_soft_pose_cnstr, epsi = epsi)
@@ -1199,7 +1200,7 @@ class TaskGen:
                                     self.lft_tcp_pos_wrt_ws, self.lft_tcp_rot_wrt_ws,\
                                     self.object_pos_lft[i] + np.array([0.0, 0.0, self.contact_heights[i]]),\
                                     quat2rot(self.object_q_lft[i]),\
-                                    pos_selection = ["z"],\
+                                    pos_selection = [],\
                                     rot_selection = ["x", "y"],\
                                     weight_pos = self.weight_pos, weight_rot = self.weight_rot,\
                                     is_soft = is_soft_pose_cnstr, epsi = epsi)
