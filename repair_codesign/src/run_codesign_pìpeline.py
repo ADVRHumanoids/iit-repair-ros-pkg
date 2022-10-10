@@ -23,7 +23,7 @@ if __name__ == '__main__':
 
     # first level specific arguments
     parser.add_argument('--multistart_n_s1', '-msn_s1', type = int,\
-                        help = '', default = 108)
+                        help = '', default = 216)
     parser.add_argument('--max_trials_factor_s1', '-mtfs1', type=int,\
                         help = 'for each multistart node, at best max_trials_factor new solutions will be tried to obtain an optimal solution',
                         default = 10)
@@ -34,7 +34,7 @@ if __name__ == '__main__':
                         help = 'whether to use bimanual pick task', default = True)
 
     parser.add_argument('--ig_seed_s1', '-is_s1', type = int,\
-                        help = '', default = 547)
+                        help = '', default = 629)
     parser.add_argument('--ipopt_verb_lev', '-ipopt_v', type = int,\
                         help = '', default = 1)
     parser.add_argument('--filling_nnodes', '-fnn', type = int,\
@@ -66,7 +66,7 @@ if __name__ == '__main__':
                         help = 'for each multistart node, at best max_trials_factor new solutions will be tried to obtain an optimal solution',
                         default = 20)
     parser.add_argument('--n_clust_s2', '-nc_s2', type=int,\
-                        help = 'number of clusters to be generated', default = 5)
+                        help = 'number of clusters to be generated', default = 10)
     parser.add_argument("--ig_seed_s3", '-ig_s3', type = int,\
                         help = '', default = 129)
     
