@@ -20,6 +20,8 @@ import subprocess
 
 import matplotlib.pyplot as plt
 
+import warnings
+
 def compute_man_cost(task_node_list: list, 
                     q_dot: list, man_weight = None):
 
@@ -1027,12 +1029,12 @@ class PostProcS3:
         self.__compute_weighted_costs()
         self.__compute_rmse()
 
-        self.best_3rd_step_cost, self._best_second_lev_cl_index,\
-            self.best_second_lev_man_measure, self.best_second_lev_qcodes = self.__compute_second_lev_best_sol()
+        self.best_3rd_step_cost, self._best_3rd_step_cl_index,\
+            self.best_3rd_step_man_measure, self.best_3rd_step_qcodes = self.__compute_3rd_step_best_sol()
 
         self.best_second_lev_weight_cost, self.best_second_lev_weight_cl_index,\
             self.best_second_lev_weight_man_measure, self.best_second_lev_weight_qcodes =\
-                self.__compute_second_lev_best_sol(use_weighted=True)
+                self.__compute_3rd_step_best_sol(use_weighted=True)
 
         self.__extract_3rd_step_data()
         
@@ -1327,7 +1329,7 @@ class PostProcS3:
             self._rmse_man_meas[cl] = np.sqrt(sum_sqrd_man / n_opt_ms_cl) if n_opt_ms_cl != 0 else -1.0 
             self._rmse_opt_cost[cl] = np.sqrt(sum_sqrd_cost / n_opt_ms_cl) if n_opt_ms_cl != 0 else -1.0 
 
-    def __compute_second_lev_best_sol(self, use_weighted = False):
+    def __compute_3rd_step_best_sol(self, use_weighted = False):
 
         n_des_params = len(self._s2_cl_candidates) # number of design parameters
 
@@ -1376,7 +1378,7 @@ class PostProcS3:
         # -1 if the solution from the 2nd step is better (so no improvement in the cost ref. step)
 
         best_refined_sol_index = -1
-        best_cl_cand_ref_costs = self._3rd_step_opt_data[self._best_second_lev_cl_index]["opt_costs"]
+        best_cl_cand_ref_costs = self._3rd_step_opt_data[self._best_3rd_step_cl_index]["opt_costs"]
         n_ref_samples = len(best_cl_cand_ref_costs)
         for sample_idx in range(n_ref_samples):
 
@@ -1410,9 +1412,9 @@ class PostProcS3:
                     "did_cost_improve": self._did_cost_improve,
                     "second_lev_weighted_costs": self._second_lev_weighted_costs,
                     "best_cost": self.best_3rd_step_cost,
-                    "best_cl_index": self._best_second_lev_cl_index,
-                    "best_man_measure": self.best_second_lev_man_measure,
-                    "best_qcodes": self.best_second_lev_qcodes,
+                    "best_cl_index": self._best_3rd_step_cl_index,
+                    "best_man_measure": self.best_3rd_step_man_measure,
+                    "best_qcodes": self.best_3rd_step_qcodes,
                     "best_weight_cost": self.best_second_lev_weight_cost,
                     "best_weight_cl_index": self.best_second_lev_weight_cl_index,
                     "best_weight_man_measure": self.best_second_lev_weight_man_measure,
@@ -1424,22 +1426,34 @@ class PostProcS3:
         best_cost_index = self.__get_best_sol_index()
 
         final_opt_cost = -1.0
-        if best_cost_index < 0:
+        if best_cost_index < 0: # no improvement in the refinement phase
             
-            final_opt_cost = self._s2_cl_cands_opt_cost[self._best_second_lev_cl_index]
+            final_opt_cost = self._s2_cl_cands_opt_cost[self._best_3rd_step_cl_index]
             final_man_measure = compute_man_index([final_opt_cost], self._n_int)[0]
-            raise Exception("You still need to implement extraction of q from first step!!!!!!!!!!!")
+
+            warnings.warn(str("No improvement in the costs during the refinement stage.") + \
+                str("Please implement extraction of optimal trajectories from first step") +\
+                str("in case of refinement failure.\n"))
+
+            # for now, simply extract trajectories from the third step.
+            # extraction of the original traj. from 1st step is not implemented yet.
+
+            final_opt_q = self._3rd_step_opt_data[self._best_3rd_step_cl_index]["q"][best_cost_index]
+            final_opt_q_dot = self._3rd_step_opt_data[self._best_3rd_step_cl_index]["q_dot"][best_cost_index]
+            final_opt_q_des = self._3rd_step_opt_data[self._best_3rd_step_cl_index]["q_design"]
+            final_opt_q_jnt = self._3rd_step_opt_data[self._best_3rd_step_cl_index]["q_jnt"][best_cost_index]
+            final_opt_q_dot_jnt = self._3rd_step_opt_data[self._best_3rd_step_cl_index]["q_dot_jnt"][best_cost_index]
 
         else:
 
-            final_opt_cost = self._3rd_step_opt_data[self._best_second_lev_cl_index]["opt_costs"][best_cost_index]
+            final_opt_cost = self._3rd_step_opt_data[self._best_3rd_step_cl_index]["opt_costs"][best_cost_index]
             final_man_measure = compute_man_index([final_opt_cost], self._n_int)[0]
 
-            final_opt_q = self._3rd_step_opt_data[self._best_second_lev_cl_index]["q"][best_cost_index]
-            final_opt_q_dot = self._3rd_step_opt_data[self._best_second_lev_cl_index]["q_dot"][best_cost_index]
-            final_opt_q_des = self._3rd_step_opt_data[self._best_second_lev_cl_index]["q_design"]
-            final_opt_q_jnt = self._3rd_step_opt_data[self._best_second_lev_cl_index]["q_jnt"][best_cost_index]
-            final_opt_q_dot_jnt = self._3rd_step_opt_data[self._best_second_lev_cl_index]["q_dot_jnt"][best_cost_index]
+            final_opt_q = self._3rd_step_opt_data[self._best_3rd_step_cl_index]["q"][best_cost_index]
+            final_opt_q_dot = self._3rd_step_opt_data[self._best_3rd_step_cl_index]["q_dot"][best_cost_index]
+            final_opt_q_des = self._3rd_step_opt_data[self._best_3rd_step_cl_index]["q_design"]
+            final_opt_q_jnt = self._3rd_step_opt_data[self._best_3rd_step_cl_index]["q_jnt"][best_cost_index]
+            final_opt_q_dot_jnt = self._3rd_step_opt_data[self._best_3rd_step_cl_index]["q_dot_jnt"][best_cost_index]
         
         final_solution_info = {"opt_cost": final_opt_cost, 
                                 "perf_index": final_man_measure,
@@ -1469,9 +1483,9 @@ class PostProcS3:
         if not weighted:
 
             print("Best sol. cost: " + str(self.best_3rd_step_cost))
-            print("Best sol. index : " + str(self._best_second_lev_cl_index))
-            print("Best sol. man measure: " + str(self.best_second_lev_man_measure))
-            print("Best q codes.: " + str(self.best_second_lev_qcodes))
+            print("Best sol. index : " + str(self._best_3rd_step_cl_index))
+            print("Best sol. man measure: " + str(self.best_3rd_step_man_measure))
+            print("Best q codes.: " + str(self.best_3rd_step_qcodes))
             print("\n")
 
         else:
