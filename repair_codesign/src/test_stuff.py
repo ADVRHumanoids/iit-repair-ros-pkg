@@ -5,7 +5,7 @@ from codesign_pyutils.misc_definitions import get_design_map, get_coll_joint_map
 
 import numpy as np
 
-# postprs1 = PostProcS1("/home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/test_results_10-10-2022-12_08_27",
+# postprs1 = PostProcS1("/home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/test_results_11-10-2022-14_19_55",
 #                         cl_man_post_proc= False)
 
 # postprs1.print_sol_run_info()
@@ -14,4 +14,4 @@ import numpy as np
 # postprs1.show_plots()
 
 
-postprs3 = PostProcS3("/home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/test_results_10-10-2022-12_08_27") 
+# postprs3 = PostProcS3("/home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/test_results_11-10-2022-14_19_55") 

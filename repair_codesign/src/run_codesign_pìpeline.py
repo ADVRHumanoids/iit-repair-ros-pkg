@@ -57,6 +57,8 @@ if __name__ == '__main__':
     
     parser.add_argument('--use_static_tau', '-ustau', type=str2bool,\
                         help = 'whether to use the static tau minimization cost', default = True)
+    parser.add_argument('--use_classical_man', '-ucm', type=str2bool,\
+                        help = 'whether to use the classical man. cost', default = False)
 
     # second level-specific arguments
     parser.add_argument('--multistart_n_s3', '-msn_s3', type=int,\
@@ -178,7 +180,9 @@ if __name__ == '__main__':
                                     "-coll", \
                                     coll_yaml_path, 
                                     "-ustau", 
-                                    str(args.use_static_tau)])
+                                    str(args.use_static_tau),
+                                    "-ucm", 
+                                    str(args.use_classical_man)])
 
         print(colored("\n--> FIRST LEVEL OPTIMIZATION FINISHED SUCCESSFULLY. \n", "blue"))
 

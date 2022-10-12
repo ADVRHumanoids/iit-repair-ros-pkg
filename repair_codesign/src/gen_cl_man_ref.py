@@ -19,6 +19,7 @@ from codesign_pyutils.post_proc_utils import PostProcS1
 
 from termcolor import colored
 
+
 def enforce_codes_cnstr_on_ig(q_ig):
 
     # adding q_codes to the initial guess
@@ -265,8 +266,6 @@ if __name__ == '__main__':
 
     coll_yaml_path = args.coll_yaml_path
     solution_base_name = args.solution_base_name
-
-    # load best solution from pipeline results
 
     # number of solution tries with different (random) initializations
     n_msrt_trgt = args.n_msrt_trgt
