@@ -208,7 +208,7 @@ if __name__ == '__main__':
     parser.add_argument('--weight_global_manip', '-wman', type = np.double,\
                         help = 'weight for global manipulability cost function', default = 0.01)
     parser.add_argument('--weight_class_manip', '-wclass', type = np.double,\
-                        help = 'weight for classical manipulability cost function', default = 1)
+                        help = 'weight for classical manipulability cost function', default = 0.1)
     parser.add_argument('--weight_static_tau', '-wstau', type = np.double,\
                         help = 'weight static torque minimization term', default = 0.000005)
     
