@@ -23,7 +23,7 @@ if __name__ == '__main__':
 
     # first level specific arguments
     parser.add_argument('--multistart_n_s1', '-msn_s1', type = int,\
-                        help = '', default = 216)
+                        help = '', default = 432)
     parser.add_argument('--max_trials_factor_s1', '-mtfs1', type=int,\
                         help = 'for each multistart node, at best max_trials_factor new solutions will be tried to obtain an optimal solution',
                         default = 10)
@@ -63,12 +63,12 @@ if __name__ == '__main__':
     # second level-specific arguments
     parser.add_argument('--multistart_n_s3', '-msn_s3', type=int,\
                         help = 'number of multistarts (per cluster) to use',
-                        default = 20)
+                        default = 25)
     parser.add_argument('--max_trials_factor_s3', '-mtfl3', type=int,\
                         help = 'for each multistart node, at best max_trials_factor new solutions will be tried to obtain an optimal solution',
                         default = 20)
     parser.add_argument('--n_clust_s2', '-nc_s2', type=int,\
-                        help = 'number of clusters to be generated', default = 10)
+                        help = 'number of clusters to be generated', default = 20)
     parser.add_argument("--ig_seed_s3", '-ig_s3', type = int,\
                         help = '', default = 129)
     
