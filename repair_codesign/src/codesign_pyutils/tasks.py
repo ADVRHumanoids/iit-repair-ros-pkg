@@ -783,6 +783,9 @@ class TaskGen:
 
         # lower and upper bounds for design variables and joint variables
         self.q.setBounds(self.lbs, self.ubs)
+
+        # we don't need vel. limits since we are doing only a "positional"
+        # kinematic opt.
         
         # add also velocity bounds? 
         
