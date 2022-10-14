@@ -221,7 +221,7 @@
     <parent link="arm_${id}_link_3"/>
     <child link="arm_${id}_link_4"/>
     <axis xyz="0 0 1"/>
-    <limit lower="${-150.0 * DEG2RAD}" upper="${120.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
+    <limit lower="${-150.0 * DEG2RAD}" upper="${60.0 * DEG2RAD}" effort="${big_tau_max}" velocity="10.0"/>
 
 </joint>
 
