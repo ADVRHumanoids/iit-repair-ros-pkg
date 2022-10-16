@@ -724,10 +724,10 @@ class TaskGen:
                             self.d_var_map["should_w_l"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
                             self.d_var_map["should_w_r"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]]
         
-        self.q_actuated_jnts =
-        self.q_dot_actuated_jnts =
-        self.tau_actuated_jnts = 
-        self.q_dot_actuated_jnts =
+        # self.q_actuated_jnts =
+        # self.q_dot_actuated_jnts =
+        # self.tau_actuated_jnts = 
+        # self.q_dot_actuated_jnts =
 
         self.wrist_off_ref = self.prb.createParameter('wrist_off_ref', 1)
 

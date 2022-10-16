@@ -167,7 +167,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='just a simple test file for RePAIR co-design')
     parser.add_argument('--resample_sol', '-rs', type=str2bool,\
-                        help = 'whether to resample the obtained solution before replaying it', default = False)
+                        help = 'whether to resample the obtained solution before replaying it', default = True)
     parser.add_argument('--replay_only_best', '-rob', type=str2bool,\
                         help = 'whether to only the best solution', default = True)
     parser.add_argument('--gen_coll', '-coll', type=str2bool,\
