@@ -614,7 +614,7 @@ class TaskGen:
 
         return node_man
 
-    def compute_static_tau_cost(self):
+    def compute_static_tau(self):
         
         static_tau = kin_dyn.InverseDynamics(self.urdf_kin_dyn, [], \
                 casadi_kin_dyn.py3casadi_kin_dyn.CasadiKinDyn.LOCAL_WORLD_ALIGNED).call(self.q,\
@@ -671,7 +671,7 @@ class TaskGen:
         
         # min inputs
         self.prb.createIntermediateCost("min_static_torque",\
-                        self.weight_static_tau * cs.sumsqr(self.compute_static_tau_cost()))         
+                        self.weight_static_tau * cs.sumsqr(self.compute_static_tau()))         
 
     def init_prb(self, urdf_full_path: str, weight_pos = 0.001, weight_rot = 0.001,\
                 weight_glob_man = 0.0001, weight_class_man = 0.0001, weight_static_tau = 0.0001,\
@@ -715,7 +715,7 @@ class TaskGen:
         self.q_dot = self.prb.createInputVariable('q_dot', self.nv)
 
         # THIS DEFINITIONS CAN CHANGE IF THE URDF CHANGES --> MIND THE URDF!!!
-    
+
         self.q_design = self.q[self.d_var_map["mount_h"],\
                             self.d_var_map["should_w_l"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
                             self.d_var_map["should_w_r"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]] # design vector
@@ -724,6 +724,11 @@ class TaskGen:
                             self.d_var_map["should_w_l"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
                             self.d_var_map["should_w_r"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]]
         
+        self.q_actuated_jnts =
+        self.q_dot_actuated_jnts =
+        self.tau_actuated_jnts = 
+        self.q_dot_actuated_jnts =
+
         self.wrist_off_ref = self.prb.createParameter('wrist_off_ref', 1)
 
         self.q_codes_ref = self.prb.createParameter('q_codes_ref', 4)
