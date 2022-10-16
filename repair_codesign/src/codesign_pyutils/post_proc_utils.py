@@ -53,8 +53,8 @@ class PostProcS1:
 
     def __init__(self, load_path, 
                 additional_info_pattern="info", 
-                l1_dirname="first_level", 
-                dump_dirname="l1_postproc", 
+                s1_dirname="first_step", 
+                dump_dirname="s1_postproc", 
                 opt_dirname="opt", 
                 fail_dirname="failed", 
                 cl_man_post_proc = False):
@@ -62,7 +62,7 @@ class PostProcS1:
         self.cl_man_post_proc = cl_man_post_proc # whether to compute and print
         # also cl. man. postproc. info (can take time on large n. samples)
 
-        self._load_path = load_path + "/" + l1_dirname + "/"
+        self._load_path = load_path + "/" + s1_dirname + "/"
         self._dump_path = load_path + "/" + dump_dirname
 
         # useful paths
@@ -968,7 +968,7 @@ class PostProcS3:
                 dump_dirname = "s3_postproc", 
                 ):
 
-        self._load_path = load_path + "/second_level/"
+        self._load_path = load_path + "/second_step/"
         self._clust_dir_basename = clust_dir_basename
         self._dump_path = load_path + "/" + dump_dirname
 
@@ -1054,12 +1054,6 @@ class PostProcS3:
         self._s2_cl_cands_opt_cost = self._info_data["s2_cl_opt_costs"][0]
         self._s2_cl_candidates = self._info_data["s2_cl_best_candidates"]
         self._s2_cl_cands_man_measure = self._info_data["s2_cl_man_measure"]
-
-        # #old names --> DEPRECATED
-        # self._s2_cl_cand_inds = self._info_data["l2_cl_cand_inds"][0]
-        # self._s2_cl_cands_opt_cost = self._info_data["l2_cl_opt_costs"][0]
-        # self._s2_cl_candidates = self._info_data["l2_cl_best_candidates"]
-        # self._s2_cl_cands_man_measure = self._info_data["l2_cl_cand_man_measure"]
 
         self._integrator = self._info_data["integrator"][0]
         self._ig_seed = self._info_data["ig_seed"][0][0]

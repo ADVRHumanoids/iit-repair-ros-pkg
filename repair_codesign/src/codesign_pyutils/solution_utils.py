@@ -19,25 +19,25 @@ def solve_prb_standalone(task: TaskGen,\
                         prbl_name = "Problem",
                         on_failure = "\n Failed to solve problem!! \n", 
                         on_success = "\n Converged to an optimal solution!! \n",
-                        is_second_level_opt = False, 
-                        q_codes_l1 = None):
+                        is_second_step_opt = False, 
+                        q_codes_s1 = None):
 
     # standard routine for solving the problem
         
     task.set_ig(q_init, q_dot_init)
 
-    if not is_second_level_opt:  # first level optimization 
+    if not is_second_step_opt:  # first level optimization 
 
         task.wrist_off_ref.assign(task.sliding_wrist_offset) # has no effect if the task was build with is_sliding_wrist set to False
     
     else: # second level optimization
         
-        if q_codes_l1 is None:
+        if q_codes_s1 is None:
 
             raise Exception("solve_prb_standalone: if running the second level optimization you must provide \
                             an initialization for the codesign vars.")
 
-        task.q_codes_ref.assign(q_codes_l1) # assign design variables from first level optimization
+        task.q_codes_ref.assign(q_codes_s1) # assign design variables from first level optimization
 
     t = time.time()
 

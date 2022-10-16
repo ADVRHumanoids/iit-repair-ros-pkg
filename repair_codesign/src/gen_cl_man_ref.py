@@ -77,8 +77,8 @@ def solve(multistart_nodes,\
             solve_failed, solution_time = solve_prb_standalone(task, slvr,\
                             q_ig[multistart_nodes[sol_index] + n_multistarts * trial_index],\
                             q_dot_ig[multistart_nodes[sol_index] + n_multistarts * trial_index], \
-                            is_second_level_opt= True, \
-                            q_codes_l1=q_codes)
+                            is_second_step_opt= True, \
+                            q_codes_s1=q_codes)
 
             if trial_index < max_retry_n: # not reached maximum retry number
 
@@ -211,11 +211,11 @@ if __name__ == '__main__':
 
     parser.add_argument('--dump_dir_name', '-dfn', type=str,\
                     help = 'dump directory name',
-                    default = "second_level")
+                    default = "second_step")
 
     parser.add_argument('--load_dir_name', '-ldn', type=str,\
                     help = 'load directory name',
-                    default = "first_level")
+                    default = "first_step")
 
     parser.add_argument('--res_dir_basename', '-rdbs', type=str,\
                     help = '',

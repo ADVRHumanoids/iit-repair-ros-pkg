@@ -281,13 +281,13 @@ if __name__ == '__main__':
                         default = "")
     parser.add_argument('--dump_folder_name', '-dfn', type=str,\
                     help = 'dump directory name',
-                    default = "first_level")
+                    default = "first_step")
     parser.add_argument('--res_dir_basename', '-rdbs', type=str,\
                     help = '',
                     default = "test_results")
     parser.add_argument('--solution_base_name', '-sbn', type=str,\
                     help = '',
-                    default = "repair_codesign_opt_l1")
+                    default = "repair_codesign_opt_s1")
 
     args = parser.parse_args()
     

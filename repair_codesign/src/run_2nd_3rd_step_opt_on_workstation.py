@@ -24,7 +24,7 @@ from codesign_pyutils.post_proc_utils import PostProcS1
 
 from termcolor import colored
 
-def add_l1_codes2ig(q_codes_l1, q_ig):
+def add_s1_codes2ig(q_codes_s1, q_ig):
 
     # adding q_codes to the initial guess
     design_var_map = get_design_map()
@@ -37,11 +37,11 @@ def add_l1_codes2ig(q_codes_l1, q_ig):
         design_var_map["should_roll_r"],\
         design_var_map["wrist_off_r"]]
 
-    q_codes_l1_extended = np.concatenate((q_codes_l1, q_codes_l1[1:]), axis=0)
+    q_codes_s1_extended = np.concatenate((q_codes_s1, q_codes_s1[1:]), axis=0)
 
     for i in range(len(q_ig)):
 
-        q_ig[i][design_indeces, :] = np.transpose(np.tile(q_codes_l1_extended, (len(q_ig[0][0, :]), 1)))
+        q_ig[i][design_indeces, :] = np.transpose(np.tile(q_codes_s1_extended, (len(q_ig[0][0, :]), 1)))
 
 def solve(multistart_nodes,\
             task, slvr,\
@@ -49,7 +49,7 @@ def solve(multistart_nodes,\
             solutions,\
             sol_costs, cnstr_opt, cnstr_lmbd,\
             solve_failed_array, 
-            q_codes_l1, 
+            q_codes_s1, 
             cluster_id, 
             trial_idxs, 
             n_multistarts, 
@@ -75,8 +75,8 @@ def solve(multistart_nodes,\
             solve_failed, solution_time = solve_prb_standalone(task, slvr,\
                                 q_ig[multistart_nodes[sol_index] + n_multistarts * trial_index],\
                                 q_dot_ig[multistart_nodes[sol_index] + n_multistarts * trial_index], \
-                                is_second_level_opt= True, \
-                                q_codes_l1=q_codes_l1)
+                                is_second_step_opt= True, \
+                                q_codes_s1=q_codes_s1)
             
             if trial_index < max_retry_n: # not reached maximum retry number
 
@@ -123,7 +123,7 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
         process_id,
         cluster_id,
         first_lev_sol_id, 
-        q_codes_l1, 
+        q_codes_s1, 
         n_multistarts, 
         max_retry_n):
     
@@ -138,7 +138,7 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
     trial_idxs = [-1] * n_multistarts_main
 
     # adding q_codes to the initial guess
-    add_l1_codes2ig(q_codes_l1, q_ig)
+    add_s1_codes2ig(q_codes_s1, q_ig)
 
     solution_time = solve(multistart_nodes,\
             task, slvr,\
@@ -146,7 +146,7 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
             solutions,\
             sol_costs, cnstr_opt, cnstr_lmbd,\
             solve_failed_array, 
-            q_codes_l1, 
+            q_codes_s1, 
             cluster_id, 
             trial_idxs, 
             n_multistarts, 
@@ -229,18 +229,18 @@ if __name__ == '__main__':
 
     parser.add_argument('--dump_dir_name', '-dfn', type=str,\
                     help = 'dump directory name',
-                    default = "second_level")
+                    default = "second_step")
 
     parser.add_argument('--load_dir_name', '-ldn', type=str,\
                     help = 'load directory name',
-                    default = "first_level")
+                    default = "first_step")
 
     parser.add_argument('--res_dir_basename', '-rdbs', type=str,\
                     help = '',
                     default = "test_results")
     parser.add_argument('--solution_base_name', '-sbn', type=str,\
                     help = '',
-                    default = "repair_codesign_opt_l2")
+                    default = "repair_codesign_opt_s2s3")
 
     args = parser.parse_args()
 
@@ -264,14 +264,14 @@ if __name__ == '__main__':
     solution_base_name = args.solution_base_name
 
     # loading solution and extracting data
-    postprc_s1 = PostProcS1(load_path, l1_dirname=args.load_dir_name)
+    postprc_s1 = PostProcS1(load_path, s1_dirname=args.load_dir_name)
     postprc_s1.clusterize(args.n_clust)
 
     n_opt_sol = postprc_s1._n_opt_sols
     n_int = postprc_s1._n_int 
-    first_lev_cand_inds = postprc_s1._clusterer.get_l1_cl_cands_idx()
-    fist_lev_cand_man_measure = postprc_s1._clusterer.get_l1_cl_cands_man_measure()
-    fist_lev_cand_opt_costs = postprc_s1._clusterer.get_l1_cl_cands_opt_cost()
+    first_lev_cand_inds = postprc_s1._clusterer.get_s1_cl_cands_idx()
+    fist_lev_cand_man_measure = postprc_s1._clusterer.get_s1_cl_cands_man_measure()
+    fist_lev_cand_opt_costs = postprc_s1._clusterer.get_s1_cl_cands_opt_cost()
     n_clust = postprc_s1._clusterer.get_n_clust()
     # unique id used for generation of results
     unique_id = postprc_s1._unique_id
@@ -390,13 +390,13 @@ if __name__ == '__main__':
                                     max_ig_trials, ig_seed,\
                                     False)
     
-    real_first_level_cand_inds = [-1] * n_clust
-    first_level_q_design_opt = np.zeros((len(postprc_s1._q_design[:, 0]), n_clust))
+    real_first_step_cand_inds = [-1] * n_clust
+    first_step_q_design_opt = np.zeros((len(postprc_s1._q_design[:, 0]), n_clust))
 
     for cl in range(n_clust): # for each cluster
 
-        first_level_q_design_opt[:, cl] = postprc_s1._q_design[:, first_lev_cand_inds[cl]]
-        real_first_level_cand_inds[cl] = postprc_s1._ms_indxs[first_lev_cand_inds[cl]]
+        first_step_q_design_opt[:, cl] = postprc_s1._q_design[:, first_lev_cand_inds[cl]]
+        real_first_step_cand_inds[cl] = postprc_s1._ms_indxs[first_lev_cand_inds[cl]]
 
     # inizialize a dumper object for post-processing
 
@@ -431,8 +431,8 @@ if __name__ == '__main__':
                     "n_clust": n_clust,
                     "is_in_place_flip": is_in_place_flip, 
                     "is_biman_pick": is_biman_pick,
-                    "s2_cl_cand_inds": np.array(real_first_level_cand_inds), 
-                    "s2_cl_best_candidates": first_level_q_design_opt,
+                    "s2_cl_cand_inds": np.array(real_first_step_cand_inds), 
+                    "s2_cl_best_candidates": first_step_q_design_opt,
                     "s2_cl_opt_costs": fist_lev_cand_opt_costs, 
                     "s2_cl_man_measure": fist_lev_cand_man_measure, 
                     "n_int": task_copies[0].n_int
@@ -457,8 +457,8 @@ if __name__ == '__main__':
                                                                 unique_id,\
                                                                 p,\
                                                                 cl,\
-                                                                real_first_level_cand_inds[cl],\
-                                                                first_level_q_design_opt[:, cl], \
+                                                                real_first_step_cand_inds[cl],\
+                                                                first_step_q_design_opt[:, cl], \
                                                                 n_msrt_trgt, 
                                                                 max_retry_n,))
             proc_list[p].start()

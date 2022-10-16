@@ -120,7 +120,7 @@ class Clusterer():
 
     return X_sel
 
-  def get_l1_cl_cands_idx(self):
+  def get_s1_cl_cands_idx(self):
 
     # gets the index of the candidate of each cluster wrt to the loaded solution
     # (note that these indeces are NOT the absolute indeces contained in the opt data;
@@ -139,15 +139,15 @@ class Clusterer():
 
     return opt_indxs
 
-  def get_l1_cl_cands_man_measure(self):
+  def get_s1_cl_cands_man_measure(self):
 
-    l1_cl_cands_indxs = self.get_l1_cl_cands_idx()
+    s1_cl_cands_indxs = self.get_s1_cl_cands_idx()
 
-    return self.man_measure[l1_cl_cands_indxs]
+    return self.man_measure[s1_cl_cands_indxs]
 
-  def get_l1_cl_cands_opt_cost(self):
+  def get_s1_cl_cands_opt_cost(self):
 
-    opt_index_abs = self.get_l1_cl_cands_idx()
+    opt_index_abs = self.get_s1_cl_cands_idx()
 
     return np.array(self.opt_costs)[opt_index_abs]
 
@@ -181,7 +181,7 @@ class Clusterer():
 
     self.n_clust = len(self.clust_ids)
 
-    self.l1_cl_cand_idxs = self.get_l1_cl_cands_idx()
+    self.s1_cl_cand_idxs = self.get_s1_cl_cands_idx()
 
   def compute_clust(self, method_name="minikmeans"):
     

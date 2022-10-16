@@ -88,8 +88,8 @@ if __name__ == '__main__':
                         datetime.now().strftime("%H_%M_%S")
 
     # useful paths
-    l1_dump_folder_name = "first_level"
-    l2_dump_folder_name = "second_level"
+    s1_dump_folder_name = "first_step"
+    s3_dump_folder_name = "second_step"
     res_dir_basename = "test_results"
     res_dir_full_name = res_dir_basename + "_" + \
                 unique_id
@@ -98,8 +98,8 @@ if __name__ == '__main__':
     codesign_path = rospackage.get_path("repair_codesign")
     exec_path = codesign_path + "/src"
 
-    l1_results_path = codesign_path + "/" + res_dir_basename + "/" + res_dir_full_name + "/" + l1_dump_folder_name
-    l2_results_path = codesign_path + "/" + res_dir_basename + "/" + res_dir_full_name + "/" + l2_dump_folder_name
+    s1_results_path = codesign_path + "/" + res_dir_basename + "/" + res_dir_full_name + "/" + s1_dump_folder_name
+    s3_results_path = codesign_path + "/" + res_dir_basename + "/" + res_dir_full_name + "/" + s3_dump_folder_name
 
     #generating urdf
     urdfs_path = rospackage.get_path("repair_urdf") + "/urdf"
@@ -138,7 +138,7 @@ if __name__ == '__main__':
         print(colored("\n--> STARTING FIRST LEVEL OPTIMIZATION....\n", "blue"))
         reset_term = subprocess.check_call(["reset"])
         # run first level (blocking --> we have to wait for data to be dumped to file)
-        first_level_proc = subprocess.check_call(["./run_1st_step_opt_on_workstation.py", \
+        first_step_proc = subprocess.check_call(["./run_1st_step_opt_on_workstation.py", \
                                     "-mst", \
                                     str(args.multistart_n_s1), \
                                     "-mtf", \
@@ -168,7 +168,7 @@ if __name__ == '__main__':
                                     "-yubb", \
                                     str(args.y_sampl_ub_biman), \
                                     "-dfn", \
-                                    l1_dump_folder_name, \
+                                    s1_dump_folder_name, \
                                     "-rdbs", \
                                     res_dir_basename, \
                                     "-iplf", \
@@ -198,15 +198,15 @@ if __name__ == '__main__':
             print(colored("\n--> STARTING SECOND LEVEL OPTIMIZATION....\n", "blue"))
 
             #run first level (blocking --> we have to wait for data to be dumped to file)
-            second_level_proc = subprocess.check_call(["./run_2nd_3rd_step_opt_on_workstation.py", \
+            second_step_proc = subprocess.check_call(["./run_2nd_3rd_step_opt_on_workstation.py", \
                                         "-d", \
                                         res_dir_full_name, \
                                         "-dfn", \
-                                        l2_dump_folder_name,
+                                        s3_dump_folder_name,
                                         "-rdbs", \
                                         res_dir_basename, \
                                         "-ldn", \
-                                        l1_dump_folder_name, \
+                                        s1_dump_folder_name, \
                                         "-ipopt_v", \
                                         str(args.ipopt_verb_lev), \
                                         "-nc",\
@@ -237,7 +237,7 @@ if __name__ == '__main__':
 
     #         print(colored("\n--> PERFORMING POST-PROCESSING STEPS FOR 3rd STEP....\n", "blue"))
 
-    #         postprl2 = PostProcS3(codesign_path + "/" + res_dir_basename)
+    #         postprs2s3 = PostProcS3(codesign_path + "/" + res_dir_basename)
 
     #     except:
 
@@ -249,10 +249,10 @@ if __name__ == '__main__':
 
     #         print(colored("\n--> PERFORMING POST-PROCESSING STEPS FOR 3rd STEP....\n", "blue"))
 
-    #         postprl2 = PostProcS3(codesign_path + "/" + res_dir_basename)
+    #         postprs2s3 = PostProcS3(codesign_path + "/" + res_dir_basename)
 
     #         # generate cl man references
-    #         second_level_proc = subprocess.check_call(["./gen_cl_man_ref.py", \
+    #         second_step_proc = subprocess.check_call(["./gen_cl_man_ref.py", \
     #                                     "-mst", \
     #                                     args.max_trials_factor_clmr, \
     #                                     ])
