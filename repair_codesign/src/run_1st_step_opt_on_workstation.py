@@ -222,7 +222,9 @@ if __name__ == '__main__':
                         help = 'full path to URDF', default = "")
     parser.add_argument('--coll_yaml_path', '-coll', type=str,\
                         help = 'full path to collision YAML', default = "")
-    
+    parser.add_argument('--cost_weights_yaml_path', '-weights', type=str,\
+                        help = 'full path to weights YAML', default = "")
+
     parser.add_argument('--is_in_place_flip', '-iplf', type=str2bool,\
                         help = 'whether to use in place flip task', default = True)
     parser.add_argument('--is_biman_pick', '-ibp', type=str2bool,\
@@ -320,6 +322,8 @@ if __name__ == '__main__':
     opt_results_path = results_path + "/opt" 
     failed_results_path = results_path + "/failed"
     coll_yaml_path = args.coll_yaml_path
+    cost_weights_yaml_path = args.cost_weights_yaml_path
+
     solution_base_name = args.solution_base_name
 
     # task-specific options
@@ -402,6 +406,7 @@ if __name__ == '__main__':
                                         args.use_static_tau,
                                         is_sliding_wrist,
                                         coll_yaml_path,
+                                        cost_weights_yaml_path,
                                         is_second_lev_opt, 
                                         args.is_in_place_flip, 
                                         args.is_biman_pick)

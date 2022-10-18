@@ -2,6 +2,10 @@
 
 import casadi as cs
 
+import numpy as np
+
+import yaml
+
 epsi_default = 0.000001
 
 rot2trasl_man_scl_fact = 5.0 # man_trasl * rot2trasl_man_scl_fact will scale 
@@ -28,6 +32,34 @@ def get_design_map():
 
     return d_var_map
 
+def get_actuated_jnts_indxs(n_jnts):
+
+    d_var_map = get_design_map()
+    coll_var_map = get_coll_joint_map()
+
+    index_array = np.arange(0, n_jnts)
+
+    non_act_jnt_indxs = np.array([d_var_map["mount_h"],\
+                        d_var_map["should_w_l"], d_var_map["should_roll_l"], d_var_map["wrist_off_l"], \
+                        d_var_map["should_w_r"], d_var_map["should_roll_r"], d_var_map["wrist_off_r"],
+                        coll_var_map["link5_coll_joint_l"], coll_var_map["link5_coll_joint_r"]])
+
+    return np.delete(index_array, non_act_jnt_indxs)
+
+def parse_weights_yaml(path):
+
+    yaml_data = None
+    
+    with open(path, "r") as stream:
+        try:
+            yaml_data = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+
+    torque_weights = np.array(yaml_data["torque"])
+    vel_weights = np.array(yaml_data["vel"])
+
+    return torque_weights, vel_weights 
 
 def get_coll_joint_map():
 

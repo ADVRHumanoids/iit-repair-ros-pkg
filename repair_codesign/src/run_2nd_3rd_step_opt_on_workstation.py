@@ -226,6 +226,8 @@ if __name__ == '__main__':
                         help = 'full path to URDF', default = "")
     parser.add_argument('--coll_yaml_path', '-coll', type=str,\
                         help = 'full path to collision YAML', default = "")
+    parser.add_argument('--cost_weights_yaml_path', '-weights', type=str,\
+                        help = 'full path to weights YAML', default = "")
 
     parser.add_argument('--dump_dir_name', '-dfn', type=str,\
                     help = 'dump directory name',
@@ -261,6 +263,8 @@ if __name__ == '__main__':
     dump_basepath = codesign_path + "/" + args.res_dir_basename + "/" + args.res_dirname + "/" + dump_folder_name
 
     coll_yaml_path = args.coll_yaml_path
+    cost_weights_yaml_path = args.cost_weights_yaml_path
+
     solution_base_name = args.solution_base_name
 
     # loading solution and extracting data
@@ -374,6 +378,7 @@ if __name__ == '__main__':
                                         use_static_tau,
                                         is_sliding_wrist,
                                         coll_yaml_path,
+                                        cost_weights_yaml_path,
                                         is_second_lev_opt, 
                                         is_in_place_flip, 
                                         is_biman_pick)

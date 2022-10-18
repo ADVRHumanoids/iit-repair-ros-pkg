@@ -22,6 +22,7 @@ def gen_task_copies(weight_global_manip: np.double, weight_class_manip: np.doubl
                     use_static_tau = False, 
                     sliding_wrist = False, 
                     coll_path = "", 
+                    cost_weight_path = "",
                     is_second_lev_opt = False, 
                     is_in_place_flip = True, 
                     is_bimanual_pick = False):
@@ -47,7 +48,8 @@ def gen_task_copies(weight_global_manip: np.double, weight_class_manip: np.doubl
     task = TaskGen(filling_n_nodes = filling_nodes, \
                     is_sliding_wrist = sliding_wrist,\
                     sliding_wrist_offset = wrist_offset,\
-                    coll_yaml_path = coll_path)
+                    coll_yaml_path = coll_path, 
+                    cost_weights_yaml_path = cost_weight_path)
 
     task.add_tasks(y_sampling, right_arm_picks, 
                     is_in_place_flip = is_in_place_flip, 

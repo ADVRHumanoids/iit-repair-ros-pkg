@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from codesign_pyutils.post_proc_utils import PostProcS1, PostProcS3
-from codesign_pyutils.misc_definitions import get_design_map, get_coll_joint_map
+from codesign_pyutils.misc_definitions import get_design_map, get_actuated_jnts_indxs
 
 import numpy as np
 
@@ -14,4 +14,10 @@ import numpy as np
 # postprs1.show_plots()
 
 
-postprs3 = PostProcS3("/home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/test_results_14-10-2022-15_26_19") 
+# postprs3 = PostProcS3("/home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/test_results_14-10-2022-15_26_19") 
+
+index_array = np.arange(0, 25)
+
+print(np.delete(index_array, get_actuated_jnts_indxs(25)))
+
+print(get_actuated_jnts_indxs(25))

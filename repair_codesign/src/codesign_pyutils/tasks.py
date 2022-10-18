@@ -7,7 +7,8 @@ from codesign_pyutils.horizon_utils import add_pose_cnstrnt, SimpleCollHandler
 
 from codesign_pyutils.ros_utils import MarkerGen, ReplaySol
 
-from codesign_pyutils.misc_definitions import get_design_map, get_coll_joint_map
+from codesign_pyutils.misc_definitions import get_design_map, get_coll_joint_map, get_actuated_jnts_indxs,\
+                                            parse_weights_yaml
 
 from horizon import problem
 from horizon.utils import kin_dyn
@@ -23,7 +24,6 @@ import time
 from horizon.solvers import solver
 
 from horizon.transcriptions.transcriptor import Transcriptor
-
 
 class DoubleArmCartTask:
 
@@ -437,9 +437,14 @@ class TaskGen:
     def __init__(self, filling_n_nodes = 0, \
                 is_sliding_wrist = False,\
                 sliding_wrist_offset = 0.0, \
-                coll_yaml_path = ""):
+                coll_yaml_path = "", 
+                cost_weights_yaml_path = ""):
         
         self.coll_yaml_path = coll_yaml_path
+        
+        self.cost_weights_yaml_path = cost_weights_yaml_path
+
+        self.torque_weights, self.vel_weights = parse_weights_yaml(self.cost_weights_yaml_path)
 
         self.is_sliding_wrist = is_sliding_wrist # whether to add a fictitious d.o.f. on the wrist or not
         self.sliding_wrist_offset =  sliding_wrist_offset # mounting offset for wrist auxiliary joint
@@ -608,19 +613,19 @@ class TaskGen:
 
         return cl_man_trasl, cl_man_rot, cl_man_tot
 
-    def compute_man(self, weight, q_dot):
+    def compute_man(self, weights, q_dot):
 
-        node_man = weight * cs.sumsqr(q_dot)
+        non_local_man = q_dot.T @ weights @ q_dot
 
-        return node_man
+        return non_local_man
 
     def compute_static_tau(self):
         
         static_tau = kin_dyn.InverseDynamics(self.urdf_kin_dyn, [], \
                 casadi_kin_dyn.py3casadi_kin_dyn.CasadiKinDyn.LOCAL_WORLD_ALIGNED).call(self.q,\
                                                         np.array([0] * self.nq), np.array([0] * self.nv)) 
-        
-        return static_tau
+
+        return static_tau[get_actuated_jnts_indxs(self.nq)]
 
     def add_cl_man_cost(self):
 
@@ -660,7 +665,7 @@ class TaskGen:
             
             # min inputs 
             self.prb.createIntermediateCost("max_global_manipulability" + str(i),\
-                            self.compute_man(self.weight_glob_man, self.q_dot),
+                            self.weight_glob_man * (self.compute_man(self.vel_weights, self.q_dot_actuated_jnts)),
                             nodes = range(start_node_idx, last_node_idx)) 
 
         if is_classical_man:
@@ -669,9 +674,10 @@ class TaskGen:
 
     def add_static_tau_cost(self):
         
+        static_tau = self.compute_static_tau()
         # min inputs
         self.prb.createIntermediateCost("min_static_torque",\
-                        self.weight_static_tau * cs.sumsqr(self.compute_static_tau()))         
+                        self.weight_static_tau * (static_tau.T @ self.weight_static_tau @ static_tau))         
 
     def init_prb(self, urdf_full_path: str, weight_pos = 0.001, weight_rot = 0.001,\
                 weight_glob_man = 0.0001, weight_class_man = 0.0001, weight_static_tau = 0.0001,\
@@ -723,11 +729,10 @@ class TaskGen:
         self.q_design_dot = self.q_dot[self.d_var_map["mount_h"],\
                             self.d_var_map["should_w_l"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
                             self.d_var_map["should_w_r"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]]
-        
-        # self.q_actuated_jnts =
-        # self.q_dot_actuated_jnts =
-        # self.tau_actuated_jnts = 
-        # self.q_dot_actuated_jnts =
+   
+        self.q_actuated_jnts = self.q[get_actuated_jnts_indxs(self.nq)]
+      
+        self.q_dot_actuated_jnts = self.q_dot[get_actuated_jnts_indxs(self.nv)]
 
         self.wrist_off_ref = self.prb.createParameter('wrist_off_ref', 1)
 

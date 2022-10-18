@@ -112,6 +112,9 @@ if __name__ == '__main__':
     coll_yaml_name = "arm_coll.yaml"
     coll_yaml_path = rospackage.get_path("repair_urdf") + "/config/" + coll_yaml_name
 
+    cost_weights_filename = "codes_cost_rel_weights.yaml"
+    cost_weights_path = rospackage.get_path("repair_codesign") + "/config/" + cost_weights_filename
+
     try:
 
         print(colored("\n--> GENERATING URDF...\n", "blue"))
@@ -179,6 +182,8 @@ if __name__ == '__main__':
                                     urdf_full_path, \
                                     "-coll", \
                                     coll_yaml_path, 
+                                    "-weights", \
+                                    cost_weights_path, 
                                     "-ustau", 
                                     str(args.use_static_tau),
                                     "-ucm", 
@@ -222,7 +227,9 @@ if __name__ == '__main__':
                                         "-urdf", \
                                         urdf_full_path, \
                                         "-coll", \
-                                        coll_yaml_path])
+                                        coll_yaml_path, \
+                                        "-weights", \
+                                        cost_weights_path])
 
             print(colored("\n--> SECOND LEVEL OPTIMIZATION FINISHED SUCCESSFULLY. \n", "blue"))
 

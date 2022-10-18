@@ -72,7 +72,9 @@ class PostProcS1:
         self._urdf_full_path = urdfs_path + "/" + urdf_name + ".urdf"
         self._xacro_full_path = urdfs_path + "/" + urdf_name + ".urdf.xacro"
         coll_yaml_name = "arm_coll.yaml"
+        cost_weights_filename = "codes_cost_rel_weights.yaml"
         self._coll_yaml_path = rospackage.get_path("repair_urdf") + "/config/" + coll_yaml_name
+        self._cost_weights_path = rospackage.get_path("repair_codesign") + "/config/" + cost_weights_filename
 
         print(colored("\n--->Initializing first level postprocess object from folder \"" + 
                         self._load_path + "\n", 
@@ -118,6 +120,7 @@ class PostProcS1:
                                             self._use_static_tau,
                                             self._is_sliding_wrist, 
                                             self._coll_yaml_path, 
+                                            self._cost_weights_path,
                                             is_second_lev_opt=False)
 
             self._cl_man_llist, self._cl_man_rlist = self.__get_cl_man_list()
@@ -559,6 +562,8 @@ class PostProcS1:
         print(colored(" urdf_full_path:", "white"), self._urdf_full_path)
 
         print(colored(" coll_yaml_path:", "white"), self._coll_yaml_path)
+
+        print(colored(" cost_weights_path:", "white"), self._cost_weights_path)
 
         print(colored(" ms_trgt:", "white"), self._ms_trgt)
 
