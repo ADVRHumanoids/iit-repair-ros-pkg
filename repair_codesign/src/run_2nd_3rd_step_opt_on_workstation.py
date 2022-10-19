@@ -173,6 +173,7 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
         full_solution = {**(solutions[sol_index]),
                         **(cnstr_opt[sol_index]),
                         **(cnstr_lmbd[sol_index]),
+                        **(sol_costs[sol_index]),
                         "q_ig": q_ig[multistart_nodes[sol_index] + n_multistarts * trial_idxs[sol_index]],\
                         "q_dot_ig": q_dot_ig[multistart_nodes[sol_index] + n_multistarts * trial_idxs[sol_index]], \
                         "multistart_index": multistart_nodes[sol_index], 
