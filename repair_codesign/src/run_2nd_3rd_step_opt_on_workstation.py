@@ -47,7 +47,7 @@ def solve(multistart_nodes,\
             task, slvr,\
             q_ig, q_dot_ig,\
             solutions,\
-            sol_costs, cnstr_opt, cnstr_lmbd,\
+            sol_tot_cost, sol_costs, cnstr_opt, cnstr_lmbd,\
             solve_failed_array, 
             q_codes_s1, 
             cluster_id, 
@@ -110,10 +110,20 @@ def solve(multistart_nodes,\
             "/" + str(len(multistart_nodes)) + \
             ".\nOpt. cost: " + str(solutions[sol_index]["opt_cost"]), print_color))
 
-        sol_costs[sol_index] = solutions[sol_index]["opt_cost"]
+        sol_tot_cost[sol_index] = solutions[sol_index]["opt_cost"]
         cnstr_opt[sol_index] = slvr.getConstraintSolutionDict()
         cnstr_lmbd[sol_index] = slvr.getCnstrLmbdSolDict()
 
+        # also add separate cost values to the dumped data
+        cost_dict = task.prb.getCosts("")
+        sol_cost_dict = []
+
+        for cost_fnct_key, cost_fnct_val in cost_dict.items():
+
+            sol_cost_dict[cost_fnct_key] = task.prb.evalFun(cost_fnct_val, solutions[sol_index])
+
+        sol_costs[sol_index] = sol_cost_dict
+        
         solve_failed_array[sol_index] = solve_failed # for now, solve_failed will always be true
     
     return solution_time
@@ -131,7 +141,8 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
 
     # some initializations before entering the solution loop
     solve_failed_array = [True] * n_multistarts_main
-    sol_costs = [1e10] * n_multistarts_main
+    sol_tot_cost = [1e10] * n_multistarts_main
+    sol_costs = [None] * n_multistarts_main
     solutions = [None] * n_multistarts_main
     cnstr_opt = [None] * n_multistarts_main
     cnstr_lmbd = [None] * n_multistarts_main
@@ -144,7 +155,7 @@ def sol_main(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_path,\
             task, slvr,\
             q_ig, q_dot_ig,\
             solutions,\
-            sol_costs, cnstr_opt, cnstr_lmbd,\
+            sol_tot_cost, sol_costs, cnstr_opt, cnstr_lmbd,\
             solve_failed_array, 
             q_codes_s1, 
             cluster_id, 
@@ -418,6 +429,10 @@ if __name__ == '__main__':
                     "w_man_actual": task_copies[0].weight_glob_man, 
                     "w_clman_actual": task_copies[0].weight_classical_man,
                     "w_stau_actual": task_copies[0].weight_static_tau,
+                    "w_rel_mat_man": task_copies[0].vel_weights, 
+                    "w_rel_clman_rot": task_copies[0].weight_clman_rot, 
+                    "w_rel_clman_trasl": task_copies[0].weight_clman_trasl, 
+                    "w_rel_mat_stau": task_copies[0].weight_static_tau,
                     "use_classical_man": use_classical_man,
                     "nodes_list": task_copies[0].nodes_list, 
                     "tasks_list": task_copies[0].task_list,

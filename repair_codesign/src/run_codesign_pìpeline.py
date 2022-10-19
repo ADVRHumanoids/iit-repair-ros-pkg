@@ -59,6 +59,12 @@ if __name__ == '__main__':
                         help = 'whether to use the static tau minimization cost', default = True)
     parser.add_argument('--use_classical_man', '-ucm', type=str2bool,\
                         help = 'whether to use the classical man. cost', default = True)
+    parser.add_argument('--weight_global_manip', '-wman', type = np.double,\
+                        help = 'weight for global manipulability cost function', default = 0.01)
+    parser.add_argument('--weight_class_manip', '-wclass', type = np.double,\
+                        help = 'weight for classical manipulability cost function', default = 0.1)
+    parser.add_argument('--weight_static_tau', '-wstau', type = np.double,\
+                        help = 'weight static torque minimization term', default = 0.000005)
 
     # second level-specific arguments
     parser.add_argument('--multistart_n_s3', '-msn_s3', type=int,\
@@ -187,7 +193,13 @@ if __name__ == '__main__':
                                     "-ustau", 
                                     str(args.use_static_tau),
                                     "-ucm", 
-                                    str(args.use_classical_man)])
+                                    str(args.use_classical_man), 
+                                    "-wman", 
+                                    str(args.weight_global_manip),
+                                    "-wclass", 
+                                    str(args.weight_class_manip),
+                                    "-wstau", 
+                                    str(args.weight_static_tau)])
 
         print(colored("\n--> FIRST LEVEL OPTIMIZATION FINISHED SUCCESSFULLY. \n", "blue"))
 

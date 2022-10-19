@@ -444,7 +444,8 @@ class TaskGen:
         
         self.cost_weights_yaml_path = cost_weights_yaml_path
 
-        self.torque_weights, self.vel_weights = parse_weights_yaml(self.cost_weights_yaml_path)
+        self.torque_weights, self.vel_weights,\
+            self.weight_clman_rot, self.weight_clman_trasl = parse_weights_yaml(self.cost_weights_yaml_path)
 
         self.is_sliding_wrist = is_sliding_wrist # whether to add a fictitious d.o.f. on the wrist or not
         self.sliding_wrist_offset =  sliding_wrist_offset # mounting offset for wrist auxiliary joint
@@ -612,8 +613,23 @@ class TaskGen:
         cl_man_tot = cs.sqrt(cs.det(J @ J.T))
 
         return cl_man_trasl, cl_man_rot, cl_man_tot
+    
+    def compute_cl_man_cost(self, J):
 
-    def compute_man(self, weights, q_dot):
+        # modified version to avoid unstable sqrt method
+        # we basically use the 4th power of the classical 
+        # index
+
+        J_trasl = J[0:3, :]
+        J_rot = J[3:(J[:,0].shape[0]), :]
+    
+        cl_man_trasl_cost = (cs.det(J_trasl @ J_trasl.T)) **2
+        cl_man_rot_cost = (cs.det(J_rot @ J_rot.T)) **2
+        cl_man_tot_cost = (cs.det(J @ J.T)) **2
+
+        return cl_man_trasl_cost, cl_man_rot_cost, cl_man_tot_cost
+
+    def compute_nonloc_man(self, weights, q_dot):
 
         non_local_man = q_dot.T @ weights @ q_dot
 
@@ -627,33 +643,32 @@ class TaskGen:
 
         return static_tau[get_actuated_jnts_indxs(self.nq)]
 
-    def add_cl_man_cost(self):
+    def add_cl_man_cost(self, epsi_cl_man = 1e-5):
 
         Jl = self.larm_tcp_jacobian_sym
         Jr = self.rarm_tcp_jacobian_sym
 
-        man_l_trasl, man_l_rot, _1 = self.compute_cl_man(Jl)
-        man_r_trasl, man_r_rot, _2 = self.compute_cl_man(Jr)
+        man_l_trasl_cost, man_l_rot_cost, _1 = self.compute_cl_man_cost(Jl)
+        man_r_trasl_cost, man_r_rot_cost, _2 = self.compute_cl_man_cost(Jr)
 
         # max cl. manipulability (can be defined on all task nodes without problems,
         # because it involves q and not q_dot)
+        # same weights between left and right
 
         self.prb.createIntermediateCost("max_clman_l_trasl",\
-                        self.weight_classical_man / (man_l_trasl)**2)
+                        self.weight_classical_man * self.weight_clman_trasl / (man_l_trasl_cost + epsi_cl_man))
         self.prb.createIntermediateCost("max_clman_l_rot",\
-                        self.weight_classical_man / (man_l_rot)**2)
+                        self.weight_classical_man * self.weight_clman_rot / (man_l_rot_cost + epsi_cl_man))
 
         self.prb.createIntermediateCost("max_clman_r_trasl",\
-                        self.weight_classical_man / (man_r_trasl)**2)
+                        self.weight_classical_man * self.weight_clman_trasl / (man_r_trasl_cost + epsi_cl_man))
         self.prb.createIntermediateCost("max_clman_r_rot",\
-                        self.weight_classical_man / (man_r_rot)**2)
+                        self.weight_classical_man * self.weight_clman_rot / (man_r_rot_cost + epsi_cl_man))
 
     def add_manip_cost(self, is_classical_man = False):
         
         n_of_tasks = len(self.nodes_list)
         
-        epsi = 1 # used to make classical man cost robust wrt singularity
-
         # the global man cost has to be removed from the final node of each task
         # so that the transition nodes between them do not influence the optimization
         # This is not needed for the classical man cost because it does not involve joint velocity
@@ -665,7 +680,7 @@ class TaskGen:
             
             # min inputs 
             self.prb.createIntermediateCost("max_global_manipulability" + str(i),\
-                            self.weight_glob_man * (self.compute_man(self.vel_weights, self.q_dot_actuated_jnts)),
+                            self.weight_glob_man * (self.compute_nonloc_man(self.vel_weights, self.q_dot_actuated_jnts)),
                             nodes = range(start_node_idx, last_node_idx)) 
 
         if is_classical_man:
@@ -1502,7 +1517,7 @@ class HighClManGen:
 
         return cl_man_trasl, cl_man_rot, cl_man_tot
 
-    def compute_man(self, q_dot):
+    def compute_nonloc_man(self, q_dot):
 
         node_man = cs.sumsqr(q_dot)
 
@@ -1667,6 +1682,6 @@ class HighClManGen:
 
         # adding regularization 
         self.prb.createIntermediateCost("regular",\
-                        self.compute_man(self.q_dot))
+                        self.compute_nonloc_man(self.q_dot))
 
    

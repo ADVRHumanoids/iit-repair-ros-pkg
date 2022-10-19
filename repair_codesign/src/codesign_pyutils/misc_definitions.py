@@ -59,7 +59,10 @@ def parse_weights_yaml(path):
     torque_weights = np.array(yaml_data["torque"])
     vel_weights = np.array(yaml_data["vel"])
 
-    return torque_weights, vel_weights 
+    clman_rot = yaml_data["cl_man"]["rot"]
+    clman_trsl = yaml_data["cl_man"]["trasl"]
+
+    return torque_weights, vel_weights, clman_rot, clman_trsl
 
 def get_coll_joint_map():
 

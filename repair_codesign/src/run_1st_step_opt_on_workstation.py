@@ -55,10 +55,10 @@ def enforce_codes_cnstr_on_ig(q_ig):
         q_ig[i][design_indeces, :] = np.transpose(np.tile(q_codes_extended, (len(q_ig[0][0, :]), 1)))
 
 def solve(multistart_nodes,\
-            task, slvr,\
+            task : TaskGen, slvr,\
             q_ig, q_dot_ig,\
             solutions,\
-            sol_costs, cnstr_opt, cnstr_lmbd,\
+            sol_tot_cost, sol_costs, cnstr_opt, cnstr_lmbd,\
             solve_failed_array,
             trial_idxs, 
             n_multistarts, 
@@ -114,9 +114,19 @@ def solve(multistart_nodes,\
             "/" + str(len(multistart_nodes)) + \
             ".\nOpt. cost: " + str(solutions[sol_index]["opt_cost"]), print_color))
 
-        sol_costs[sol_index] = solutions[sol_index]["opt_cost"]
+        sol_tot_cost[sol_index] = solutions[sol_index]["opt_cost"]
         cnstr_opt[sol_index] = slvr.getConstraintSolutionDict()
         cnstr_lmbd[sol_index] = slvr.getCnstrLmbdSolDict()
+
+        # also add separate cost values to the dumped data
+        cost_dict = task.prb.getCosts("")
+        sol_cost_dict = []
+
+        for cost_fnct_key, cost_fnct_val in cost_dict.items():
+
+            sol_cost_dict[cost_fnct_key] = task.prb.evalFun(cost_fnct_val, solutions[sol_index])
+
+        sol_costs[sol_index] = sol_cost_dict
 
         solve_failed_array[sol_index] = solve_failed
 
@@ -132,7 +142,8 @@ def sol_main(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path, op
 
     # some initializations before entering the solution loop
     solve_failed_array = [True] * n_multistarts_main
-    sol_costs = [1e10] * n_multistarts_main
+    sol_tot_cost = [1e10] * n_multistarts_main
+    sol_costs = [None] * n_multistarts_main
     solutions = [None] * n_multistarts_main
     cnstr_opt = [None] * n_multistarts_main
     cnstr_lmbd = [None] * n_multistarts_main
@@ -142,7 +153,7 @@ def sol_main(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path, op
             task, slvr,\
             q_ig, q_dot_ig,\
             solutions,\
-            sol_costs, cnstr_opt, cnstr_lmbd,\
+            sol_tot_cost, sol_costs, cnstr_opt, cnstr_lmbd,\
             solve_failed_array, 
             trial_idxs, 
             n_multistarts, 
@@ -440,6 +451,10 @@ if __name__ == '__main__':
                     "w_man_actual": task_copies[0].weight_glob_man, 
                     "w_clman_actual": task_copies[0].weight_classical_man, 
                     "w_stau_actual": task_copies[0].weight_static_tau,
+                    "w_rel_mat_man": task_copies[0].vel_weights, 
+                    "w_rel_clman_rot": task_copies[0].weight_clman_rot, 
+                    "w_rel_clman_trasl": task_copies[0].weight_clman_trasl, 
+                    "w_rel_mat_stau": task_copies[0].weight_static_tau,
                     "nodes_list": task_copies[0].nodes_list, 
                     "tasks_list": task_copies[0].task_list,
                     "tasks_dict": task_copies[0].task_dict, 

@@ -33,6 +33,9 @@ results_path = codesign_path + "/test_results"
 replay_folder_name = "replay_directory" 
 replay_base_path = results_path  + "/" + replay_folder_name
 
+cost_weights_filename = "codes_cost_rel_weights.yaml"
+cost_weights_path = rospackage.get_path("repair_codesign") + "/config/" + cost_weights_filename
+
 # resample solutions before replaying
 refinement_scale = 10
 
@@ -74,7 +77,7 @@ def main(args):
         print('Failed to launch RViz.')
     
     # only used to parse urdf
-    dummy_task = TaskGen()
+    dummy_task = TaskGen(cost_weights_yaml_path=cost_weights_path)
 
     dummy_task.add_in_place_flip_task(0)
 
