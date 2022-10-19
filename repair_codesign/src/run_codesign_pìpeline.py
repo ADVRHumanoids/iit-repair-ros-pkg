@@ -64,7 +64,7 @@ if __name__ == '__main__':
     parser.add_argument('--weight_class_manip', '-wclass', type = np.double,\
                         help = 'weight for classical manipulability cost function', default = 0.1)
     parser.add_argument('--weight_static_tau', '-wstau', type = np.double,\
-                        help = 'weight static torque minimization term', default = 1000000)
+                        help = 'weight static torque minimization term', default = 0.1)
 
     # second level-specific arguments
     parser.add_argument('--multistart_n_s3', '-msn_s3', type=int,\
@@ -76,7 +76,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_clust_s2', '-nc_s2', type=int,\
                         help = 'number of clusters to be generated', default = 20)
     parser.add_argument("--ig_seed_s3", '-ig_s3', type = int,\
-                        help = '', default = 129)
+                        help = '', default = 731)
     
     # cl man reference generation-specific arguments
     # parser.add_argument('--gen_cl_man_ref', '-gen_clmr', type=bool,\
