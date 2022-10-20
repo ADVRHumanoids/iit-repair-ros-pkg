@@ -95,3 +95,31 @@ def compute_man_index(man_cost: list, n_int: int):
         man_measure[i] = 1 / np.sqrt(man_cost[i] / n_int) # --> discretized root mean squared joint velocities over the opt interval 
 
     return man_measure
+
+def arturo2traversaro_sel_conv(selector_arturo):
+
+    selector_traversaro = []
+
+    if (len(selector_arturo) == 1):
+
+        raise Exception("cannot convert to Traversaro error")
+    
+    if (len(selector_arturo) == 2):
+
+        if (selector_arturo.count("x") > 0 and selector_arturo.count("y")):
+
+            selector_traversaro = np.array([2]) # rotation around z free
+
+        if (selector_arturo.count("x") > 0 and selector_arturo.count("z")):
+
+            selector_traversaro = np.array([1]) # rotation around y free
+        
+        if (selector_arturo.count("y") > 0 and selector_arturo.count("z")):
+
+            selector_traversaro = np.array([0]) # rotation around x free
+
+    if (len(selector_arturo) == 3):
+
+        selector_traversaro = np.array([0, 1]) # blocking x and y is sufficient to block all rotational d.o.f.
+
+    return selector_traversaro

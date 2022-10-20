@@ -2,7 +2,7 @@ import numpy as np
 
 import casadi as cs
 
-from codesign_pyutils.math_utils import quat2rot, rot_error, rot_error2, rot_error3
+from codesign_pyutils.math_utils import quat2rot, rot_error, rot_error2, rot_error3, arturo2traversaro_sel_conv
 
 from codesign_pyutils.miscell_utils import check_str_list, rot_error_axis_sel_not_supp
 
@@ -76,8 +76,10 @@ def add_pose_cnstrnt(unique_id: int, prb: problem, nodes: Union[int, list],\
                 
                 if rot_error_approach == "traversaro":
                     
+                    converter_rot_selector = arturo2traversaro_sel_conv(rot_selection)
+
                     rot_cnstrnt = prb.createConstraint("rot_" + str(unique_id),\
-                                        rot_error3(rot_ref, rot, epsi)[rot_selector], nodes = nodes)
+                                        rot_error3(rot_ref, rot, epsi)[converter_rot_selector], nodes = nodes)
 
                 if rot_error_approach != "traversaro" and rot_error_approach != "arturo"\
                     and rot_error_approach != "siciliano":
