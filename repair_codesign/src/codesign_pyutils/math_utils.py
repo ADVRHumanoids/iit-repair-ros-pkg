@@ -120,6 +120,6 @@ def arturo2traversaro_sel_conv(selector_arturo):
 
     if (len(selector_arturo) == 3):
 
-        selector_traversaro = np.array([0, 1]) # blocking x and y is sufficient to block all rotational d.o.f.
+        selector_traversaro = np.array([0, 1, 2]) # blocking all d.o.f.
 
     return selector_traversaro

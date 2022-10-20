@@ -78,8 +78,10 @@ def add_pose_cnstrnt(unique_id: int, prb: problem, nodes: Union[int, list],\
                     
                     converter_rot_selector = arturo2traversaro_sel_conv(rot_selection)
 
+                    # squaring the constraint can improve convergence far from the constraint
+                    # but makes convergence close to the constraint slower
                     rot_cnstrnt = prb.createConstraint("rot_" + str(unique_id),\
-                                        rot_error3(rot_ref, rot, epsi)[converter_rot_selector], nodes = nodes)
+                                        (rot_error3(rot_ref, rot, epsi)[converter_rot_selector])**2, nodes = nodes)
 
                 if rot_error_approach != "traversaro" and rot_error_approach != "arturo"\
                     and rot_error_approach != "siciliano":
