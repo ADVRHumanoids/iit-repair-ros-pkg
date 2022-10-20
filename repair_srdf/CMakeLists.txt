@@ -183,10 +183,10 @@ include_directories(
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 
-# install(DIRECTORY
-#   srdf
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
+install(DIRECTORY
+  srdf
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
 
 #############
 ## Testing ##

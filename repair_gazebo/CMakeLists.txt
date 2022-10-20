@@ -3,4 +3,12 @@ project(repair_gazebo)
 
 find_package(catkin REQUIRED)
 
-catkin_add_env_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/${PROJECT_NAME}.sh.in")
+install(DIRECTORY
+  worlds
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+install(DIRECTORY
+  launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)

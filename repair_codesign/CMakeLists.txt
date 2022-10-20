@@ -181,15 +181,15 @@ include_directories(
 #   PATTERN ".svn" EXCLUDE
 # )
 
-# install(DIRECTORY
-#   src
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
+install(DIRECTORY
+  src
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
 
-# install(DIRECTORY
-#   test_results
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
+install(DIRECTORY
+  config
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
 
 #############
 ## Testing ##

@@ -20,5 +20,10 @@ generate_messages(
   std_msgs
 )
 
+install(DIRECTORY
+  config
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
 catkin_package(CATKIN_DEPENDS message_runtime)
 add_subdirectory(src/xbot2_plugins/replay_traj)

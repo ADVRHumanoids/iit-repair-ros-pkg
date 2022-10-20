@@ -115,7 +115,7 @@ def solve(multistart_nodes,\
         cnstr_lmbd[sol_index] = slvr.getCnstrLmbdSolDict()
 
         # also add separate cost values to the dumped data
-        cost_dict = task.prb.getCosts("")
+        cost_dict = task.prb.getCosts()
         sol_cost_dict = []
 
         for cost_fnct_key, cost_fnct_val in cost_dict.items():
