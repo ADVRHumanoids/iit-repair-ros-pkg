@@ -16,6 +16,10 @@ from codesign_pyutils.miscell_utils import str2bool
 
 from codesign_pyutils.post_proc_utils import PostProcS3
 
+from pathlib import Path
+
+script_dir = Path( __file__ ).parent.absolute()
+
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(
@@ -137,9 +141,8 @@ if __name__ == '__main__':
 
         print(colored('FAILED TO GENERATE URDF.', "red"))
 
-
-    os.chdir(exec_path) # change current path, so that executable can be run with check_call
-
+    os.chdir(script_dir) # change current path, so that executable can be run with check_call
+    
     if args.multistart_n_s1 > 0:
 
         # try:
