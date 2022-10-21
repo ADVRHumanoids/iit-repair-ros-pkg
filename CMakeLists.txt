@@ -7,4 +7,6 @@ add_subdirectory(repair_codesign)
 add_subdirectory(repair_urdf)
 add_subdirectory(repair_srdf)
 add_subdirectory(repair_cartesio)
+add_subdirectory(repair_cntrl)
+add_subdirectory(repair_gazebo)
 

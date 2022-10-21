@@ -3,6 +3,8 @@ project(repair_gazebo)
 
 find_package(catkin REQUIRED)
 
+catkin_package()
+
 install(DIRECTORY
   worlds
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}

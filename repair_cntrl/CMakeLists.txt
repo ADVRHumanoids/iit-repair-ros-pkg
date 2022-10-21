@@ -25,5 +25,10 @@ install(DIRECTORY
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
+install(PROGRAMS src/repair_utils/generate_sim_plots.py
+          src/repair_utils/post_process_utils.py
+        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
 catkin_package(CATKIN_DEPENDS message_runtime)
+
 add_subdirectory(src/xbot2_plugins/replay_traj)
