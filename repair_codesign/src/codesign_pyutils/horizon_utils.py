@@ -6,7 +6,7 @@ from codesign_pyutils.math_utils import quat2rot, rot_error, rot_error2, rot_err
 
 from codesign_pyutils.miscell_utils import check_str_list, rot_error_axis_sel_not_supp
 
-rot_error_approach = "traversaro" # options: "siciliano", "arturo", "traversaro"
+rot_error_approach = "arturo" # options: "siciliano", "arturo", "traversaro"
 
 from codesign_pyutils.misc_definitions import epsi_default
 
@@ -79,7 +79,7 @@ def add_pose_cnstrnt(unique_id: int, prb: problem, nodes: Union[int, list],\
                     converter_rot_selector = arturo2traversaro_sel_conv(rot_selection)
 
                     # squaring the constraint can improve convergence far from the constraint
-                    # but makes convergence close to the constraint slower
+                    # but makes convergence close to the constraint slower and less stable
                     rot_cnstrnt = prb.createConstraint("rot_" + str(unique_id),\
                                         (rot_error3(rot_ref, rot, epsi)[converter_rot_selector])**2, nodes = nodes)
 

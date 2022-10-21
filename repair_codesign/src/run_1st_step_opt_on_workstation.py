@@ -280,7 +280,7 @@ if __name__ == '__main__':
     parser.add_argument('--slvr_type', '-slvr', type = str,\
                         help = 'solver type', default = "ipopt")
     parser.add_argument('--ipopt_tol', '-ipopt_tol', type = np.double,\
-                        help = 'IPOPT tolerance', default = 0.0000001)
+                        help = 'IPOPT tolerance', default = 0.00001)
     parser.add_argument('--ipopt_max_iter', '-max_iter', type = int,\
                         help = 'IPOPT max iterations', default = 450)
     parser.add_argument('--ipopt_cnstr_tol', '-ipopt_cnstr', type = np.double,\
