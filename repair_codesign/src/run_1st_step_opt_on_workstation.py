@@ -28,7 +28,7 @@ from codesign_pyutils.misc_definitions import get_design_map
 
 from codesign_pyutils.task_utils import gen_task_copies,\
                                         gen_slvr_copies,\
-                                        sol_main_s1_s1,
+                                        sol_main_s1,\
                                         solve_s1,\
                                         enforce_codes_cnstr_on_ig
 

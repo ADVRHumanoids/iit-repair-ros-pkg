@@ -25,7 +25,7 @@ from horizon.solvers import solver
 
 from horizon.transcriptions.transcriptor import Transcriptor
 
-class CodesCodesTaskGen:
+class CodesTaskGen:
     
     # single class for generaing the whole co-design problem
     # for he RePAIR co-design

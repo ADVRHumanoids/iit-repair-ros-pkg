@@ -1,8 +1,10 @@
 import numpy as np
 
-from codesign_pyutils.tasks import CodesCodesTaskGen, HighClManGen
+from codesign_pyutils.tasks import CodesTaskGen, HighClManGen
 
 from codesign_pyutils.miscell_utils import gen_y_sampling
+
+from codesign_pyutils.solution_utils import solve_prb_standalone
 
 from termcolor import colored
 
@@ -45,7 +47,7 @@ def gen_task_copies(weight_global_manip: np.double, weight_class_manip: np.doubl
             right_arm_picks[i] = False
 
     # initialize problem task
-    task = CodesCodesTaskGen(filling_n_nodes = filling_nodes, \
+    task = CodesTaskGen(filling_n_nodes = filling_nodes, \
                     is_sliding_wrist = sliding_wrist,\
                     sliding_wrist_offset = wrist_offset,\
                     coll_yaml_path = coll_path, 
@@ -97,7 +99,7 @@ def gen_cl_man_gen_copies(
 
     return task
 
-def gen_slvr_copies(task: CodesCodesTaskGen,
+def gen_slvr_copies(task: CodesTaskGen,
                     solver_type: str,
                     transcription_method: str, 
                     transcription_opts: dict, 
@@ -118,7 +120,7 @@ def gen_slvr_copies(task: CodesCodesTaskGen,
 
     return slvr
 
-def compute_node_cl_man(task: CodesCodesTaskGen, q: np.ndarray):
+def compute_node_cl_man(task: CodesTaskGen, q: np.ndarray):
 
     Jl = task.jac_arm_l( q = q )["J"]
     Jr = task.jac_arm_r( q = q )["J"]
@@ -128,7 +130,7 @@ def compute_node_cl_man(task: CodesCodesTaskGen, q: np.ndarray):
     return cl_man_ltrasl, cl_man_lrot, cl_man_ltot, \
             cl_man_rtrasl, cl_man_rrot, cl_man_rtot   
 
-def compute_ms_cl_man(q: np.ndarray, nodes_list: list, task: CodesCodesTaskGen):
+def compute_ms_cl_man(q: np.ndarray, nodes_list: list, task: CodesTaskGen):
     
     ms_cl_man_lft = np.zeros((2, nodes_list[-1][-1] + 1))
     ms_cl_man_rght = np.zeros((2, nodes_list[-1][-1] + 1))
@@ -175,7 +177,7 @@ def enforce_codes_cnstr_on_ig(q_ig):
         q_ig[i][design_indeces, :] = np.transpose(np.tile(q_codes_extended, (len(q_ig[0][0, :]), 1)))
 
 def solve_s1(multistart_nodes,\
-            task : CodesTaskGen, slvr,\
+            task, slvr,\
             q_ig, q_dot_ig,\
             solutions,\
             sol_tot_cost, sol_costs, cnstr_opt, cnstr_lmbd,\
