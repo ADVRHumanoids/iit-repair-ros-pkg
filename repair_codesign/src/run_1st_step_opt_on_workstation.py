@@ -15,7 +15,7 @@ from codesign_pyutils.miscell_utils import str2bool, compute_solution_divs
 from codesign_pyutils.dump_utils import SolDumper
 from codesign_pyutils.solution_utils import solve_prb_standalone, \
                                         generate_ig              
-from codesign_pyutils.tasks import TaskGen
+from codesign_pyutils.tasks import CodesTaskGen
 
 import multiprocessing as mp
 

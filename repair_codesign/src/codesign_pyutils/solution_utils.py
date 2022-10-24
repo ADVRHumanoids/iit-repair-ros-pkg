@@ -5,7 +5,7 @@ import numpy as np
 
 import time 
 
-from codesign_pyutils.tasks import CodesTaskGen
+from codesign_pyutils.tasks import CodesCodesTaskGen
 
 from codesign_pyutils.miscell_utils import wait_for_confirmation
 
@@ -13,7 +13,7 @@ import argparse
 
 from termcolor import colored
 
-def solve_prb_standalone(task: CodesTaskGen,\
+def solve_prb_standalone(task: CodesCodesTaskGen,\
                         slvr: Solver,\
                         q_init=None, q_dot_init=None,\
                         prbl_name = "Problem",
@@ -61,7 +61,7 @@ def solve_prb_standalone(task: CodesTaskGen,\
     
     return solve_failed, solution_time
 
-def solve_main_prb_soft_init(task: CodesTaskGen, slvr_init: Solver, slvr: Solver,\
+def solve_main_prb_soft_init(task: CodesCodesTaskGen, slvr_init: Solver, slvr: Solver,\
                     q_ig_main=None, q_dot_ig_main=None,\
                     prbl_name = "Problem",\
                     on_failure = "\n Failed to converge using soft initialization!! \n'"):
@@ -103,8 +103,8 @@ def solve_main_prb_soft_init(task: CodesTaskGen, slvr_init: Solver, slvr: Solver
     return solve_failed, solution_time
 
 def try_init_solve_or_go_on(arguments: argparse.Namespace,\
-                            init_task: CodesTaskGen, init_slvr: Solver,\
-                            task: CodesTaskGen, slvr: Solver,\
+                            init_task: CodesCodesTaskGen, init_slvr: Solver,\
+                            task: CodesCodesTaskGen, slvr: Solver,\
                             q_ig_main=None, q_dot_ig_main=None, \
                             q_ig_init=None, q_dot_ig_init=None):
         
@@ -149,7 +149,7 @@ def try_init_solve_or_go_on(arguments: argparse.Namespace,\
         return soft_sol_failed, sol_failed
 
 def do_one_solve_pass(arguments: argparse.Namespace,\
-                    task: CodesTaskGen, slvr: Solver,\
+                    task: CodesCodesTaskGen, slvr: Solver,\
                     q_ig_main=None, q_dot_ig_main=None,\
                     task_init=None, slvr_init=None,\
                     q_ig_init=None, q_dot_ig_init=None):
@@ -178,7 +178,7 @@ def do_one_solve_pass(arguments: argparse.Namespace,\
     return init_sol_failed, solve_failed
 
 def generate_ig(arguments: argparse.Namespace,\
-                abs_paths: str, task: CodesTaskGen,\
+                abs_paths: str, task: CodesCodesTaskGen,\
                 n_sol_tries: int, seed: int,\
                 verbose = False):
 

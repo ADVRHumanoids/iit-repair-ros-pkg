@@ -15,7 +15,7 @@ from codesign_pyutils.ros_utils import ReplaySol
 from codesign_pyutils.miscell_utils import str2bool,\
                                         get_min_cost_index
             
-from codesign_pyutils.tasks import CodesTaskGen
+from codesign_pyutils.tasks import CodesCodesTaskGen
 from codesign_pyutils.load_utils import LoadSols
 
 # useful paths
@@ -77,7 +77,7 @@ def main(args):
         print('Failed to launch RViz.')
     
     # only used to parse urdf
-    dummy_task = CodesTaskGen(cost_weights_yaml_path=cost_weights_path)
+    dummy_task = CodesCodesTaskGen(cost_weights_yaml_path=cost_weights_path)
 
     dummy_task.add_in_place_flip_task(0)
 

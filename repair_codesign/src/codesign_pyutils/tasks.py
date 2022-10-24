@@ -25,7 +25,7 @@ from horizon.solvers import solver
 
 from horizon.transcriptions.transcriptor import Transcriptor
 
-class CodesTaskGen:
+class CodesCodesTaskGen:
     
     # single class for generaing the whole co-design problem
     # for he RePAIR co-design
@@ -1289,7 +1289,7 @@ class DoubleArmCartTask:
     # task geneator for testing the pose constraints on the RePAIR 
     # platform using interactive markers
     # OBSOLETE (migh be broken)
-    
+
     def __init__(self,\
         rviz_process,\
         should_w = 0.26, should_roll = 2.0, mount_h = 0.5, \
