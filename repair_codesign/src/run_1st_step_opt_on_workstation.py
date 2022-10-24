@@ -15,7 +15,7 @@ from codesign_pyutils.miscell_utils import str2bool, compute_solution_divs
 from codesign_pyutils.dump_utils import SolDumper
 from codesign_pyutils.solution_utils import solve_prb_standalone, \
                                         generate_ig              
-from codesign_pyutils.tasks import CodesTaskGen
+from codesign_pyutils.tasks import TaskGen
 
 import multiprocessing as mp
 
@@ -28,156 +28,9 @@ from codesign_pyutils.misc_definitions import get_design_map
 
 from codesign_pyutils.task_utils import gen_task_copies,\
                                         gen_slvr_copies,\
+                                        sol_main_s1_s1,
+                                        solve_s1,\
                                         enforce_codes_cnstr_on_ig
-
-
-def solve(multistart_nodes,\
-            task, slvr,\
-            q_ig, q_dot_ig,\
-            solutions,\
-            sol_tot_cost, sol_costs, cnstr_opt, cnstr_lmbd,\
-            solve_failed_array,
-            trial_idxs, 
-            n_multistarts, 
-            max_retry_n, 
-            process_id):
-
-    solution_time = -1.0
-
-    for sol_index in range(len(multistart_nodes)):
-        
-        trial_index = 0
-        solve_failed = True
-
-        print(colored("\nSOLVING PROBLEM OF MULTISTART NODE: " + str(multistart_nodes[sol_index]) +\
-                        ".\nProcess n." + str(process_id) + \
-                        ".\nIn-process index: " + str(sol_index + 1) + \
-                        "/" + str(len(multistart_nodes)), "magenta"))
-
-        print("\n")
-
-        while True:
-
-            solve_failed, solution_time = solve_prb_standalone(task,\
-                slvr, q_ig[multistart_nodes[sol_index] + n_multistarts * trial_index],\
-                q_dot_ig[multistart_nodes[sol_index] + n_multistarts * trial_index])
-
-            if trial_index < max_retry_n: # not reached maximum retry number
-
-                if solve_failed:
-                    
-                    trial_index = trial_index + 1
-
-                    print(colored("Solution of node " + str(multistart_nodes[sol_index]) + \
-                        "- in-process index: "  + str(sol_index + 1) + "/" + str(len(multistart_nodes)) + \
-                        " failed --> starting trial n." + str(trial_index), "yellow"))
-                
-                else:
-
-                    break # exit while
-            
-            else:
-
-                break # exit loop and read solution (even if it failed
-        
-        trial_idxs[sol_index] = trial_index # assign trial index (== 0 if solution is optimal on first attempt)
-
-        solutions[sol_index] = slvr.getSolutionDict()
-
-        print_color = "green" if not solve_failed else "yellow"
-        print(colored("COMLETED SOLUTION PROCEDURE OF MULTISTART NODE:" + str(multistart_nodes[sol_index]) + \
-            ".\nProcess n." + str(process_id) + \
-            ".\nIn-process index: " + str(sol_index + 1) + \
-            "/" + str(len(multistart_nodes)) + \
-            ".\nOpt. cost: " + str(solutions[sol_index]["opt_cost"]), print_color))
-
-        sol_tot_cost[sol_index] = solutions[sol_index]["opt_cost"]
-        cnstr_opt[sol_index] = slvr.getConstraintSolutionDict()
-        cnstr_lmbd[sol_index] = slvr.getCnstrLmbdSolDict()
-
-        # also add separate cost values to the dumped data
-        cost_dict = task.prb.getCosts()
-        sol_cost_dict = {}
-
-        for cost_fnct_key, cost_fnct_val in cost_dict.items():
-
-            sol_cost_dict[cost_fnct_key] = task.prb.evalFun(cost_fnct_val, solutions[sol_index])
-
-        sol_costs[sol_index] = sol_cost_dict
-
-        solve_failed_array[sol_index] = solve_failed
-
-    return solution_time
-
-def sol_main(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path, opt_path, fail_path,\
-        id_unique,\
-        process_id, \
-        n_multistarts, 
-        max_retry_n):
-    
-    n_multistarts_main = len(multistart_nodes) # number of multistarts assigned to this main instance
-
-    # some initializations before entering the solution loop
-    solve_failed_array = [True] * n_multistarts_main
-    sol_tot_cost = [1e10] * n_multistarts_main
-    sol_costs = [None] * n_multistarts_main
-    solutions = [None] * n_multistarts_main
-    cnstr_opt = [None] * n_multistarts_main
-    cnstr_lmbd = [None] * n_multistarts_main
-    trial_idxs = [-1] * n_multistarts_main
-
-    solution_time = solve(multistart_nodes,\
-            task, slvr,\
-            q_ig, q_dot_ig,\
-            solutions,\
-            sol_tot_cost, sol_costs, cnstr_opt, cnstr_lmbd,\
-            solve_failed_array, 
-            trial_idxs, 
-            n_multistarts, 
-            max_retry_n, 
-            process_id)
-
-    # solutions packaging for postprocessing
-    
-    sol_dumper = SolDumper()
-
-    for sol_index in range(len(multistart_nodes)):
-        
-        full_solution = {**(solutions[sol_index]),
-                        **(cnstr_opt[sol_index]),
-                        **(cnstr_lmbd[sol_index]),
-                        **(sol_costs[sol_index]),
-                        "q_ig": q_ig[multistart_nodes[sol_index] + n_multistarts * trial_idxs[sol_index]],
-                        "q_dot_ig": q_dot_ig[multistart_nodes[sol_index] + n_multistarts * trial_idxs[sol_index]], \
-                        "multistart_index": multistart_nodes[sol_index], 
-                        "trial_index": trial_idxs[sol_index], 
-                        "solution_time": solution_time, 
-                        "solve_failed": solve_failed_array[sol_index], 
-                        "run_id": id_unique}
-
-        if not solve_failed_array[sol_index]:
-
-            sol_dumper.add_storer(full_solution, opt_path,\
-                            solution_base_name +\
-                            "_p" + str(process_id) + \
-                            "_r" + str(trial_idxs[sol_index]) + \
-                            "_n" + str(multistart_nodes[sol_index]) + \
-                            "_t" + \
-                            id_unique, False)
-        else:
-
-            sol_dumper.add_storer(full_solution, fail_path,\
-                            solution_base_name +\
-                            "_p" + str(process_id) + \
-                            "_r" + str(trial_idxs[sol_index]) + \
-                            "_n" + str(multistart_nodes[sol_index]) + \
-                            "_t" + \
-                            id_unique, False)
-
-    sol_dumper.dump() 
-
-    print(colored("\nSolutions of process " + str(process_id) + \
-        " dumped. \n", "magenta"))
 
 if __name__ == '__main__':
 
@@ -467,7 +320,7 @@ if __name__ == '__main__':
     
     for p in range(len(proc_sol_divs)):
 
-        proc_list[p] = mp.Process(target=sol_main, args=(args, proc_sol_divs[p],\
+        proc_list[p] = mp.Process(target=sol_main_s1, args=(args, proc_sol_divs[p],\
                                                             q_ig, q_dot_ig, task_copies[p], slvr_copies[p],\
                                                             results_path, opt_results_path, failed_results_path,\
                                                             unique_id,\
