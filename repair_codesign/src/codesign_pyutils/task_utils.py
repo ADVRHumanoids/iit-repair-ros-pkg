@@ -6,11 +6,15 @@ from codesign_pyutils.miscell_utils import gen_y_sampling
 
 from codesign_pyutils.solution_utils import solve_prb_standalone
 
+from codesign_pyutils.dump_utils import SolDumper
+
 from termcolor import colored
 
 from horizon.transcriptions.transcriptor import Transcriptor
 
 from horizon.solvers import solver
+
+from codesign_pyutils.misc_definitions import get_design_map
 
 def gen_task_copies(weight_global_manip: np.double, weight_class_manip: np.double, 
                     weight_static_tau: np.double,
@@ -151,6 +155,8 @@ def compute_ms_cl_man(q: np.ndarray, nodes_list: list, task: CodesTaskGen):
 
 
 def enforce_codes_cnstr_on_ig(q_ig):
+    
+    # broken
 
     # adding q_codes to the initial guess
     design_var_map = get_design_map()
@@ -258,7 +264,8 @@ def sol_main_s1(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path,
         id_unique,\
         process_id, \
         n_multistarts, 
-        max_retry_n):
+        max_retry_n, 
+        solution_base_name):
     
     n_multistarts_main = len(multistart_nodes) # number of multistarts assigned to this main instance
 
@@ -270,6 +277,8 @@ def sol_main_s1(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path,
     cnstr_opt = [None] * n_multistarts_main
     cnstr_lmbd = [None] * n_multistarts_main
     trial_idxs = [-1] * n_multistarts_main
+
+    # enforce_codes_cnstr_on_ig(q_ig) # broken
 
     solution_time = solve_s1(multistart_nodes,\
             task, slvr,\
@@ -323,6 +332,25 @@ def sol_main_s1(args, multistart_nodes, q_ig, q_dot_ig, task, slvr, result_path,
 
     print(colored("\nSolutions of process " + str(process_id) + \
         " dumped. \n", "magenta"))
+
+def add_s1_codes2ig(q_codes_s1, q_ig):
+
+    # adding q_codes to the initial guess
+    design_var_map = get_design_map()
+
+    design_indeces = [design_var_map["mount_h"],\
+        design_var_map["should_w_l"],\
+        design_var_map["should_roll_l"],\
+        design_var_map["wrist_off_l"],\
+        design_var_map["should_w_r"],\
+        design_var_map["should_roll_r"],\
+        design_var_map["wrist_off_r"]]
+
+    q_codes_s1_extended = np.concatenate((q_codes_s1, q_codes_s1[1:]), axis=0)
+
+    for i in range(len(q_ig)):
+
+        q_ig[i][design_indeces, :] = np.transpose(np.tile(q_codes_s1_extended, (len(q_ig[0][0, :]), 1)))
 
 def solve_s3(multistart_nodes,\
             task, slvr,\
@@ -416,7 +444,8 @@ def sol_main_s3(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_pat
         first_lev_sol_id, 
         q_codes_s1, 
         n_multistarts, 
-        max_retry_n):
+        max_retry_n,
+        solution_base_name):
     
     n_multistarts_main = len(multistart_nodes) # number of multistarts assigned to this main instance
 
@@ -432,7 +461,7 @@ def sol_main_s3(multistart_nodes, q_ig, q_dot_ig, task, slvr, opt_path, fail_pat
     # adding q_codes to the initial guess
     add_s1_codes2ig(q_codes_s1, q_ig)
 
-    solution_time = solve(multistart_nodes,\
+    solution_time = solve_s3(multistart_nodes,\
             task, slvr,\
             q_ig, q_dot_ig,\
             solutions,\

@@ -29,9 +29,8 @@ from codesign_pyutils.misc_definitions import get_design_map
 from codesign_pyutils.task_utils import gen_task_copies,\
                                         gen_slvr_copies,\
                                         sol_main_s1,\
-                                        solve_s1,\
-                                        enforce_codes_cnstr_on_ig
-
+                                        solve_s1
+                                        
 if __name__ == '__main__':
 
     # adding script arguments
@@ -326,7 +325,8 @@ if __name__ == '__main__':
                                                             unique_id,\
                                                             p,
                                                             n_msrt_trgt, 
-                                                            max_retry_n,))
+                                                            max_retry_n,
+                                                            solution_base_name,))
         proc_list[p].start()
 
     for p in range(len(proc_sol_divs)):

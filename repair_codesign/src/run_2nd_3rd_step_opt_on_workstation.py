@@ -14,9 +14,12 @@ from codesign_pyutils.miscell_utils import str2bool, \
                                             extract_q_design,\
                                             compute_solution_divs
 from codesign_pyutils.clustering_utils import Clusterer
-from codesign_pyutils.misc_definitions import get_design_map
 from codesign_pyutils.load_utils import LoadSols
-from codesign_pyutils.task_utils import gen_task_copies, gen_slvr_copies
+from codesign_pyutils.task_utils import gen_task_copies,\
+                                        gen_slvr_copies,\
+                                        solve_s3,\
+                                        sol_main_s3
+
 from codesign_pyutils.dump_utils import SolDumper
 from codesign_pyutils.solution_utils import solve_prb_standalone, \
                                         generate_ig            
@@ -292,7 +295,8 @@ if __name__ == '__main__':
                                                                 real_first_step_cand_inds[cl],\
                                                                 first_step_q_design_opt[:, cl], \
                                                                 n_msrt_trgt, 
-                                                                max_retry_n,))
+                                                                max_retry_n,
+                                                                solution_base_name,))
             proc_list[p].start()
         
         for p in range(len(proc_sol_divs)):
