@@ -15,7 +15,7 @@ from codesign_pyutils.miscell_utils import str2bool, compute_solution_divs
 from codesign_pyutils.dump_utils import SolDumper
 from codesign_pyutils.solution_utils import solve_prb_standalone, \
                                         generate_ig              
-from codesign_pyutils.tasks import TaskGen
+from codesign_pyutils.tasks import CodesTaskGen
 
 import multiprocessing as mp
 
@@ -26,36 +26,13 @@ from termcolor import colored
 
 from codesign_pyutils.misc_definitions import get_design_map
 
-from codesign_pyutils.task_utils import gen_task_copies, gen_slvr_copies
+from codesign_pyutils.task_utils import gen_task_copies,\
+                                        gen_slvr_copies,\
+                                        enforce_codes_cnstr_on_ig
 
-def enforce_codes_cnstr_on_ig(q_ig):
-
-    # adding q_codes to the initial guess
-    design_var_map = get_design_map()
-
-    design_indeces = [design_var_map["mount_h"],\
-        design_var_map["should_w_l"],\
-        design_var_map["should_roll_l"],\
-        design_var_map["wrist_off_l"],\
-        design_var_map["should_w_r"],\
-        design_var_map["should_roll_r"],\
-        design_var_map["wrist_off_r"]]
-
-    design_indeces_aux = [design_var_map["mount_h"],\
-        design_var_map["should_w_l"],\
-        design_var_map["should_roll_l"],\
-        design_var_map["wrist_off_l"]]
-
-    for i in range(len(q_ig)):
-
-        q_codes_ig = q_ig[i][design_indeces_aux, :]
-
-        q_codes_extended = np.concatenate((q_codes_ig, q_codes_ig[1:]), axis=0)
-
-        q_ig[i][design_indeces, :] = np.transpose(np.tile(q_codes_extended, (len(q_ig[0][0, :]), 1)))
 
 def solve(multistart_nodes,\
-            task : TaskGen, slvr,\
+            task, slvr,\
             q_ig, q_dot_ig,\
             solutions,\
             sol_tot_cost, sol_costs, cnstr_opt, cnstr_lmbd,\

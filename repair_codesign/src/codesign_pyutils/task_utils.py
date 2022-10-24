@@ -1,6 +1,6 @@
 import numpy as np
 
-from codesign_pyutils.tasks import TaskGen, HighClManGen
+from codesign_pyutils.tasks import CodesTaskGen, HighClManGen
 
 from codesign_pyutils.miscell_utils import gen_y_sampling
 
@@ -45,7 +45,7 @@ def gen_task_copies(weight_global_manip: np.double, weight_class_manip: np.doubl
             right_arm_picks[i] = False
 
     # initialize problem task
-    task = TaskGen(filling_n_nodes = filling_nodes, \
+    task = CodesTaskGen(filling_n_nodes = filling_nodes, \
                     is_sliding_wrist = sliding_wrist,\
                     sliding_wrist_offset = wrist_offset,\
                     coll_yaml_path = coll_path, 
@@ -97,7 +97,7 @@ def gen_cl_man_gen_copies(
 
     return task
 
-def gen_slvr_copies(task: TaskGen,
+def gen_slvr_copies(task: CodesTaskGen,
                     solver_type: str,
                     transcription_method: str, 
                     transcription_opts: dict, 
@@ -118,7 +118,7 @@ def gen_slvr_copies(task: TaskGen,
 
     return slvr
 
-def compute_node_cl_man(task: TaskGen, q: np.ndarray):
+def compute_node_cl_man(task: CodesTaskGen, q: np.ndarray):
 
     Jl = task.jac_arm_l( q = q )["J"]
     Jr = task.jac_arm_r( q = q )["J"]
@@ -128,7 +128,7 @@ def compute_node_cl_man(task: TaskGen, q: np.ndarray):
     return cl_man_ltrasl, cl_man_lrot, cl_man_ltot, \
             cl_man_rtrasl, cl_man_rrot, cl_man_rtot   
 
-def compute_ms_cl_man(q: np.ndarray, nodes_list: list, task: TaskGen):
+def compute_ms_cl_man(q: np.ndarray, nodes_list: list, task: CodesTaskGen):
     
     ms_cl_man_lft = np.zeros((2, nodes_list[-1][-1] + 1))
     ms_cl_man_rght = np.zeros((2, nodes_list[-1][-1] + 1))

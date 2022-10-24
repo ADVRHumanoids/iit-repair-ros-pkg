@@ -22,7 +22,7 @@ from codesign_pyutils.miscell_utils import str2bool,\
 from codesign_pyutils.dump_utils import SolDumper
 from codesign_pyutils.task_utils import do_one_solve_pass, \
                                         generate_ig              
-from codesign_pyutils.tasks import TaskGen
+from codesign_pyutils.tasks import CodesTaskGen
 
 # useful paths
 rospackage = rospkg.RosPack() # Only for taking the path to the leg package
@@ -147,7 +147,7 @@ def main(args):
     ## Main problem ## 
 
     # initialize main problem task
-    flipping_task = TaskGen(filling_n_nodes = filling_n_nodes, \
+    flipping_task = CodesTaskGen(filling_n_nodes = filling_n_nodes, \
                                     sliding_wrist_offset = sliding_wrist_offset)
     object_q = np.array([1, 0, 0, 0])
 
@@ -205,7 +205,7 @@ def main(args):
         ## Initialization problem ##
         
         # initialize the initialization problem task
-        flipping_task_init = TaskGen(filling_n_nodes = filling_n_nodes)
+        flipping_task_init = CodesTaskGen(filling_n_nodes = filling_n_nodes)
     
         # add tasks to the task holder object
         next_node = 0 # used to place the next task on the right problem nodes

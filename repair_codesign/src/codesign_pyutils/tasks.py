@@ -25,414 +25,10 @@ from horizon.solvers import solver
 
 from horizon.transcriptions.transcriptor import Transcriptor
 
-class DoubleArmCartTask:
-
-    def __init__(self,\
-        rviz_process,\
-        should_w = 0.26, should_roll = 2.0, mount_h = 0.5, \
-        filling_n_nodes = 0,\
-        collision_margin = 0.1, 
-        is_sliding_wrist = False,\
-        sliding_wrist_offset = 0.0):
-
-        self.is_sliding_wrist = is_sliding_wrist
-        self.sliding_wrist_offset =  sliding_wrist_offset
-
-        self.collision_margin = collision_margin
-
-        self.rviz_process = rviz_process
-
-        self.lft_default_q_wrt_ws = np.array([- np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0])
-        self.rght_default_q_wrt_ws = np.array([- np.sqrt(2.0)/2.0, np.sqrt(2.0)/2.0, 0.0, 0.0])
-        self.lft_default_p_wrt_ws = np.array([0.0, 0.2, 0.3])
-        self.rght_default_p_wrt_ws = np.array([0.0, - 0.2, 0.3])
-
-        self.should_w = should_w
-        self.should_roll = should_roll
-        self.mount_h = mount_h
-        
-        self.is_soft_pose_cnstrnt = False
-
-        self.weight_pos = 0
-        self.weight_rot = 0
-        self.weight_glob_man = 0
-
-        self.urdf = None
-        self.joint_names = None
-        self.nq = 0
-        self.nv = 0
-        self.urdf_kin_dyn = None
-        self.lbs = None
-        self.ubs = None
-
-        self.q = None
-        self.q_dot = None
-        self.q_design = None
-        self.q_design_dot = None
-        
-        self.d_var_map = get_design_map() # retrieving design map (dangerous method)
-
-        self.task_base_n_nodes = 2
-        self.phase_number = 1 # number of phases of the task
-        self.total_nnodes = 0
-        self.filling_n_nodes = filling_n_nodes # filling nodes in between two base task nodes
-        self.nodes_list = [] 
-
-        self.dt = 0.0
-        self.tf = 0.0
-
-        self.prb = None
-
-        self.solver_type = 'ipopt'
-        self.slvr_opt = {"ipopt.tol": 0.00001,
-                        "ipopt.max_iter": 1000,
-                        "ipopt.constr_viol_tol": 0.1} 
-
-        self.transcription_method = 'multiple_shooting'
-        self.transcription_opts = dict(integrator='RK4') 
-
-        self.slvr = None
-
-        # kinematic quantities
-
-        self.lft_inward_q = np.array([- np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0])
-        self.rght_inward_q = np.array([- np.sqrt(2.0)/2.0, np.sqrt(2.0)/2.0, 0.0, 0.0])
-
-        self.lft_pick_q = [] # where left arm will pick
-        self.rght_pick_q = [] # where right arm will pick
-
-        self.ws_link_pos = None
-        self.ws_link_rot = None
-        self.rarm_tcp_pos_rel_ws = None
-        self.larm_tcp_pos_rel_ws = None
-        self.rarm_tcp_rot_wrt_ws = None
-        self.larm_tcp_rot_wrt_ws = None
-
-        self.lft_tcp_pos_wrt_ws = None
-        self.lft_tcp_rot_wrt_ws = None
-        self.rght_tcp_pos_wrt_ws = None
-        self.rght_tcp_rot_wrt_ws = None
-
-
-        self.p_ref_left_init = None
-        self.p_ref_right_init  = None
-        self.q_ref_left_init  = None
-        self.q_ref_right_init  = None
-
-        self.p_ref_left_trgt = None
-        self.p_ref_right_trgt = None
-        self.q_ref_left_trgt = None
-        self.q_ref_right_trgt = None
-
-        self.coll_links_pos_rght = None
-        self.coll_links_pos_lft = None
-
-        self.compute_nodes(0, self.filling_n_nodes)
+class CodesTaskGen:
     
-    def create_markers(self):
-
-        self.lft_trgt_marker_topic = "repair/lft_trgt"
-        self.rght_trgt_marker_topic = "repair/rght_trgt"
-        self.rviz_marker_gen = MarkerGen(node_name = "marker_gen_cart_task")
-        self.rviz_marker_gen.add_marker("working_surface_link", [0.0, 0.3, 0.4], self.lft_trgt_marker_topic,\
-                                "left_trgt", 0.3) 
-        self.rviz_marker_gen.add_marker("working_surface_link", [0.0, - 0.3, 0.4], self.rght_trgt_marker_topic,\
-                                "rght_trgt", 0.3) 
-        self.rviz_marker_gen.spin()
-
-    def compute_nodes(self, init_node, filling_n_nodes):
-
-        # HOW THE PROBLEM IS BUILT:
-        #                    
-        #                     
-        # |                   |   
-        # |                   |   
-        # | | | | | | | | | | |  
-        # 0                   1   
-
-        # This simple cartesian task has only two base nodes: initial node and target node
-
-        total_n_task_nodes = self.phase_number * filling_n_nodes + self.task_base_n_nodes # total number of nodes required to perform a single task
- 
-        self.total_nnodes = total_n_task_nodes
-
-        final_node = init_node + total_n_task_nodes - 1 
-        
-        self.nodes_list.append(list(range(init_node, final_node + 1)))
-        
-        return final_node
-    
-    def set_ig(self, q_ig = None, q_dot_ig = None):
-
-        if q_ig is not None:
-
-            self.q.setInitialGuess(q_ig)
-
-        if q_dot_ig is not None:
-
-            self.q_dot.setInitialGuess(q_dot_ig)
-
-    def init_prb(self, urdf_full_path, weight_pos = 0.001, weight_rot = 0.001,\
-            weight_glob_man = 0.0001, is_soft_pose_cnstr = False,\
-            tf_task = 4.0):
-
-        ## All the main initializations for the prb are performed here ##
-
-        self.is_soft_pose_cnstrnt = is_soft_pose_cnstr
-
-        self.weight_pos = weight_pos / ( self.total_nnodes ) # scaling weights on the basis of the problem dimension
-        self.weight_rot = weight_rot / ( self.total_nnodes )
-        self.weight_glob_man = weight_glob_man / ( self.total_nnodes )
-
-        n_int = self.total_nnodes - 1 # adding addditional filling nodes between nodes of two successive tasks
-        self.prb = problem.Problem(n_int) 
-
-        self.urdf = open(urdf_full_path, 'r').read()
-        self.urdf_kin_dyn = casadi_kin_dyn.pycasadi_kin_dyn.CasadiKinDyn(self.urdf)
-        self.tf = tf_task * len(self.nodes_list)
-        self.dt = self.tf / n_int
-        
-        self.joint_names = self.urdf_kin_dyn.joint_names()
-        if 'universe' in self.joint_names: self.joint_names.remove('universe')
-        if 'floating_base_joint' in self.joint_names: self.joint_names.remove('floating_base_joint')
-        
-        self.nq = self.urdf_kin_dyn.nq()
-        self.nv = self.urdf_kin_dyn.nv()
-
-        self.lbs = self.urdf_kin_dyn.q_min() 
-        self.ubs = self.urdf_kin_dyn.q_max()
-
-        self.q = self.prb.createStateVariable('q', self.nq)
-        self.q_dot = self.prb.createInputVariable('q_dot', self.nv)
-
-        # THIS DEFINITIONS CAN CHANGE IF THE URDF CHANGES --> MIND THE URDF!!!
-    
-        self.q_design = self.q[self.d_var_map["mount_h"],\
-                            self.d_var_map["should_w_l"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
-                            self.d_var_map["should_w_r"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]] # design vector
-
-        self.q_design_dot = self.q_dot[self.d_var_map["mount_h"],\
-                            self.d_var_map["should_w_l"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
-                            self.d_var_map["should_w_r"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]]
-
-        self.p_ref_left_init = self.prb.createParameter('p_ref_left_init', 3)
-        self.p_ref_right_init  = self.prb.createParameter('p_ref_right_init ', 3)
-        self.q_ref_left_init  = self.prb.createParameter('q_ref_left_init ', 4)
-        self.q_ref_right_init  = self.prb.createParameter('q_ref_right_init ', 4)
-
-        self.p_ref_left_trgt = self.prb.createParameter('p_ref_left_trgt', 3)
-        self.p_ref_right_trgt = self.prb.createParameter('p_ref_right_trgt', 3)
-        self.q_ref_left_trgt = self.prb.createParameter('q_ref_left_trgt', 4)
-        self.q_ref_right_trgt = self.prb.createParameter('q_ref_right_trgt', 4)
-
-        self.prb.setDynamics(self.q_dot)
-        self.prb.setDt(self.dt)  
-
-        # getting useful kinematic quantities
-        fk_ws = self.urdf_kin_dyn.fk("working_surface_link")
-        self.ws_link_pos = fk_ws(q = np.zeros((self.nq, 1)).flatten())["ee_pos"] # w.r.t. world
-        self.ws_link_rot = fk_ws(q = np.zeros((self.nq, 1)).flatten())["ee_rot"] # w.r.t. world (3x3 rot matrix)
-
-        fk_ws_arm1_link6 = self.urdf_kin_dyn.fk("arm_1_link_6")
-        arm1_link6_pos = fk_ws_arm1_link6(q = self.q)["ee_pos"] # w.r.t. world
-        arm1_link6_rot = fk_ws_arm1_link6(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
-        
-        fk_ws_arm2_link6 = self.urdf_kin_dyn.fk("arm_2_link_6")
-        arm2_link6_pos = fk_ws_arm2_link6(q = self.q)["ee_pos"] # w.r.t. world
-        arm2_link6_rot = fk_ws_arm2_link6(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
-
-        fk_arm_r = self.urdf_kin_dyn.fk("arm_1_tcp")
-        rarm_tcp_pos = fk_arm_r(q = self.q)["ee_pos"] # w.r.t. world
-        rarm_tcp_rot = fk_arm_r(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
-        self.rarm_tcp_pos_rel_ws = rarm_tcp_pos - self.ws_link_pos # pos w.r.t. working surface in world frame
-
-        fk_arm_l = self.urdf_kin_dyn.fk("arm_2_tcp")
-        larm_tcp_pos = fk_arm_l(q = self.q)["ee_pos"] # w.r.t. world
-        larm_tcp_rot = fk_arm_l(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
-        self.larm_tcp_pos_rel_ws = larm_tcp_pos - self.ws_link_pos # pos w.r.t. working surface in world frame
-
-        rarm_cocktail_pos = rarm_tcp_pos 
-        rarm_cocktail_rot = rarm_tcp_rot
-        self.rght_tcp_rot_wrt_ws = self.ws_link_rot.T @ rarm_cocktail_rot
-        self.rght_tcp_pos_wrt_ws = self.ws_link_rot.T @ (rarm_cocktail_pos - self.ws_link_pos)
-
-        larm_cocktail_pos = larm_tcp_pos
-        larm_cocktail_rot = larm_tcp_rot
-        self.lft_tcp_rot_wrt_ws = self.ws_link_rot.T @ larm_cocktail_rot
-        self.lft_tcp_pos_wrt_ws = self.ws_link_rot.T @ (larm_cocktail_pos - self.ws_link_pos)
-
-        self.coll_links_pos_rght = self.ws_link_rot.T @ (arm1_link6_pos - self.ws_link_pos)
-        self.coll_links_pos_lft = self.ws_link_rot.T @ (arm2_link6_pos - self.ws_link_pos)
-
-    def setup_prb(self,\
-                epsi = epsi_default,\
-                q_ig = None, q_dot_ig = None):
-         
-        self.epsi = epsi
-
-        ## All the constraints and costs are set here ##
-
-        # setting initial guesses
-        if q_ig is not None:
-
-            self.q.setInitialGuess(q_ig)
-
-        if q_dot_ig is not None:
-            
-            self.q_dot.setInitialGuess(q_dot_ig)
-
-        # lower and upper bounds for design variables and joint variables
-        self.q.setBounds(self.lbs, self.ubs)
-        
-        # adapt collision model of the bent link (link5) to the wrist offset value
-        # this is to account for variations link5's footprint as a results of the optimal
-        # wrist offset 
-
-        self.prb.createConstraint("adapt_link5_coll_model", \
-                                self.q[self.d_var_map["should_roll_l"]] - \
-                                self.q[self.d_var_map["should_roll_r"]])
-
-        # roll and shoulder vars equal
-        self.prb.createConstraint("same_roll", \
-                                self.q[self.d_var_map["should_roll_l"]] - \
-                                self.q[self.d_var_map["should_roll_r"]])
-
-        self.prb.createConstraint("same_shoulder_w",\
-                                self.q[self.d_var_map["should_w_l"]] - \
-                                self.q[self.d_var_map["should_w_r"]])
-
-        self.prb.createConstraint("same_wrist_offset",\
-                                self.q[self.d_var_map["wrist_off_l"]] - \
-                                self.q[self.d_var_map["wrist_off_r"]])
-
-        # design vars equal on all nodes 
-        self.prb.createConstraint("single_var_cntrnt",\
-                            self.q_design_dot,\
-                            nodes = range(0, (self.total_nnodes - 1)))
-
-        if not self.is_sliding_wrist: # setting value for wrist offsets
-
-            self.prb.createConstraint("wrist_offset_value",\
-                    self.q[self.d_var_map["wrist_off_l"]] - self.sliding_wrist_offset,\
-                    nodes = range(0, (self.total_nnodes - 1)))
-
-        # TCPs inside working volume (assumed to be a box)
-        ws_ub = np.array([1.2, 0.8, 1.0])
-        ws_lb = np.array([-1.2, -0.8, 0.0])
-
-        keep_tcp_in_ws_rght = self.prb.createConstraint("keep_tcp_in_ws_rght",\
-                                                           self.rght_tcp_pos_wrt_ws)
-        keep_tcp_in_ws_rght.setBounds(ws_lb, ws_ub)
-        keep_tcp_in_ws_lft = self.prb.createConstraint("keep_tcp_in_ws_lft",\
-                                                           self.lft_tcp_pos_wrt_ws)
-        keep_tcp_in_ws_lft.setBounds(ws_lb, ws_ub)
-
-        # TCPs above working surface
-        keep_tcp1_above_ground = self.prb.createConstraint("keep_tcp1_above_ground",\
-                                                           self.rarm_tcp_pos_rel_ws[2])
-        keep_tcp1_above_ground.setBounds(0, cs.inf)
-        keep_tcp2_above_ground = self.prb.createConstraint("keep_tcp2_above_ground",\
-                                                           self.larm_tcp_pos_rel_ws[2])
-        keep_tcp2_above_ground.setBounds(0, cs.inf)
-
-        # add p2p collision task on y axis
-        coll = self.prb.createConstraint("avoid_collision_on_y", \
-                                self.coll_links_pos_lft[1] - self.coll_links_pos_rght[1])
-        coll.setBounds(self.collision_margin - 0.001, cs.inf)
-
-        # min inputs --> also corresponds to penalize large joint excursions
-        self.prb.createIntermediateCost("max_global_manipulability",\
-                        self.weight_glob_man * cs.sumsqr(self.q_dot))
-        
-        add_pose_cnstrnt("right_arm_init", self.prb, 0,\
-                        pos = self.rght_tcp_pos_wrt_ws, rot = self.rght_tcp_rot_wrt_ws,\
-                        pos_ref = self.p_ref_right_init, rot_ref = quat2rot(self.q_ref_right_init),\
-                        pos_selection = ["x", "y", "z"],\
-                        rot_selection = ["x", "y", "z"])
-
-        add_pose_cnstrnt("right_arm_trgt", self.prb, self.total_nnodes - 1,\
-                        pos = self.rght_tcp_pos_wrt_ws, rot = self.rght_tcp_rot_wrt_ws,\
-                        pos_ref = self.p_ref_right_trgt, rot_ref = quat2rot(self.q_ref_right_trgt),\
-                        pos_selection = ["x", "y", "z"],\
-                        rot_selection = ["x", "y", "z"])
-        
-        add_pose_cnstrnt("left_arm_init", self.prb, 0,\
-                        pos = self.lft_tcp_pos_wrt_ws, rot = self.lft_tcp_rot_wrt_ws,\
-                        pos_ref = self.p_ref_left_init, rot_ref = quat2rot(self.q_ref_left_init), \
-                        pos_selection = ["x", "y", "z"],\
-                        rot_selection = ["x", "y", "z"])
-
-        add_pose_cnstrnt("left_arm_trgt", self.prb, self.total_nnodes - 1,\
-                        pos = self.lft_tcp_pos_wrt_ws, rot = self.lft_tcp_rot_wrt_ws,\
-                        pos_ref = self.p_ref_left_trgt, rot_ref = quat2rot(self.q_ref_left_trgt), \
-                        pos_selection = ["x", "y", "z"],\
-                        rot_selection = ["x", "y", "z"])
-        
-        Transcriptor.make_method(self.transcription_method,\
-                                self.prb,\
-                                self.transcription_opts)
-
-        self.slvr = solver.Solver.make_solver(self.solver_type, self.prb, self.slvr_opt)
-
-    def start_loop(self):
-
-        self.create_markers() # spawn markers node
-
-        mark_lft_pos_trgt = None
-        mark_lft_q_trgt = None
-        mark_rght_pos_trgt = None
-        mark_rght_q_trgt = None
-
-        self.p_ref_left_init.assign(self.lft_default_p_wrt_ws)
-        self.p_ref_right_init.assign(self.rght_default_p_wrt_ws)
-        self.q_ref_left_init.assign(self.lft_default_q_wrt_ws)
-        self.q_ref_right_init.assign(self.rght_default_q_wrt_ws)
-
-        print("\n \nPlease move both markers in order to start the solution loop!!\n \n ")
-
-        while (mark_lft_pos_trgt is None) or (mark_lft_q_trgt is None) \
-            or (mark_rght_pos_trgt is None) or (mark_rght_q_trgt is None):
-            
-            # continue polling the positions until they become valid
-            mark_lft_pos_trgt, mark_lft_q_trgt = self.rviz_marker_gen.getPose(self.lft_trgt_marker_topic)
-            mark_rght_pos_trgt, mark_rght_q_trgt = self.rviz_marker_gen.getPose(self.rght_trgt_marker_topic)
-
-            time.sleep(0.1)
-
-        print("\n \nValid feedback from markers received! Starting solution loop ...\n \n ")
-
-        while True:
-            
-            # continue polling
-            mark_lft_pos_trgt, mark_lft_q_trgt = self.rviz_marker_gen.getPose(self.lft_trgt_marker_topic)
-            mark_rght_pos_trgt, mark_rght_q_trgt = self.rviz_marker_gen.getPose(self.rght_trgt_marker_topic)
-
-            self.p_ref_left_trgt.assign(mark_lft_pos_trgt)
-            self.p_ref_right_trgt.assign(mark_rght_pos_trgt)
-            self.q_ref_left_trgt.assign(mark_lft_q_trgt)
-            self.q_ref_right_trgt.assign(mark_rght_q_trgt)
-
-            t = time.time()
-
-            self.slvr.solve()  # solving
-
-            solution_time = time.time() - t
-
-            print(f'\n Problem solved in {solution_time} s \n')
-                    
-            self.p_ref_left_init.assign(mark_lft_pos_trgt)
-            self.p_ref_right_init.assign(mark_rght_pos_trgt)
-            self.q_ref_left_init.assign(mark_lft_q_trgt)
-            self.q_ref_right_init.assign(mark_rght_q_trgt)
-
-            solution = self.slvr.getSolutionDict() # extracting solution
-            q_sol = solution["q"]
-
-            sol_replayer = ReplaySol(dt = self.dt, joint_list = self.joint_names, q_replay = q_sol) 
-            sol_replayer.replay(is_floating_base = False, play_once = True)
-
-
-class TaskGen:
+    # single class for generaing the whole co-design problem
+    # for he RePAIR co-design
 
     def __init__(self, filling_n_nodes = 0, \
                 is_sliding_wrist = False,\
@@ -679,7 +275,7 @@ class TaskGen:
             last_node_idx = self.nodes_list[i][-1] # last node index of task i
             
             # min inputs 
-            self.prb.createIntermediateCost("max_global_manipulability" + str(i),\
+            self.prb.createIntermediateCost("max_nonlocal_manipulability" + str(i),\
                             self.weight_glob_man * (self.compute_nonloc_man(self.vel_weights, self.q_dot_actuated_jnts)),
                             nodes = range(start_node_idx, last_node_idx)) 
 
@@ -810,7 +406,7 @@ class TaskGen:
         self.q.setBounds(self.lbs, self.ubs)
 
         # we don't need vel. limits since we are doing only a "positional"
-        # kinematic opt.
+        # kinematic opt 
         
         # add also velocity bounds? 
         
@@ -847,10 +443,12 @@ class TaskGen:
             self.prb.createConstraint("codesign_values",\
                     self.q_design[0:4] - self.q_codes_ref,\
                     nodes = 0) # is sufficient to put it on the first node and only on one arm
+                    # since there are already constraints which impose simmetry of design vars
 
         else:
 
-            if not self.is_sliding_wrist: # setting value for wrist offsets
+            if not self.is_sliding_wrist: # setting value for wrist offsets (basically
+            # removing the wrist from the design variables)
 
                 self.prb.createConstraint("wrist_offset_value",\
                         self.q[self.d_var_map["wrist_off_l"]] - self.wrist_off_ref,\
@@ -868,9 +466,10 @@ class TaskGen:
                                                            self.lft_tcp_pos_wrt_ws)
         keep_tcp_in_ws_lft.setBounds(ws_lb, ws_ub)
 
-        # min inputs 
+        # kinemaic costs
         self.add_manip_cost(is_classical_man = is_classical_man)
 
+        # static tau cost
         if is_static_tau:
 
             self.add_static_tau_cost()
@@ -1420,6 +1019,7 @@ class TaskGen:
 
 class HighClManGen:
 
+    # class for geneating reference number for high-classical manipulability configurations
     def __init__(self,
                 sliding_wrist_offset = 0.0, \
                 coll_yaml_path = ""):
@@ -1683,5 +1283,416 @@ class HighClManGen:
         # adding regularization 
         self.prb.createIntermediateCost("regular",\
                         self.compute_nonloc_man(self.q_dot))
+
+class DoubleArmCartTask:
+    
+    # task geneator for testing the pose constraints on the RePAIR 
+    # platform using interactive markers
+    # OBSOLETE (migh be broken)
+    
+    def __init__(self,\
+        rviz_process,\
+        should_w = 0.26, should_roll = 2.0, mount_h = 0.5, \
+        filling_n_nodes = 0,\
+        collision_margin = 0.1, 
+        is_sliding_wrist = False,\
+        sliding_wrist_offset = 0.0):
+
+        self.is_sliding_wrist = is_sliding_wrist
+        self.sliding_wrist_offset =  sliding_wrist_offset
+
+        self.collision_margin = collision_margin
+
+        self.rviz_process = rviz_process
+
+        self.lft_default_q_wrt_ws = np.array([- np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0])
+        self.rght_default_q_wrt_ws = np.array([- np.sqrt(2.0)/2.0, np.sqrt(2.0)/2.0, 0.0, 0.0])
+        self.lft_default_p_wrt_ws = np.array([0.0, 0.2, 0.3])
+        self.rght_default_p_wrt_ws = np.array([0.0, - 0.2, 0.3])
+
+        self.should_w = should_w
+        self.should_roll = should_roll
+        self.mount_h = mount_h
+        
+        self.is_soft_pose_cnstrnt = False
+
+        self.weight_pos = 0
+        self.weight_rot = 0
+        self.weight_glob_man = 0
+
+        self.urdf = None
+        self.joint_names = None
+        self.nq = 0
+        self.nv = 0
+        self.urdf_kin_dyn = None
+        self.lbs = None
+        self.ubs = None
+
+        self.q = None
+        self.q_dot = None
+        self.q_design = None
+        self.q_design_dot = None
+        
+        self.d_var_map = get_design_map() # retrieving design map (dangerous method)
+
+        self.task_base_n_nodes = 2
+        self.phase_number = 1 # number of phases of the task
+        self.total_nnodes = 0
+        self.filling_n_nodes = filling_n_nodes # filling nodes in between two base task nodes
+        self.nodes_list = [] 
+
+        self.dt = 0.0
+        self.tf = 0.0
+
+        self.prb = None
+
+        self.solver_type = 'ipopt'
+        self.slvr_opt = {"ipopt.tol": 0.00001,
+                        "ipopt.max_iter": 1000,
+                        "ipopt.constr_viol_tol": 0.1} 
+
+        self.transcription_method = 'multiple_shooting'
+        self.transcription_opts = dict(integrator='RK4') 
+
+        self.slvr = None
+
+        # kinematic quantities
+
+        self.lft_inward_q = np.array([- np.sqrt(2.0)/2.0, - np.sqrt(2.0)/2.0, 0.0, 0.0])
+        self.rght_inward_q = np.array([- np.sqrt(2.0)/2.0, np.sqrt(2.0)/2.0, 0.0, 0.0])
+
+        self.lft_pick_q = [] # where left arm will pick
+        self.rght_pick_q = [] # where right arm will pick
+
+        self.ws_link_pos = None
+        self.ws_link_rot = None
+        self.rarm_tcp_pos_rel_ws = None
+        self.larm_tcp_pos_rel_ws = None
+        self.rarm_tcp_rot_wrt_ws = None
+        self.larm_tcp_rot_wrt_ws = None
+
+        self.lft_tcp_pos_wrt_ws = None
+        self.lft_tcp_rot_wrt_ws = None
+        self.rght_tcp_pos_wrt_ws = None
+        self.rght_tcp_rot_wrt_ws = None
+
+
+        self.p_ref_left_init = None
+        self.p_ref_right_init  = None
+        self.q_ref_left_init  = None
+        self.q_ref_right_init  = None
+
+        self.p_ref_left_trgt = None
+        self.p_ref_right_trgt = None
+        self.q_ref_left_trgt = None
+        self.q_ref_right_trgt = None
+
+        self.coll_links_pos_rght = None
+        self.coll_links_pos_lft = None
+
+        self.compute_nodes(0, self.filling_n_nodes)
+    
+    def create_markers(self):
+
+        self.lft_trgt_marker_topic = "repair/lft_trgt"
+        self.rght_trgt_marker_topic = "repair/rght_trgt"
+        self.rviz_marker_gen = MarkerGen(node_name = "marker_gen_cart_task")
+        self.rviz_marker_gen.add_marker("working_surface_link", [0.0, 0.3, 0.4], self.lft_trgt_marker_topic,\
+                                "left_trgt", 0.3) 
+        self.rviz_marker_gen.add_marker("working_surface_link", [0.0, - 0.3, 0.4], self.rght_trgt_marker_topic,\
+                                "rght_trgt", 0.3) 
+        self.rviz_marker_gen.spin()
+
+    def compute_nodes(self, init_node, filling_n_nodes):
+
+        # HOW THE PROBLEM IS BUILT:
+        #                    
+        #                     
+        # |                   |   
+        # |                   |   
+        # | | | | | | | | | | |  
+        # 0                   1   
+
+        # This simple cartesian task has only two base nodes: initial node and target node
+
+        total_n_task_nodes = self.phase_number * filling_n_nodes + self.task_base_n_nodes # total number of nodes required to perform a single task
+ 
+        self.total_nnodes = total_n_task_nodes
+
+        final_node = init_node + total_n_task_nodes - 1 
+        
+        self.nodes_list.append(list(range(init_node, final_node + 1)))
+        
+        return final_node
+    
+    def set_ig(self, q_ig = None, q_dot_ig = None):
+
+        if q_ig is not None:
+
+            self.q.setInitialGuess(q_ig)
+
+        if q_dot_ig is not None:
+
+            self.q_dot.setInitialGuess(q_dot_ig)
+
+    def init_prb(self, urdf_full_path, weight_pos = 0.001, weight_rot = 0.001,\
+            weight_glob_man = 0.0001, is_soft_pose_cnstr = False,\
+            tf_task = 4.0):
+
+        ## All the main initializations for the prb are performed here ##
+
+        self.is_soft_pose_cnstrnt = is_soft_pose_cnstr
+
+        self.weight_pos = weight_pos / ( self.total_nnodes ) # scaling weights on the basis of the problem dimension
+        self.weight_rot = weight_rot / ( self.total_nnodes )
+        self.weight_glob_man = weight_glob_man / ( self.total_nnodes )
+
+        n_int = self.total_nnodes - 1 # adding addditional filling nodes between nodes of two successive tasks
+        self.prb = problem.Problem(n_int) 
+
+        self.urdf = open(urdf_full_path, 'r').read()
+        self.urdf_kin_dyn = casadi_kin_dyn.pycasadi_kin_dyn.CasadiKinDyn(self.urdf)
+        self.tf = tf_task * len(self.nodes_list)
+        self.dt = self.tf / n_int
+        
+        self.joint_names = self.urdf_kin_dyn.joint_names()
+        if 'universe' in self.joint_names: self.joint_names.remove('universe')
+        if 'floating_base_joint' in self.joint_names: self.joint_names.remove('floating_base_joint')
+        
+        self.nq = self.urdf_kin_dyn.nq()
+        self.nv = self.urdf_kin_dyn.nv()
+
+        self.lbs = self.urdf_kin_dyn.q_min() 
+        self.ubs = self.urdf_kin_dyn.q_max()
+
+        self.q = self.prb.createStateVariable('q', self.nq)
+        self.q_dot = self.prb.createInputVariable('q_dot', self.nv)
+
+        # THIS DEFINITIONS CAN CHANGE IF THE URDF CHANGES --> MIND THE URDF!!!
+    
+        self.q_design = self.q[self.d_var_map["mount_h"],\
+                            self.d_var_map["should_w_l"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
+                            self.d_var_map["should_w_r"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]] # design vector
+
+        self.q_design_dot = self.q_dot[self.d_var_map["mount_h"],\
+                            self.d_var_map["should_w_l"], self.d_var_map["should_roll_l"], self.d_var_map["wrist_off_l"], \
+                            self.d_var_map["should_w_r"], self.d_var_map["should_roll_r"], self.d_var_map["wrist_off_r"]]
+
+        self.p_ref_left_init = self.prb.createParameter('p_ref_left_init', 3)
+        self.p_ref_right_init  = self.prb.createParameter('p_ref_right_init ', 3)
+        self.q_ref_left_init  = self.prb.createParameter('q_ref_left_init ', 4)
+        self.q_ref_right_init  = self.prb.createParameter('q_ref_right_init ', 4)
+
+        self.p_ref_left_trgt = self.prb.createParameter('p_ref_left_trgt', 3)
+        self.p_ref_right_trgt = self.prb.createParameter('p_ref_right_trgt', 3)
+        self.q_ref_left_trgt = self.prb.createParameter('q_ref_left_trgt', 4)
+        self.q_ref_right_trgt = self.prb.createParameter('q_ref_right_trgt', 4)
+
+        self.prb.setDynamics(self.q_dot)
+        self.prb.setDt(self.dt)  
+
+        # getting useful kinematic quantities
+        fk_ws = self.urdf_kin_dyn.fk("working_surface_link")
+        self.ws_link_pos = fk_ws(q = np.zeros((self.nq, 1)).flatten())["ee_pos"] # w.r.t. world
+        self.ws_link_rot = fk_ws(q = np.zeros((self.nq, 1)).flatten())["ee_rot"] # w.r.t. world (3x3 rot matrix)
+
+        fk_ws_arm1_link6 = self.urdf_kin_dyn.fk("arm_1_link_6")
+        arm1_link6_pos = fk_ws_arm1_link6(q = self.q)["ee_pos"] # w.r.t. world
+        arm1_link6_rot = fk_ws_arm1_link6(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
+        
+        fk_ws_arm2_link6 = self.urdf_kin_dyn.fk("arm_2_link_6")
+        arm2_link6_pos = fk_ws_arm2_link6(q = self.q)["ee_pos"] # w.r.t. world
+        arm2_link6_rot = fk_ws_arm2_link6(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
+
+        fk_arm_r = self.urdf_kin_dyn.fk("arm_1_tcp")
+        rarm_tcp_pos = fk_arm_r(q = self.q)["ee_pos"] # w.r.t. world
+        rarm_tcp_rot = fk_arm_r(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
+        self.rarm_tcp_pos_rel_ws = rarm_tcp_pos - self.ws_link_pos # pos w.r.t. working surface in world frame
+
+        fk_arm_l = self.urdf_kin_dyn.fk("arm_2_tcp")
+        larm_tcp_pos = fk_arm_l(q = self.q)["ee_pos"] # w.r.t. world
+        larm_tcp_rot = fk_arm_l(q = self.q)["ee_rot"] # w.r.t. world (3x3 rot matrix)
+        self.larm_tcp_pos_rel_ws = larm_tcp_pos - self.ws_link_pos # pos w.r.t. working surface in world frame
+
+        rarm_cocktail_pos = rarm_tcp_pos 
+        rarm_cocktail_rot = rarm_tcp_rot
+        self.rght_tcp_rot_wrt_ws = self.ws_link_rot.T @ rarm_cocktail_rot
+        self.rght_tcp_pos_wrt_ws = self.ws_link_rot.T @ (rarm_cocktail_pos - self.ws_link_pos)
+
+        larm_cocktail_pos = larm_tcp_pos
+        larm_cocktail_rot = larm_tcp_rot
+        self.lft_tcp_rot_wrt_ws = self.ws_link_rot.T @ larm_cocktail_rot
+        self.lft_tcp_pos_wrt_ws = self.ws_link_rot.T @ (larm_cocktail_pos - self.ws_link_pos)
+
+        self.coll_links_pos_rght = self.ws_link_rot.T @ (arm1_link6_pos - self.ws_link_pos)
+        self.coll_links_pos_lft = self.ws_link_rot.T @ (arm2_link6_pos - self.ws_link_pos)
+
+    def setup_prb(self,\
+                epsi = epsi_default,\
+                q_ig = None, q_dot_ig = None):
+         
+        self.epsi = epsi
+
+        ## All the constraints and costs are set here ##
+
+        # setting initial guesses
+        if q_ig is not None:
+
+            self.q.setInitialGuess(q_ig)
+
+        if q_dot_ig is not None:
+            
+            self.q_dot.setInitialGuess(q_dot_ig)
+
+        # lower and upper bounds for design variables and joint variables
+        self.q.setBounds(self.lbs, self.ubs)
+        
+        # adapt collision model of the bent link (link5) to the wrist offset value
+        # this is to account for variations link5's footprint as a results of the optimal
+        # wrist offset 
+
+        self.prb.createConstraint("adapt_link5_coll_model", \
+                                self.q[self.d_var_map["should_roll_l"]] - \
+                                self.q[self.d_var_map["should_roll_r"]])
+
+        # roll and shoulder vars equal
+        self.prb.createConstraint("same_roll", \
+                                self.q[self.d_var_map["should_roll_l"]] - \
+                                self.q[self.d_var_map["should_roll_r"]])
+
+        self.prb.createConstraint("same_shoulder_w",\
+                                self.q[self.d_var_map["should_w_l"]] - \
+                                self.q[self.d_var_map["should_w_r"]])
+
+        self.prb.createConstraint("same_wrist_offset",\
+                                self.q[self.d_var_map["wrist_off_l"]] - \
+                                self.q[self.d_var_map["wrist_off_r"]])
+
+        # design vars equal on all nodes 
+        self.prb.createConstraint("single_var_cntrnt",\
+                            self.q_design_dot,\
+                            nodes = range(0, (self.total_nnodes - 1)))
+
+        if not self.is_sliding_wrist: # setting value for wrist offsets
+
+            self.prb.createConstraint("wrist_offset_value",\
+                    self.q[self.d_var_map["wrist_off_l"]] - self.sliding_wrist_offset,\
+                    nodes = range(0, (self.total_nnodes - 1)))
+
+        # TCPs inside working volume (assumed to be a box)
+        ws_ub = np.array([1.2, 0.8, 1.0])
+        ws_lb = np.array([-1.2, -0.8, 0.0])
+
+        keep_tcp_in_ws_rght = self.prb.createConstraint("keep_tcp_in_ws_rght",\
+                                                           self.rght_tcp_pos_wrt_ws)
+        keep_tcp_in_ws_rght.setBounds(ws_lb, ws_ub)
+        keep_tcp_in_ws_lft = self.prb.createConstraint("keep_tcp_in_ws_lft",\
+                                                           self.lft_tcp_pos_wrt_ws)
+        keep_tcp_in_ws_lft.setBounds(ws_lb, ws_ub)
+
+        # TCPs above working surface
+        keep_tcp1_above_ground = self.prb.createConstraint("keep_tcp1_above_ground",\
+                                                           self.rarm_tcp_pos_rel_ws[2])
+        keep_tcp1_above_ground.setBounds(0, cs.inf)
+        keep_tcp2_above_ground = self.prb.createConstraint("keep_tcp2_above_ground",\
+                                                           self.larm_tcp_pos_rel_ws[2])
+        keep_tcp2_above_ground.setBounds(0, cs.inf)
+
+        # add p2p collision task on y axis
+        coll = self.prb.createConstraint("avoid_collision_on_y", \
+                                self.coll_links_pos_lft[1] - self.coll_links_pos_rght[1])
+        coll.setBounds(self.collision_margin - 0.001, cs.inf)
+
+        # min inputs --> also corresponds to penalize large joint excursions
+        self.prb.createIntermediateCost("max_global_manipulability",\
+                        self.weight_glob_man * cs.sumsqr(self.q_dot))
+        
+        add_pose_cnstrnt("right_arm_init", self.prb, 0,\
+                        pos = self.rght_tcp_pos_wrt_ws, rot = self.rght_tcp_rot_wrt_ws,\
+                        pos_ref = self.p_ref_right_init, rot_ref = quat2rot(self.q_ref_right_init),\
+                        pos_selection = ["x", "y", "z"],\
+                        rot_selection = ["x", "y", "z"])
+
+        add_pose_cnstrnt("right_arm_trgt", self.prb, self.total_nnodes - 1,\
+                        pos = self.rght_tcp_pos_wrt_ws, rot = self.rght_tcp_rot_wrt_ws,\
+                        pos_ref = self.p_ref_right_trgt, rot_ref = quat2rot(self.q_ref_right_trgt),\
+                        pos_selection = ["x", "y", "z"],\
+                        rot_selection = ["x", "y", "z"])
+        
+        add_pose_cnstrnt("left_arm_init", self.prb, 0,\
+                        pos = self.lft_tcp_pos_wrt_ws, rot = self.lft_tcp_rot_wrt_ws,\
+                        pos_ref = self.p_ref_left_init, rot_ref = quat2rot(self.q_ref_left_init), \
+                        pos_selection = ["x", "y", "z"],\
+                        rot_selection = ["x", "y", "z"])
+
+        add_pose_cnstrnt("left_arm_trgt", self.prb, self.total_nnodes - 1,\
+                        pos = self.lft_tcp_pos_wrt_ws, rot = self.lft_tcp_rot_wrt_ws,\
+                        pos_ref = self.p_ref_left_trgt, rot_ref = quat2rot(self.q_ref_left_trgt), \
+                        pos_selection = ["x", "y", "z"],\
+                        rot_selection = ["x", "y", "z"])
+        
+        Transcriptor.make_method(self.transcription_method,\
+                                self.prb,\
+                                self.transcription_opts)
+
+        self.slvr = solver.Solver.make_solver(self.solver_type, self.prb, self.slvr_opt)
+
+    def start_loop(self):
+
+        self.create_markers() # spawn markers node
+
+        mark_lft_pos_trgt = None
+        mark_lft_q_trgt = None
+        mark_rght_pos_trgt = None
+        mark_rght_q_trgt = None
+
+        self.p_ref_left_init.assign(self.lft_default_p_wrt_ws)
+        self.p_ref_right_init.assign(self.rght_default_p_wrt_ws)
+        self.q_ref_left_init.assign(self.lft_default_q_wrt_ws)
+        self.q_ref_right_init.assign(self.rght_default_q_wrt_ws)
+
+        print("\n \nPlease move both markers in order to start the solution loop!!\n \n ")
+
+        while (mark_lft_pos_trgt is None) or (mark_lft_q_trgt is None) \
+            or (mark_rght_pos_trgt is None) or (mark_rght_q_trgt is None):
+            
+            # continue polling the positions until they become valid
+            mark_lft_pos_trgt, mark_lft_q_trgt = self.rviz_marker_gen.getPose(self.lft_trgt_marker_topic)
+            mark_rght_pos_trgt, mark_rght_q_trgt = self.rviz_marker_gen.getPose(self.rght_trgt_marker_topic)
+
+            time.sleep(0.1)
+
+        print("\n \nValid feedback from markers received! Starting solution loop ...\n \n ")
+
+        while True:
+            
+            # continue polling
+            mark_lft_pos_trgt, mark_lft_q_trgt = self.rviz_marker_gen.getPose(self.lft_trgt_marker_topic)
+            mark_rght_pos_trgt, mark_rght_q_trgt = self.rviz_marker_gen.getPose(self.rght_trgt_marker_topic)
+
+            self.p_ref_left_trgt.assign(mark_lft_pos_trgt)
+            self.p_ref_right_trgt.assign(mark_rght_pos_trgt)
+            self.q_ref_left_trgt.assign(mark_lft_q_trgt)
+            self.q_ref_right_trgt.assign(mark_rght_q_trgt)
+
+            t = time.time()
+
+            self.slvr.solve()  # solving
+
+            solution_time = time.time() - t
+
+            print(f'\n Problem solved in {solution_time} s \n')
+                    
+            self.p_ref_left_init.assign(mark_lft_pos_trgt)
+            self.p_ref_right_init.assign(mark_rght_pos_trgt)
+            self.q_ref_left_init.assign(mark_lft_q_trgt)
+            self.q_ref_right_init.assign(mark_rght_q_trgt)
+
+            solution = self.slvr.getSolutionDict() # extracting solution
+            q_sol = solution["q"]
+
+            sol_replayer = ReplaySol(dt = self.dt, joint_list = self.joint_names, q_replay = q_sol) 
+            sol_replayer.replay(is_floating_base = False, play_once = True)
+
 
    

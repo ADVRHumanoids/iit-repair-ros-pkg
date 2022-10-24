@@ -6,7 +6,7 @@ from codesign_pyutils.math_utils import quat2rot, rot_error, rot_error2, rot_err
 
 from codesign_pyutils.miscell_utils import check_str_list, rot_error_axis_sel_not_supp
 
-rot_error_approach = "arturo" # options: "siciliano", "arturo", "traversaro"
+rot_error_approach = "traversaro" # options: "siciliano", "arturo", "traversaro"
 
 from codesign_pyutils.misc_definitions import epsi_default
 
