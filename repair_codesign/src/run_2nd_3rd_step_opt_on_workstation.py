@@ -247,7 +247,7 @@ if __name__ == '__main__':
                     "w_rel_mat_man": task_copies[0].vel_weights, 
                     "w_rel_clman_rot": task_copies[0].weight_clman_rot, 
                     "w_rel_clman_trasl": task_copies[0].weight_clman_trasl, 
-                    "w_rel_mat_stau": task_copies[0].weight_static_tau,
+                    "w_rel_mat_stau": task_copies[0].torque_weights,
                     "use_classical_man": use_classical_man,
                     "nodes_list": task_copies[0].nodes_list, 
                     "tasks_list": task_copies[0].task_list,
