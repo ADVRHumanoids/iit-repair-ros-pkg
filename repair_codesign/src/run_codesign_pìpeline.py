@@ -78,9 +78,9 @@ if __name__ == '__main__':
                         help = 'for each multistart node, at best max_trials_factor new solutions will be tried to obtain an optimal solution',
                         default = 20)
     parser.add_argument('--n_clust_s2', '-nc_s2', type=int,\
-                        help = 'number of clusters to be generated', default = 20)
+                        help = 'number of clusters to be generated', default = 10)
     parser.add_argument("--ig_seed_s3", '-ig_s3', type = int,\
-                        help = '', default = 1)
+                        help = '', default = 653)
     
     # cl man reference generation-specific arguments
     # parser.add_argument('--gen_cl_man_ref', '-gen_clmr', type=bool,\
