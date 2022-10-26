@@ -72,8 +72,8 @@ if __name__ == '__main__':
     parser.add_argument('--weight_static_tau', '-wstau', type = np.double,\
                         help = 'weight static torque minimization term', default = 0.1)
     parser.add_argument('--weight_wrist_attractor', '-wwa', type = np.double,\
-                        help = 'weight wrist attractor term', default = 0.0001)
-                        
+                        help = 'weight wrist attractor term', default = 1)
+
     # second level-specific arguments
     parser.add_argument('--multistart_n_s3', '-msn_s3', type=int,\
                         help = 'number of multistarts (per cluster) to use',
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_clust_s2', '-nc_s2', type=int,\
                         help = 'number of clusters to be generated', default = 10)
     parser.add_argument("--ig_seed_s3", '-ig_s3', type = int,\
-                        help = '', default = 653)
+                        help = '', default = 235)
     
     # cl man reference generation-specific arguments
     # parser.add_argument('--gen_cl_man_ref', '-gen_clmr', type=bool,\

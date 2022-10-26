@@ -180,11 +180,11 @@ def enforce_codes_cnstr_on_ig(q_ig):
 
     for i in range(len(q_ig)):
 
-        q_codes_ig = q_ig[i][design_indeces_aux, :]
+        q_codes_ig = q_ig[i][design_indeces_aux, 0]
 
-        q_codes_extended = np.concatenate((q_codes_ig, q_codes_ig[1:]), axis=0)
+        q_codes_extended = np.concatenate((q_codes_ig, q_codes_ig), axis=0)
 
-        q_ig[i][design_indeces, :] = np.transpose(np.tile(q_codes_extended, (len(q_ig[0][0, :]), 1)))
+        q_ig[i][design_indeces, :] = np.tile(q_codes_extended, (len(q_ig[0][0, :]), 1))
 
 def solve_s1(multistart_nodes,\
             task, slvr,\
