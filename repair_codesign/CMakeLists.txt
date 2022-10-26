@@ -10,6 +10,11 @@ install(DIRECTORY
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
+install(DIRECTORY
+  test_results
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
 install(PROGRAMS src/replay_sol.py src/run_1st_step_opt_on_workstation.py  
             src/run_2nd_3rd_step_opt_on_workstation.py 
             src/run_codesign_pìpeline.py 
