@@ -992,15 +992,14 @@ class PostProcS3:
 
         if len(add_info_filename_aux) == 0:
 
-            raise Exception("PostProc2ndLev: didn't find any solution information file matching pattern \"" +
+            raise Exception("PostProcS3: didn't find any solution information file matching pattern \"" +
                             additional_info_name + "\"" + " in base directory " + self._load_path + ".\n" +
                             "Please provide a valid solution information file.")
 
         if len(add_info_filename_aux) > 1:
 
-            raise Exception("PostProc2ndLev: too many solution information files provided.\n" + 
-                            "Please make sure the loading directory only contains coherent data.")
-
+            raise Exception("PostProcS3: too many solution information files provided.\n" + 
+                            "Please make sure the load directory only contains one information file.")
 
         self._add_info_path = self._load_path + "/" + add_info_filename_aux[0]
         self._info_data = mat_storer.matStorer(self._add_info_path).load()
@@ -1009,25 +1008,25 @@ class PostProcS3:
         self._loaders = [None] * self._n_clust # list of loaders (one for each cluster)
         self._3rd_step_opt_data = [None] * self._n_clust # list containing a dictionary for each cluster with all necessary opt data
 
-        self._second_lev_opt_costs = [] 
-        self._second_lev_man_measure = []
+        self._s3_opt_costs = [] # optimal costs for each cluster multistart
+        self._s3_man_measure = [] # man. measure for each cluster multistart
 
         self._opt_mult_indeces = [] # index of the solution (w.r.t. the n multistarts per cluster)
         
-        self._confidence_coeffs = [-1] * self._n_clust
+        self._confidence_coeffs = [-1] * self._n_clust # confidence coefficient for each cluster
 
-        self._second_lev_true_costs = [-1] * self._n_clust
-        self._second_lev_best_ms_index = -1
-        self.second_lev_true_man = [-1] * self._n_clust
+        self._s3_true_costs = [-1] * self._n_clust
+
+        self.s3_true_man = [-1] * self._n_clust
         self.n_of_improved_costs = 0
 
-        self._second_lev_weighted_costs = [-1] * self._n_clust
+        self._s3_weighted_costs = [-1] * self._n_clust
 
         self._rmse_man_meas = [-1] * self._n_clust
         self._rmse_opt_cost = [-1] * self._n_clust
 
         self.__load_clust_sols()
-        self.__compute_second_lev_true_costs()
+        self.__compute_s3_true_costs()
         self._s2_cl_cands_man_measure = compute_man_index(self._s2_cl_cands_opt_cost, self._n_int)
 
         self.__compute_conf_coeff()
@@ -1037,8 +1036,8 @@ class PostProcS3:
         self.best_3rd_step_cost, self._best_3rd_step_cl_index,\
             self.best_3rd_step_man_measure, self.best_3rd_step_qcodes = self.__compute_3rd_step_best_sol()
 
-        self.best_second_lev_weight_cost, self.best_second_lev_weight_cl_index,\
-            self.best_second_lev_weight_man_measure, self.best_second_lev_weight_qcodes =\
+        self.best_s3_weight_cost, self.best_s3_weight_cl_index,\
+            self.best_s3_weight_man_measure, self.best_s3_weight_qcodes =\
                 self.__compute_3rd_step_best_sol(use_weighted=True)
 
         self.__extract_3rd_step_data()
@@ -1263,24 +1262,25 @@ class PostProcS3:
 
     def __load_clust_sols(self):
 
-        for cl in range(self._n_clust):
+        for cl in range(self._n_clust): # for each generated cluster
             
-            #clusters are loaded in order
+            # clusters are loaded in order, from cluster n. 0 to cluster n. (n_cl - 1) 
             self._loaders[cl] = LoadSols(self._load_path + self._clust_dir_basename + str(cl),\
                                         base_info_path = self._load_path)
 
             opt_cost_aux_list = []
             opt_mult_aux_indeces = []
 
-            for opt_sol_index in range(len(self._loaders[cl].opt_data)):
+            for opt_sol_index in range(len(self._loaders[cl].opt_data)): # iterate thorough each refined solution
+                # in the cluster
 
                 opt_cost_aux_list.append(self._loaders[cl].opt_data[opt_sol_index]["opt_cost"][0][0])
                 opt_mult_aux_indeces.append(self._loaders[cl].opt_data[opt_sol_index]["multistart_index"][0][0])
             
-            self._second_lev_opt_costs.append(opt_cost_aux_list)
-            self._second_lev_man_measure.append(compute_man_index(opt_cost_aux_list, self._n_int))
+            self._s3_opt_costs.append(opt_cost_aux_list)
+            self._s3_man_measure.append(compute_man_index(opt_cost_aux_list, self._n_int))
 
-            self._opt_mult_indeces.append(opt_mult_aux_indeces)
+            self._opt_mult_indeces.append(opt_mult_aux_indeces) # appending multistart index
 
     def __extract_3rd_step_data(self):
 
@@ -1288,21 +1288,27 @@ class PostProcS3:
 
             self._3rd_step_opt_data[cl] = self.__read_opt_data(cl)
             
-    def __compute_second_lev_true_costs(self):
+    def __compute_s3_true_costs(self):
 
-        for cl in range(self._n_clust):
+        for cl in range(self._n_clust): # for each generated cluster
             
-            min_second_lev_cl = super_high_cost
-            if len(self._second_lev_opt_costs[cl]) > 0:
+            s3_min_cl_cost = super_high_cost # set default value to a high number
 
-                min_second_lev_cl = np.min(np.array(self._second_lev_opt_costs[cl]))
+            if len(self._s3_opt_costs[cl]) > 0: # we have at least one successfull refined solution
+                # in this cluster
 
-            self._second_lev_true_costs[cl] = \
-                min_second_lev_cl if (min_second_lev_cl<=self._s2_cl_cands_opt_cost[cl]) else self._s2_cl_cands_opt_cost[cl]
+                s3_min_cl_cost = np.min(np.array(self._s3_opt_costs[cl])) # take the minimum value
+                # between the refined solutions
 
-        self.second_lev_true_man = compute_man_index(self._second_lev_true_costs, self._n_int)
+            self._s3_true_costs[cl] = \
+                s3_min_cl_cost if (s3_min_cl_cost<=self._s2_cl_cands_opt_cost[cl]) else self._s2_cl_cands_opt_cost[cl]
+            # _s3_true_costs is the lowest value between the best refined solution of this cluster and the original 
+            # cost of the cluster candidate
 
-        self._did_cost_improve = np.array(self._s2_cl_cands_opt_cost != self._second_lev_true_costs)
+        self.s3_true_man = compute_man_index(self._s3_true_costs, self._n_int)
+
+        self._did_cost_improve = np.array(self._s2_cl_cands_opt_cost != self._s3_true_costs)
+        # array for checking if the refinement step produced any improvements in the optimal cost
 
         self.n_of_improved_costs = len(np.argwhere(self._did_cost_improve == True).flatten())
 
@@ -1310,20 +1316,20 @@ class PostProcS3:
 
         for cl in range(self._n_clust):
 
-            self._second_lev_weighted_costs[cl] = self._second_lev_true_costs[cl] / self._confidence_coeffs[cl]
+            self._s3_weighted_costs[cl] = self._s3_true_costs[cl] / self._confidence_coeffs[cl]
 
     def __compute_rmse(self):
         
         for cl in range(self._n_clust):
             
-            min_man_cl = self.second_lev_true_man[cl]
+            min_man_cl = self.s3_true_man[cl]
             sum_sqrd_man = 0.0
             sum_sqrd_cost = 0.0
-            n_opt_ms_cl = len(self._second_lev_man_measure[cl])
+            n_opt_ms_cl = len(self._s3_man_measure[cl])
             for ms_sample in range(n_opt_ms_cl):
                 
-                sum_sqrd_man = sum_sqrd_man + (self._second_lev_man_measure[cl][ms_sample] - min_man_cl)**2
-                sum_sqrd_cost = sum_sqrd_cost + (self._second_lev_opt_costs[cl][ms_sample] - min_man_cl)**2
+                sum_sqrd_man = sum_sqrd_man + (self._s3_man_measure[cl][ms_sample] - min_man_cl)**2
+                sum_sqrd_cost = sum_sqrd_cost + (self._s3_opt_costs[cl][ms_sample] - min_man_cl)**2
 
             self._rmse_man_meas[cl] = np.sqrt(sum_sqrd_man / n_opt_ms_cl) if n_opt_ms_cl != 0 else -1.0 
             self._rmse_opt_cost[cl] = np.sqrt(sum_sqrd_cost / n_opt_ms_cl) if n_opt_ms_cl != 0 else -1.0 
@@ -1332,40 +1338,42 @@ class PostProcS3:
 
         n_des_params = len(self._s2_cl_candidates) # number of design parameters
 
-        best_second_lev_qcodes = np.zeros((n_des_params, 1)).flatten()
+        best_s3_qcodes = np.zeros((n_des_params, 1)).flatten()
 
-        if not use_weighted:
+        if not use_weighted: # best solution is selected using 
+            # the criterion of the lowest cost only
             
-            best_second_lev_cost = min(self._second_lev_true_costs)
-            best_second_lev_cl_index = \
-                np.argwhere(np.array(self._second_lev_true_costs) == best_second_lev_cost)[0][0]
+            best_s3_cost = min(self._s3_true_costs) # get minimum refined cost between 
+            # among clusters
+            best_s3_cl_index = \
+                np.argwhere(np.array(self._s3_true_costs) == best_s3_cost)[0][0]
 
-            best_second_lev_man_measure = compute_man_index([best_second_lev_cost], self._n_int)[0]
+            best_s3_man_measure = compute_man_index([best_s3_cost], self._n_int)[0]
 
             for i in range(n_des_params): # iterating through design paramter dimension
 
-                best_second_lev_qcodes[i] = self._s2_cl_candidates[i][best_second_lev_cl_index]
+                best_s3_qcodes[i] = self._s2_cl_candidates[i][best_s3_cl_index]
 
         else:   
 
-            best_second_lev_cost = min(self._second_lev_weighted_costs)
-            best_second_lev_cl_index = \
-                np.argwhere(np.array(self._second_lev_weighted_costs) == best_second_lev_cost)[0][0]
+            best_s3_cost = min(self._s3_weighted_costs)
+            best_s3_cl_index = \
+                np.argwhere(np.array(self._s3_weighted_costs) == best_s3_cost)[0][0]
 
-            best_second_lev_man_measure = compute_man_index([best_second_lev_cost], self._n_int)[0]
+            best_s3_man_measure = compute_man_index([best_s3_cost], self._n_int)[0]
             
             for i in range(n_des_params):
 
-                best_second_lev_qcodes[i] = self._s2_cl_candidates[i][best_second_lev_cl_index]
+                best_s3_qcodes[i] = self._s2_cl_candidates[i][best_s3_cl_index]
 
-        return best_second_lev_cost, best_second_lev_cl_index,\
-                best_second_lev_man_measure, best_second_lev_qcodes
+        return best_s3_cost, best_s3_cl_index,\
+                best_s3_man_measure, best_s3_qcodes
 
     def __compute_conf_coeff(self):
         
         opt_sols_n_aux_list = []
         for cl in range(self._n_clust):
-            opt_sols_n_aux_list.append(len(self._second_lev_opt_costs[cl]))
+            opt_sols_n_aux_list.append(len(self._s3_opt_costs[cl]))
 
         max_n_cl_opt_sol = self._ms_trgt
 
@@ -1377,7 +1385,8 @@ class PostProcS3:
         # -1 if the solution from the 2nd step is better (so no improvement in the cost ref. step)
 
         best_refined_sol_index = -1
-        best_cl_cand_ref_costs = self._3rd_step_opt_data[self._best_3rd_step_cl_index]["opt_costs"]
+        best_cl_cand_ref_costs = self._3rd_step_opt_data[self._best_3rd_step_cl_index]["opt_costs"] # reading optimal cost
+        # from the cluster associated with the best solution
         n_ref_samples = len(best_cl_cand_ref_costs)
         for sample_idx in range(n_ref_samples):
 
@@ -1385,6 +1394,8 @@ class PostProcS3:
 
                 best_refined_sol_index = sample_idx
         
+        # return the index inside the best cluster of the optimal cost.
+        # this index should only be used with 3rd step
         return best_refined_sol_index
 
     def __dump_results(self):
@@ -1402,22 +1413,22 @@ class PostProcS3:
                     "s2_cl_best_candidates": self._s2_cl_candidates,
                     "s2_cl_opt_costs": self._s2_cl_cands_opt_cost, 
                     "s2_cl_man_measure": self._s2_cl_cands_man_measure,
-                    "second_lev_opt_costs": np.array(self._second_lev_opt_costs, dtype=object),
-                    "second_lev_man_measure": np.array(self._second_lev_man_measure, dtype=object),
+                    "s3_opt_costs": np.array(self._s3_opt_costs, dtype=object),
+                    "s3_man_measure": np.array(self._s3_man_measure, dtype=object),
                     "opt_mult_indeces": np.array(self._opt_mult_indeces, dtype=object),
                     "confidence_coeffs": self._confidence_coeffs,
-                    "second_lev_true_costs": self._second_lev_true_costs,
+                    "s3_true_costs": self._s3_true_costs,
                     "n_of_improved_costs": self.n_of_improved_costs,
                     "did_cost_improve": self._did_cost_improve,
-                    "second_lev_weighted_costs": self._second_lev_weighted_costs,
-                    "best_cost": self.best_3rd_step_cost,
-                    "best_cl_index": self._best_3rd_step_cl_index,
-                    "best_man_measure": self.best_3rd_step_man_measure,
-                    "best_qcodes": self.best_3rd_step_qcodes,
-                    "best_weight_cost": self.best_second_lev_weight_cost,
-                    "best_weight_cl_index": self.best_second_lev_weight_cl_index,
-                    "best_weight_man_measure": self.best_second_lev_weight_man_measure,
-                    "best_weight_qcodes": self.best_second_lev_weight_qcodes,
+                    "s3_weighted_costs": self._s3_weighted_costs,
+                    "s3_best_cost": self.best_3rd_step_cost,
+                    "s3_best_cl_index": self._best_3rd_step_cl_index,
+                    "s3_best_man_measure": self.best_3rd_step_man_measure,
+                    "s3_best_qcodes": self.best_3rd_step_qcodes,
+                    "best_s3_weight_cos": self.best_s3_weight_cost,
+                    "best_s3_weight_cl_index": self.best_s3_weight_cl_index,
+                    "best_s3_weight_man_measure": self.best_s3_weight_man_measure,
+                    "best_s3_weight_qcodes": self.best_s3_weight_qcodes,
                     "rmse_man_meas": self._rmse_man_meas, 
                     "rmse_opt_cost":self._rmse_opt_cost, 
                     "nodes_list": self._nodes_list}
@@ -1489,8 +1500,8 @@ class PostProcS3:
 
         else:
             
-            print("Best weighted sol. cost: " + str(self.best_second_lev_weight_cost))
-            print("Best weighted sol. index: " + str(self.best_second_lev_weight_cl_index))
-            print("Best weighted sol. man measure: " + str(self.best_second_lev_weight_man_measure))
-            print("Best weighted q codes.: " + str(self.best_second_lev_weight_qcodes))
+            print("Best weighted sol. cost: " + str(self.best_s3_weight_cost))
+            print("Best weighted sol. index: " + str(self.best_s3_weight_cl_index))
+            print("Best weighted sol. man measure: " + str(self.best_s3_weight_man_measure))
+            print("Best weighted q codes.: " + str(self.best_s3_weight_qcodes))
             print("\n")
