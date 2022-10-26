@@ -52,12 +52,17 @@ if __name__ == '__main__':
                         help = 'weight for classical manipulability cost function', default = 0.1)
     parser.add_argument('--weight_static_tau', '-wstau', type = np.double,\
                         help = 'weight static torque minimization term', default = 0.000005)
-    
+    parser.add_argument('--weight_wrist_attractor', '-wwa', type = np.double,\
+                        help = 'weight wrist attractor term', default = 0.0001)
+
     parser.add_argument('--use_classical_man', '-ucm', type=str2bool,\
                         help = 'whether to use the classical manipulability index', default = False)
 
     parser.add_argument('--use_static_tau', '-ustau', type=str2bool,\
                         help = 'whether to use the static tau minimization cost', default = False)
+    
+    parser.add_argument('--use_wrist_attractor', '-uwa', type=str2bool,\
+                        help = 'whether to a cost to favour spherical wrists', default = False)
 
     parser.add_argument('--urdf_full_path', '-urdf', type=str,\
                         help = 'full path to URDF', default = "")
@@ -237,6 +242,7 @@ if __name__ == '__main__':
         task_copies[p] = gen_task_copies(args.weight_global_manip,
                                         args.weight_class_manip,
                                         args.weight_static_tau,
+                                        args.weight_wrist_attractor,
                                         filling_n_nodes,
                                         sliding_wrist_offset, 
                                         n_y_samples, y_sampl_ub,
@@ -245,6 +251,7 @@ if __name__ == '__main__':
                                         rot_error_epsi,
                                         args.use_classical_man,
                                         args.use_static_tau,
+                                        args.use_wrist_attractor,
                                         is_sliding_wrist,
                                         coll_yaml_path,
                                         cost_weights_yaml_path,
@@ -275,6 +282,7 @@ if __name__ == '__main__':
                     "right_arm_picks": task_copies[0].rght_arm_picks, 
                     "use_classical_man": args.use_classical_man,
                     "use_static_tau": args.use_static_tau,
+                    "use_wrist_attractor": args.use_wrist_attractor,
                     "w_man_base": args.weight_global_manip, 
                     "w_clman_base": args.weight_class_manip,
                     "w_stau_base": args.weight_static_tau,
@@ -285,6 +293,8 @@ if __name__ == '__main__':
                     "w_rel_clman_rot": task_copies[0].weight_clman_rot, 
                     "w_rel_clman_trasl": task_copies[0].weight_clman_trasl, 
                     "w_rel_mat_stau": task_copies[0].torque_weights,
+                    "w_wrist_attr_base": args.weight_wrist_attractor,
+                    "w_wrist_attr_actual": task_copies[0].weight_wrist_attractor,
                     "nodes_list": task_copies[0].nodes_list, 
                     "tasks_list": task_copies[0].task_list,
                     "tasks_dict": task_copies[0].task_dict, 

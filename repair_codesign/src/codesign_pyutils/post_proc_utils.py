@@ -159,14 +159,19 @@ class PostProcS1:
         self._tasks_list = self._prb_info_data["tasks_list"]
         self._transcription_method = self._prb_info_data["transcription_method"][0]
         self._unique_id = self._prb_info_data["unique_id"][0]
+
         self._is_class_man = bool(self._prb_info_data["use_classical_man"][0][0])
         self._use_static_tau = bool(self._prb_info_data["use_static_tau"][0][0])
+
         self._class_man_w_base = self._prb_info_data["w_clman_base"][0][0]
         self._class_man_w_a = self._prb_info_data["w_clman_actual"][0][0]
         self._man_w_base = self._prb_info_data["w_man_base"][0][0]
         self._man_w_a = self._prb_info_data["w_man_actual"][0][0]
         self._static_tau_w_base = self._prb_info_data["w_stau_base"][0][0]
         self._static_tau_w_a = self._prb_info_data["w_stau_actual"][0][0]
+        self._wrist_attr_w_base = self._prb_info_data["w_wrist_attr_base"][0][0]
+        self._wrist_attr_w_a = self._prb_info_data["w_wrist_attr_actual"][0][0]
+
         self._wrist_off = self._prb_info_data["sliding_wrist_offset"][0][0]
         self._is_sliding_wrist = bool(self._prb_info_data["is_sliding_wrist"][0][0])
 

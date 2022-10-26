@@ -53,6 +53,7 @@ class CodesTaskGen:
         self.weight_glob_man = 0 # actual weight assigned to the global manipulability cost
         self.weight_classical_man = 0 # actual weight assigned to the classical manipulability cost
         self.weight_static_tau = 0 
+        self.weight_wrist_attractor = 0
 
         self.urdf = None # opened urdf file
         self.joint_names = None # joint names
@@ -289,9 +290,16 @@ class CodesTaskGen:
         # min inputs
         self.prb.createIntermediateCost("min_static_torque",\
                         self.weight_static_tau * (static_tau.T @ self.weight_static_tau @ static_tau))         
+    
+    def add_wrist_attractor_cost(self):
+
+        self.prb.createIntermediateCost("promote_spherical_wrists",\
+                        self.weight_wrist_attractor * self.q[self.d_var_map["wrist_off_l"]]) 
+        # it is sufficien to put it only on one wris 
 
     def init_prb(self, urdf_full_path: str, weight_pos = 0.001, weight_rot = 0.001,\
                 weight_glob_man = 0.0001, weight_class_man = 0.0001, weight_static_tau = 0.0001,\
+                weight_wrist_attractor = 0.001,\
                 is_soft_pose_cnstr = False,\
                 tf_single_task = 10):
 
@@ -306,6 +314,7 @@ class CodesTaskGen:
         self.weight_glob_man = weight_glob_man / ( self.total_nnodes )
         self.weight_classical_man = weight_class_man / ( self.total_nnodes )
         self.weight_static_tau = weight_static_tau / ( self.total_nnodes )
+        self.weight_wrist_attractor = weight_wrist_attractor / ( self.total_nnodes )
 
         self.n_int = self.total_nnodes - 1 # adding addditional filling nodes between nodes of two successive tasks
         self.prb = problem.Problem(self.n_int) 
@@ -389,6 +398,7 @@ class CodesTaskGen:
                 q_ig = None, q_dot_ig = None, 
                 is_classical_man = False,
                 is_static_tau = False, 
+                is_wrist_attractor = False, 
                 is_second_lev_opt = False):
          
         ## All the constraints and costs are set here ##
@@ -473,6 +483,11 @@ class CodesTaskGen:
         if is_static_tau:
 
             self.add_static_tau_cost()
+        
+        # static tau cost
+        if is_wrist_attractor:
+
+            self.add_wrist_attractor_cost()
 
         # here the "custom" task is added to the problem
         self.build_tasks(is_soft_pose_cnstr = self.is_soft_pose_cnstrnt, epsi = epsi)

@@ -18,6 +18,7 @@ from codesign_pyutils.misc_definitions import get_design_map
 
 def gen_task_copies(weight_global_manip: np.double, weight_class_manip: np.double, 
                     weight_static_tau: np.double,
+                    weight_wrist_attractor: np.double,
                     filling_nodes: int,
                     wrist_offset: np.double, 
                     y_samples: list, y_ub: list, 
@@ -26,6 +27,7 @@ def gen_task_copies(weight_global_manip: np.double, weight_class_manip: np.doubl
                     rot_err_epsi: np.double,
                     use_classical_man = False,
                     use_static_tau = False, 
+                    use_wrist_attractor = False, 
                     sliding_wrist = False, 
                     coll_path = "", 
                     cost_weight_path = "",
@@ -65,6 +67,7 @@ def gen_task_copies(weight_global_manip: np.double, weight_class_manip: np.doubl
     task.init_prb(urdf_path,
                 weight_glob_man = weight_global_manip, weight_class_man = weight_class_manip,\
                 weight_static_tau = weight_static_tau,
+                weight_wrist_attractor = weight_wrist_attractor,
                 tf_single_task = t_exec)
 
     print(colored("Task node list: " + str(task.nodes_list), "magenta"))
@@ -77,7 +80,8 @@ def gen_task_copies(weight_global_manip: np.double, weight_class_manip: np.doubl
     # set constraints and costs
     task.setup_prb(rot_err_epsi, is_classical_man = use_classical_man,
                     is_second_lev_opt=is_second_lev_opt, 
-                    is_static_tau = use_static_tau)
+                    is_static_tau = use_static_tau, 
+                    is_wrist_attractor = use_wrist_attractor)
 
     return task
 

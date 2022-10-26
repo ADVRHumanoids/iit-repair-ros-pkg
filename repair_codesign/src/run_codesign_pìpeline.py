@@ -63,13 +63,17 @@ if __name__ == '__main__':
                         help = 'whether to use the static tau minimization cost', default = True)
     parser.add_argument('--use_classical_man', '-ucm', type=str2bool,\
                         help = 'whether to use the classical man. cost', default = True)
+    parser.add_argument('--use_wrist_attractor', '-uwa', type=str2bool,\
+                        help = 'whether to a cost to favour spherical wrists', default = False)
     parser.add_argument('--weight_global_manip', '-wman', type = np.double,\
                         help = 'weight for global manipulability cost function', default = 1.0)
     parser.add_argument('--weight_class_manip', '-wclass', type = np.double,\
                         help = 'weight for classical manipulability cost function', default = 100)
     parser.add_argument('--weight_static_tau', '-wstau', type = np.double,\
                         help = 'weight static torque minimization term', default = 0.1)
-
+    parser.add_argument('--weight_wrist_attractor', '-wwa', type = np.double,\
+                        help = 'weight wrist attractor term', default = 0.0001)
+                        
     # second level-specific arguments
     parser.add_argument('--multistart_n_s3', '-msn_s3', type=int,\
                         help = 'number of multistarts (per cluster) to use',
@@ -202,7 +206,11 @@ if __name__ == '__main__':
                                     "-wclass", 
                                     str(args.weight_class_manip),
                                     "-wstau", 
-                                    str(args.weight_static_tau)])
+                                    str(args.weight_static_tau), 
+                                    "-uwa", 
+                                    str(args.use_wrist_attractor), 
+                                    "-wwa", 
+                                    str(args.weight_wrist_attractor),])
 
         print(colored("\n--> FIRST LEVEL OPTIMIZATION FINISHED SUCCESSFULLY. \n", "blue"))
 

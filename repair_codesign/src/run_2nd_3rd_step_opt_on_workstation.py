@@ -183,6 +183,7 @@ if __name__ == '__main__':
     weight_global_manip = postprc_s1._man_w_base
     weight_class_manip = postprc_s1._class_man_w_base
     weight_static_tau = postprc_s1._static_tau_w_base
+    weight_wrist_attractor = postprc_s1._wrist_attr_w_base
 
     task_copies = [None] * len(proc_sol_divs)
     slvr_copies = [None] * len(proc_sol_divs)
@@ -194,6 +195,7 @@ if __name__ == '__main__':
         task_copies[p] = gen_task_copies(weight_global_manip,
                                         weight_class_manip,
                                         weight_static_tau,
+                                        weight_wrist_attractor,
                                         filling_n_nodes,
                                         sliding_wrist_offset, 
                                         n_y_samples, y_sampl_ub,
@@ -248,6 +250,8 @@ if __name__ == '__main__':
                     "w_rel_clman_rot": task_copies[0].weight_clman_rot, 
                     "w_rel_clman_trasl": task_copies[0].weight_clman_trasl, 
                     "w_rel_mat_stau": task_copies[0].torque_weights,
+                    "w_wrist_attr_base": args.weight_wrist_attractor,
+                    "w_wrist_attr_actual": task_copies[0].weight_wrist_attractor,
                     "use_classical_man": use_classical_man,
                     "nodes_list": task_copies[0].nodes_list, 
                     "tasks_list": task_copies[0].task_list,
