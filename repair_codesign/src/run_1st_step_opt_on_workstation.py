@@ -111,7 +111,7 @@ if __name__ == '__main__':
     parser.add_argument('--ipopt_tol', '-ipopt_tol', type = np.double,\
                         help = 'IPOPT tolerance', default = 0.00001)
     parser.add_argument('--ipopt_max_iter', '-max_iter', type = int,\
-                        help = 'IPOPT max iterations', default = 450)
+                        help = 'IPOPT max iterations', default = 1000)
     parser.add_argument('--ipopt_cnstr_tol', '-ipopt_cnstr', type = np.double,\
                         help = 'IPOPT constraint violation tolerance', default = 0.000001)
     parser.add_argument('--ipopt_verbose', '-ipopt_v', type = int,\
