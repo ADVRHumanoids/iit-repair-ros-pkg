@@ -180,6 +180,7 @@ if __name__ == '__main__':
 
     use_classical_man = postprc_s1._is_class_man
     use_static_tau = postprc_s1._use_static_tau
+    use_wrist_attractor = postprc_s1._use_wrist_attractor
     weight_global_manip = postprc_s1._man_w_base
     weight_class_manip = postprc_s1._class_man_w_base
     weight_static_tau = postprc_s1._static_tau_w_base
@@ -204,18 +205,23 @@ if __name__ == '__main__':
                                         rot_error_epsi,
                                         use_classical_man,
                                         use_static_tau,
+                                        use_wrist_attractor,
                                         is_sliding_wrist,
                                         coll_yaml_path,
                                         cost_weights_yaml_path,
                                         is_second_lev_opt, 
                                         is_in_place_flip, 
                                         is_biman_pick)
-        
+
+        print(colored("Generated task copy for process n." + str(p), "magenta"))
+
+        print(colored("Generating solver copy for process n." + str(p), "magenta"))
         slvr_copies[p] = gen_slvr_copies(task_copies[p],
                             solver_type,
                             transcription_method, 
                             transcription_opts, 
                             slvr_opt)
+        print(colored("Generated solver copy for process n." + str(p), "magenta"))
 
     # generating initial guesses, based on the script arguments
     q_ig, q_dot_ig =  generate_ig(args, full_file_paths,\

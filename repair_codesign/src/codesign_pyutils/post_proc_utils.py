@@ -162,6 +162,7 @@ class PostProcS1:
 
         self._is_class_man = bool(self._prb_info_data["use_classical_man"][0][0])
         self._use_static_tau = bool(self._prb_info_data["use_static_tau"][0][0])
+        self._use_wrist_attractor = bool(self._prb_info_data["use_wrist_attractor"][0][0])
 
         self._class_man_w_base = self._prb_info_data["w_clman_base"][0][0]
         self._class_man_w_a = self._prb_info_data["w_clman_actual"][0][0]
