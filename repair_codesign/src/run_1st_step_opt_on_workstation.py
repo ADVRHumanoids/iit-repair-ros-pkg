@@ -257,12 +257,18 @@ if __name__ == '__main__':
                                         is_second_lev_opt, 
                                         args.is_in_place_flip, 
                                         args.is_biman_pick)
+
+        print(colored("Generated task copy for process n." + str(p), "magenta"))
+
+        print(colored("Generating solver copy for process n." + str(p), "magenta"))
         
         slvr_copies[p] = gen_slvr_copies(task_copies[p],
                             solver_type,
                             transcription_method, 
                             transcription_opts, 
                             slvr_opt)
+
+        print(colored("Generated solver copy for process n." + str(p), "magenta"))
 
     # generating initial guesses, based on the script arguments
     q_ig, q_dot_ig =  generate_ig(args, full_file_paths,\
