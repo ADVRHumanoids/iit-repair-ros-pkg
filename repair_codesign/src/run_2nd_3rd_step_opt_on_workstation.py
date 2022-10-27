@@ -256,7 +256,7 @@ if __name__ == '__main__':
                     "w_rel_clman_rot": task_copies[0].weight_clman_rot, 
                     "w_rel_clman_trasl": task_copies[0].weight_clman_trasl, 
                     "w_rel_mat_stau": task_copies[0].torque_weights,
-                    "w_wrist_attr_base": args.weight_wrist_attractor,
+                    "w_wrist_attr_base": weight_wrist_attractor,
                     "w_wrist_attr_actual": task_copies[0].weight_wrist_attractor,
                     "use_classical_man": use_classical_man,
                     "nodes_list": task_copies[0].nodes_list, 

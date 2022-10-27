@@ -72,7 +72,7 @@ if __name__ == '__main__':
     parser.add_argument('--weight_static_tau', '-wstau', type = np.double,\
                         help = 'weight static torque minimization term', default = 0.1)
     parser.add_argument('--weight_wrist_attractor', '-wwa', type = np.double,\
-                        help = 'weight wrist attractor term', default = 1)
+                        help = 'weight wrist attractor term', default = 10)
 
     # second level-specific arguments
     parser.add_argument('--multistart_n_s3', '-msn_s3', type=int,\
