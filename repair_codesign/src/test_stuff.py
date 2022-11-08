@@ -5,13 +5,15 @@ from codesign_pyutils.misc_definitions import get_design_map, get_actuated_jnts_
 
 import numpy as np
 
-# postprs1 = PostProcS1("/home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/promising/test_results_24-10-2022-14_26_29",
+res_path = "/media/andreap/super_storage/repair_test_results/test_results_27-10-2022-12_49_05"
+
+# postprs1 = PostProcS1(res_path,
 #                         cl_man_post_proc= False)
 
 # postprs1.print_sol_run_info()
-# postprs1.clusterize(20)
+# postprs1.clusterize(10)
 # postprs1.make_plots(bin_scale_factor=6, plt_red_factor = 1)
 # postprs1.show_plots()
 
 
-postprs3 = PostProcS3("/home/andreap/hhcm_ws/src/iit-repair-ros-pkg/repair_codesign/test_results/promising/test_results_24-10-2022-14_26_29") 
+postprs3 = PostProcS3(res_path) 

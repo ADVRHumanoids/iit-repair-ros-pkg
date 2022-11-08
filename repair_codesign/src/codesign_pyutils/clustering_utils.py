@@ -13,6 +13,7 @@ from codesign_pyutils.math_utils import compute_man_index
 import numpy as np
 
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 class Clusterer():
 
