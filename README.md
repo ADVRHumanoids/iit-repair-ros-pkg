@@ -1,10 +1,6 @@
 # iit-repair-ros-pkg
 
-## to visualize RePair on RViz 
-
-``` roslaunch repair_urdf repair_full_slider.launch '''
-
-## to visualize RePair on RViz:
+### To visualize RePair on RViz:
 
 ``` roslaunch repair_urdf repair_full_slider.launch '''
 
