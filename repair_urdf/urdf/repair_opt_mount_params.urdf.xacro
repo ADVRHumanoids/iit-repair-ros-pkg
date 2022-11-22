@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-<!-- Reading some parameters from a YAML config file -->
+<!-- Reading mounting paramters from YAML file -->
 
 <xacro:property name="yaml_file2" value="$(find repair_urdf)/config/arm_opt_mount_vals.yaml" />
 <xacro:property name="opt_mount_vals" value="${xacro.load_yaml(yaml_file2)}"/>

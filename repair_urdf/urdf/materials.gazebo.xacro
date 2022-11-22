@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 
+<!-- Just definitions of materials for visualization purposes -->
+
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
 <xacro:macro name="repair_arm_materials" params="id">

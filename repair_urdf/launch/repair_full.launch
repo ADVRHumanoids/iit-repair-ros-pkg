@@ -1,4 +1,7 @@
 <launch>
+
+    <!-- visualize the full RePair platform on RViz -->
+
     <arg name="gui" default="true" />
     <arg name="rate" default="250.0"/>
     <arg name="is_sliding_wrist" default="true"/>

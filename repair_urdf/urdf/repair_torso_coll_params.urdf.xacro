@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-<!-- Reading some parameters from a YAML config file -->
+<!-- RePair torso collision parameters -->
 
 <xacro:property name="yaml_file" value="$(find repair_urdf)/config/arm_coll.yaml" />
 <xacro:property name="coll_props" value="${xacro.load_yaml(yaml_file)}"/>

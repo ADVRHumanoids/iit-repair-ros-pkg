@@ -1,4 +1,14 @@
 <?xml version="1.0"?>
+
+<!-- macro for generating the urdf associated with a single arm of the RePair platform -->
+<!-- id: specifies the id of the arm (e.g. 0 for left arm and 1 for right) -->
+<!-- base_link: name of base link a the single arm -->
+<!-- is_sliding_wrist: whether to add a sliding joint along the wrist second d.o.f.
+    (true -> yes), everything else -> no. This is used to generate the URDF for the optimization.  -->
+<!-- gen_coll: whether to add the approximate collision  model of the platform -->
+<!-- use_updated_wrist: visual parameter. if true, we load the latest meshes (which are adapted to the
+results of the optimization), otherwise we go with the old ones (generated for a spherical wrist) -->
+
 <robot name = "repair_arm" xmlns:xacro="http://ros.org/wiki/xacro">
 
 <xacro:include filename="$(find repair_urdf)/urdf/utils.urdf.xacro" />

@@ -1,4 +1,20 @@
 <?xml version="1.0"?>
+<!-- xacro for generating the full urdf of the RePair platform (cage + bimanual robot) -->
+
+<!-- is_sliding_wrist: whether to add a sliding joint along the wrist second d.o.f.
+    (true -> yes), everything else -> no. This is used to generate the URDF for the optimization.  -->
+    
+<!-- gen_coll: whether to add the approximate collision  model of the platform -->
+
+<!-- load_sol: whether to generate the URDF without the additional d.o.f. used by the co-design optimization.
+Setting it to "true", allow to fix the additional d.o.f. to desired values 
+(specified in the repair_urdf/config/arm_opt_mount_vals.yaml file) -->
+
+<!-- use_updated_wrist: visual parameter. if true, we load the latest meshes (which are adapted to the
+results of the optimization), otherwise we go with the old ones (generated for a spherical wrist) -->
+
+<!-- xbot: if true, we add the gazebo tags necessary to use the URDF with XBot2 framework -->
+
 <robot name = "repair_full" xmlns:xacro="http://ros.org/wiki/xacro">
 
 <xacro:arg name="is_sliding_wrist" default="false" />
@@ -6,8 +22,6 @@
 <xacro:arg name="load_sol" default="false" />
 <xacro:arg name="use_updated_wrist" default="false" />
 <xacro:arg name="xbot" default="false" />
-<xacro:arg name="shorten_table_legs_coll" default="false" /> <!-- just to avoid flickering contact when loading into Gazebo -->
-<xacro:arg name="self_collide_gz" default="true" />
 
 <xacro:include filename="$(find repair_urdf)/urdf/repair_arm.urdf.xacro"/>
 

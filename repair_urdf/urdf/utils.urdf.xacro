@@ -1,4 +1,7 @@
 <?xml version="1.0"?>
+
+<!-- Just definitions of useful paramters -->
+
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
 <!-- scale -->

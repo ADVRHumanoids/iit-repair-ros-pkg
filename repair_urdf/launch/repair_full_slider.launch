@@ -1,4 +1,7 @@
 <launch>
+
+    <!-- visualize the full RePair platform on RViz with sliders to test the d.o.f. -->
+    
     <arg name="gui" default="true" />
     <arg name="rate" default="250.0"/>
     <arg name="is_sliding_wrist" default="true"/>
@@ -6,7 +9,6 @@
     <arg name="load_sol" default="false"/>
     <arg name="use_updated_wrist" default="false"/>
     
-    <!-- send the mirror robot XML to param server -->
     <param name="robot_description" command="xacro '$(find repair_urdf)/urdf/repair_full.urdf.xacro'
         is_sliding_wrist:=$(arg is_sliding_wrist)
         gen_coll:=$(arg gen_coll)

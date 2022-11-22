@@ -1,4 +1,6 @@
 <?xml version="1.0"?>
+<!-- xacro for the cage defining the workspace of the RePair platform -->
+
 <robot name = "repair_cage" xmlns:xacro="http://ros.org/wiki/xacro">
   
   <xacro:include filename="$(find repair_urdf)/urdf/materials.gazebo.xacro"/>
@@ -21,16 +23,17 @@
   <xacro:property name="PI_2" value="1.57079632679" />
 
   <!-- only something to avoid collisions between leg and ground plane when using Gaz. -->
-  <xacro:if value="$(arg shorten_table_legs_coll)">
+  <!-- <xacro:if value="$(arg shorten_table_legs_coll)">
 
     <xacro:property name="leg_z_offset_gz" value="0.05" /> 
 
   </xacro:if>
-  <xacro:unless value="$(arg shorten_table_legs_coll)">
 
     <xacro:property name="leg_z_offset_gz" value="0.0" /> 
 
-  </xacro:unless>
+  </xacro:unless> -->
+
+  <xacro:property name="leg_z_offset_gz" value="0.0" /> 
 
   <material name="wood">
     <color rgba="0.522 0.369 0.259 0.8"/>

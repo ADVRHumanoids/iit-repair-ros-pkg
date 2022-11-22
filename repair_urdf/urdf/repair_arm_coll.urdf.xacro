@@ -1,6 +1,10 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+<!-- File defining a macro for generating the collision links for the RePair platform -->
+<!-- load_sol = true is used when the wrist auxiliary d.o.f. (used inside the optimization) has to be
+removed -->
+
 <xacro:macro name="repair_arm_coll" params="load_sol" />
 
 <joint name="arm_${id}_link_1_coll_joint" type="fixed">
