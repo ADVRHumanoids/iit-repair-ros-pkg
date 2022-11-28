@@ -10,7 +10,6 @@
   <arg name="is_sliding_wrist" default="true"/>
   <arg name="gen_coll" default="false"/>
   <arg name="load_sol" default="true"/>
-  <arg name="xbot" default="true"/>
   <arg name="use_updated_wrist" default="false"/>
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -29,7 +28,6 @@
     is_sliding_wrist:=$(arg is_sliding_wrist)
     gen_coll:=$(arg gen_coll)
     load_sol:=$(arg load_sol)
-    xbot:=$(arg xbot)
     use_updated_wrist:=$(arg use_updated_wrist)" />
   
   <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
