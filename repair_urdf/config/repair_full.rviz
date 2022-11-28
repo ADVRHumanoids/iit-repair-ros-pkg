@@ -9,7 +9,6 @@ Panels:
         - /Grid1
         - /RobotModel1
         - /RobotModel1/Links1
-        - /RobotModel1/Links1/arm_2_link2_coll1/Orientation1
         - /RobotModel1/Links1/table_top_link1
         - /InteractiveMarkers1
         - /InteractiveMarkers2
@@ -64,188 +63,11 @@ Visualization Manager:
       Collision Enabled: false
       Enabled: true
       Links:
-        All Links Enabled: false
+        All Links Enabled: true
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        arm_1_link1_coll:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: false
-        arm_1_link2_coll:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: false
-        arm_1_link3_coll:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: false
-        arm_1_link4_coll:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: false
-        arm_1_link5_coll:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: false
-        arm_1_link6_coll:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: false
-        arm_1_link7_coll:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: false
-        arm_1_link_1:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        arm_1_link_2:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        arm_1_link_3:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        arm_1_link_4:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        arm_1_link_5:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        arm_1_link_6:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        arm_1_link_7:
-          Alpha: 0.800000011920929
-          Show Axes: false
-          Show Trail: false
-        arm_1_tcp:
-          Alpha: 0.800000011920929
-          Show Axes: true
-          Show Trail: false
-          Value: true
-        arm_2_link1_coll:
-          Alpha: 0.699999988079071
-          Show Axes: false
-          Show Trail: false
-          Value: false
-        arm_2_link2_coll:
-          Alpha: 0.699999988079071
-          Show Axes: false
-          Show Trail: false
-          Value: false
-        arm_2_link3_coll:
-          Alpha: 0.699999988079071
-          Show Axes: false
-          Show Trail: false
-          Value: false
-        arm_2_link4_coll:
-          Alpha: 0.699999988079071
-          Show Axes: false
-          Show Trail: false
-          Value: false
-        arm_2_link5_coll:
-          Alpha: 0.699999988079071
-          Show Axes: false
-          Show Trail: false
-          Value: false
-        arm_2_link6_coll:
-          Alpha: 0.699999988079071
-          Show Axes: false
-          Show Trail: false
-          Value: false
-        arm_2_link7_coll:
-          Alpha: 0.699999988079071
-          Show Axes: false
-          Show Trail: false
-          Value: false
-        arm_2_link_1:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        arm_2_link_2:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        arm_2_link_3:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        arm_2_link_4:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        arm_2_link_5:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        arm_2_link_6:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        arm_2_link_7:
-          Alpha: 0.800000011920929
-          Show Axes: false
-          Show Trail: false
-        arm_2_tcp:
-          Alpha: 0.800000011920929
-          Show Axes: true
-          Show Trail: false
-          Value: true
-        base_link:
-          Alpha: 0.800000011920929
-          Show Axes: true
-          Show Trail: false
-          Value: true
-        dummy_l:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        dummy_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        dummy_r:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        dummy_sliding_wrist1_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        dummy_sliding_wrist2_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        l_arm_mount_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
         leg1_link:
           Alpha: 1
           Show Axes: false
@@ -286,17 +108,13 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        r_arm_mount_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
         sliding_guide_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
         table_top_link:
-          Alpha: 0.10000000149011612
+          Alpha: 0.800000011920929
           Show Axes: false
           Show Trail: false
           Value: true
@@ -412,7 +230,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 0.45292097330093384
+      Distance: 3.4829459190368652
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -428,9 +246,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.18539728224277496
+      Pitch: 0.17539723217487335
       Target Frame: <Fixed Frame>
-      Yaw: 1.5822734832763672
+      Yaw: 1.8772786855697632
     Saved: ~
 Window Geometry:
   Displays:
@@ -448,5 +266,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1920
-  X: -8
-  Y: 21
+  X: -10
+  Y: -9
