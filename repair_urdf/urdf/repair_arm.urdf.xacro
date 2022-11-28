@@ -18,7 +18,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
 
 <xacro:include filename="$(find repair_urdf)/urdf/repair_arm_coll_params.urdf.xacro"/>
 
-<xacro:macro name="repair_arm" params="id base_link is_sliding_wrist gen_coll load_sol use_updated_wrist" >
+<xacro:macro name="repair_arm" params="id base_link is_sliding_wrist gen_coll load_sol use_updated_wrist gz_self_collide" >
 
 <xacro:if value="${gen_coll == True}">
 
@@ -489,6 +489,30 @@ results of the optimization), otherwise we go with the old ones (generated for a
     </visual>
 
 </link>
+
+
+<xacro:if value="${gz_self_collide == 1}">
+
+    <gazebo reference="arm_${id}_link_1">
+        <selfCollide> 1 </selfCollide>
+    </gazebo>
+    <gazebo reference="arm_${id}_link_2">
+        <selfCollide> 1 </selfCollide>
+    </gazebo>
+    <gazebo reference="arm_${id}_link_3">
+        <selfCollide> 1 </selfCollide>
+    </gazebo>
+    <gazebo reference="arm_${id}_link_4">
+        <selfCollide> 1 </selfCollide>
+    </gazebo>
+    <gazebo reference="arm_${id}_link_5">
+        <selfCollide> 1 </selfCollide>
+    </gazebo>
+    <gazebo reference="arm_${id}_link_6">
+        <selfCollide> 1 </selfCollide>
+    </gazebo>
+
+</xacro:if>
 
 </xacro:macro>
 

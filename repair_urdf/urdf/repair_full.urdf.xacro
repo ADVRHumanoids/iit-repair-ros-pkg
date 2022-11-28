@@ -15,10 +15,11 @@ results of the optimization), otherwise we go with the old ones (generated for a
 
 <robot name = "repair_full" xmlns:xacro="http://ros.org/wiki/xacro">
 
-<xacro:arg name="is_sliding_wrist" default="false" />
+<xacro:arg name="is_sliding_wrist" default="true" />
 <xacro:arg name="gen_coll" default="false" />
-<xacro:arg name="load_sol" default="false" />
+<xacro:arg name="load_sol" default="true" />
 <xacro:arg name="use_updated_wrist" default="false" />
+<xacro:arg name="gz_self_collide" default="true" />
 
 <xacro:include filename="$(find repair_urdf)/urdf/repair_arm.urdf.xacro"/>
 
@@ -27,16 +28,6 @@ results of the optimization), otherwise we go with the old ones (generated for a
 <xacro:include filename="$(find repair_urdf)/urdf/repair_opt_mount_params.urdf.xacro"/>
 
 <xacro:include filename="$(find repair_urdf)/urdf/materials.gazebo.xacro"/>
-
-<!-- <xacro:if value="$(arg gen_coll)">
-
-    <xacro:include filename="$(find repair_urdf)/urdf/repair_torso_coll_params.urdf.xacro"/>
-
-    <xacro:include filename="$(find repair_urdf)/urdf/repair_torso_coll.urdf.xacro"/>
-
-    <xacro:repair_torso_coll /> 
-
-</xacro:if> -->
 
 <xacro:if value="$(arg load_sol)">
 
@@ -200,13 +191,23 @@ results of the optimization), otherwise we go with the old ones (generated for a
 </xacro:unless>
 
 <xacro:repair_arm base_link="r_arm_mount_frame" id="1" is_sliding_wrist="$(arg is_sliding_wrist)"
-gen_coll="$(arg gen_coll)" load_sol="$(arg load_sol)" use_updated_wrist = "$(arg use_updated_wrist)"/> 
+gen_coll="$(arg gen_coll)" load_sol="$(arg load_sol)" use_updated_wrist = "$(arg use_updated_wrist)"
+gz_self_collide = "$(arg gz_self_collide)" /> 
 
 <xacro:repair_arm base_link="l_arm_mount_frame" id="2" is_sliding_wrist="$(arg is_sliding_wrist)"
-gen_coll="$(arg gen_coll)" load_sol="$(arg load_sol)" use_updated_wrist = "$(arg use_updated_wrist)"/>
+gen_coll="$(arg gen_coll)" load_sol="$(arg load_sol)" use_updated_wrist = "$(arg use_updated_wrist)"
+gz_self_collide = "$(arg gz_self_collide)" />
 
 <xacro:repair_arm_materials id="1" />
 <xacro:repair_arm_materials id="2" />
 <xacro:repair_torso_materials />
+
+<xacro:if value="$(arg gz_self_collide)">
+
+    <gazebo reference="table_top_link">
+        <selfCollide> 1 </selfCollide>
+    </gazebo>
+
+</xacro:if>
 
 </robot>
