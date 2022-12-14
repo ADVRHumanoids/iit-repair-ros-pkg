@@ -289,7 +289,7 @@ class CodesTaskGen:
         static_tau = self.compute_static_tau()
         # min inputs
         self.prb.createIntermediateCost("min_static_torque",\
-                        self.weight_static_tau * (static_tau.T @ self.weight_static_tau @ static_tau))         
+                        self.weight_static_tau * (static_tau.T @ self.torque_weights @ static_tau))         
     
     def add_wrist_attractor_cost(self):
 
