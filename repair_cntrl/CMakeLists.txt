@@ -3,9 +3,11 @@ project(repair_cntrl)
 
 find_package(catkin REQUIRED)
 
+catkin_package()
+
 install(DIRECTORY
   config
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
-catkin_package()
+
 
