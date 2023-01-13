@@ -22,17 +22,6 @@
   <xacro:property name="PI" value="3.14159265359" />
   <xacro:property name="PI_2" value="1.57079632679" />
 
-  <!-- only something to avoid collisions between leg and ground plane when using Gaz. -->
-  <!-- <xacro:if value="$(arg shorten_table_legs_coll)">
-
-    <xacro:property name="leg_z_offset_gz" value="0.05" /> 
-
-  </xacro:if>
-
-    <xacro:property name="leg_z_offset_gz" value="0.0" /> 
-
-  </xacro:unless> -->
-
   <xacro:property name="leg_z_offset_gz" value="0.0" /> 
 
   <material name="wood">
