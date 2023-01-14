@@ -10,11 +10,5 @@
 
 ### To use the robot in Gazebo:
 
-<<<<<<< HEAD
-- check that you have generated the ```repair_full.urdf``` file (if not, you can do it running the ```generate_urdf.sh``` snippet in ```${path_to_workspace_src}/iit-
-repair-ros-pkg/repair_urdf/urdf/```)
-- unpause Gazebo if paused
-=======
 ``` roslaunch repair_gazebo repair_gazebo.launch ```
->>>>>>> master
 
