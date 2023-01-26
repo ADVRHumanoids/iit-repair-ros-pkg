@@ -451,7 +451,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
 
 </link>
     
-<xacro:if value="${id == 1}">
+<!-- <xacro:if value="${id == 1}">
     
     <xacro:softhands type="right" 
         version="v1.0_simple" 
@@ -474,7 +474,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
         translation="0">
     </xacro:softhands>
 
-</xacro:unless>
+</xacro:unless> -->
 
 <xacro:if value="${gz_self_collide == 1}">
 
