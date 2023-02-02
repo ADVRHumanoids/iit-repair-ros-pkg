@@ -3,6 +3,7 @@
 <robot name="repair_full" xmlns:xacro="http://ros.org/wiki/xacro">
     
     <xacro:include filename="$(find softhands_description)/srdf/softhands.srdf.xacro"/>
+    <xacro:include filename="$(find softhands_description)/srdf/softhands.srdf.xacro"/>
 
     <group name="sliding_guide">
         <chain base_link="working_surface_link" tip_link="base_link"/>
@@ -23,18 +24,18 @@
         <group name="sliding_guide"/>
         <group name="arm1"/>
         <group name="arm2"/>
+        <!-- <group name="palm_right"/> -->
         <group name="thumb_right"/>
         <group name="index_right"/>
         <group name="middle_right"/>
         <group name="ring_right"/>
         <group name="little_right"/>
+        <!-- <group name="palm_left"/> -->
         <group name="thumb_left"/>
         <group name="index_left"/>
         <group name="middle_left"/>
         <group name="ring_left"/>
         <group name="little_left"/>
-        <group name="palm_left"/>
-        <group name="palm_right"/>
     </group>
     
     <group_state name="home" group="chains">
