@@ -6,6 +6,9 @@
 
 <!-- xbot2 joint device driver-->
 <gazebo>  
+
+    <xacro:include filename="$(find repair_urdf)/urdf/ignore_joint_softhand.xbot2.xacro" />
+
     <plugin name='xbot2_gz_joint_server' filename='libxbot2_gz_joint_server.so'> 
         <pid>
 
@@ -35,6 +38,15 @@
             <pid name="arm_2_joint_7" profile="big_mot"/>
 
         </pid>
+
+        <ignore_joints>
+            
+            <xacro:ignore_softhand_jnts side="right" type="v1s"/>
+
+            <xacro:ignore_softhand_jnts side="left" type="v1s"/>
+
+        </ignore_joints>
+
     </plugin>
 </gazebo>
 
