@@ -9,6 +9,11 @@
   <!--JOINTS: When a joint is specified, the child link of that joint (which will always exist) is automatically included-->
   <!--CHAINS: When a chain is specified, all the links along the chain (including endpoints) are included in the group. Additionally, all the joints that are parents to included links are also included. This means that joints along the chain and the parent joint of the base link are included in the group-->
   <!--SUBGROUPS: Groups can also be formed by referencing to already defined group names-->
+  <!--GROUPS: Representation of a set of joints and links. This can be useful for specifying DOF to plan for, defining arms, end effectors, etc-->
+  <!--LINKS: When a link is specified, the parent joint of that link (if it exists) is automatically included-->
+  <!--JOINTS: When a joint is specified, the child link of that joint (which will always exist) is automatically included-->
+  <!--CHAINS: When a chain is specified, all the links along the chain (including endpoints) are included in the group. Additionally, all the joints that are parents to included links are also included. This means that joints along the chain and the parent joint of the base link are included in the group-->
+  <!--SUBGROUPS: Groups can also be formed by referencing to already defined group names-->
   <group name="sliding_guide">
     <chain base_link="working_surface_link" tip_link="base_link"/>
   </group>
@@ -18,58 +23,58 @@
   <group name="arm2">
     <chain base_link="base_link" tip_link="arm_2_link_7"/>
   </group>
+  <!-- <group name="palm_${side}">
+            <chain base_link="${base_link}" tip_link="${side}_hand_${type}_palm_base"/>
+        </group> -->
   <group name="thumb_right">
-    <chain base_link="right_hand_v1s_palm_base" tip_link="right_hand_v1s_thumb_distal_link"/>
+    <chain base_link="arm_1_link_7" tip_link="right_hand_v1s_thumb_distal_link"/>
   </group>
   <group name="index_right">
-    <chain base_link="right_hand_v1s_palm_base" tip_link="right_hand_v1s_index_distal_link"/>
+    <chain base_link="arm_1_link_7" tip_link="right_hand_v1s_index_distal_link"/>
   </group>
   <group name="middle_right">
-    <chain base_link="right_hand_v1s_palm_base" tip_link="right_hand_v1s_middle_distal_link"/>
+    <chain base_link="arm_1_link_7" tip_link="right_hand_v1s_middle_distal_link"/>
   </group>
   <group name="ring_right">
-    <chain base_link="right_hand_v1s_palm_base" tip_link="right_hand_v1s_ring_distal_link"/>
+    <chain base_link="arm_1_link_7" tip_link="right_hand_v1s_ring_distal_link"/>
   </group>
   <group name="little_right">
-    <chain base_link="right_hand_v1s_palm_base" tip_link="right_hand_v1s_little_distal_link"/>
+    <chain base_link="arm_1_link_7" tip_link="right_hand_v1s_little_distal_link"/>
   </group>
-  <group name="palm_right">
-    <chain base_link="arm_1_link_7" tip_link="right_hand_v1s_palm_base"/>
-  </group>
+  <!-- <group name="palm_${side}">
+            <chain base_link="${base_link}" tip_link="${side}_hand_${type}_palm_base"/>
+        </group> -->
   <group name="thumb_left">
-    <chain base_link="left_hand_v1s_palm_base" tip_link="left_hand_v1s_thumb_distal_link"/>
+    <chain base_link="arm_2_link_7" tip_link="left_hand_v1s_thumb_distal_link"/>
   </group>
   <group name="index_left">
-    <chain base_link="left_hand_v1s_palm_base" tip_link="left_hand_v1s_index_distal_link"/>
+    <chain base_link="arm_2_link_7" tip_link="left_hand_v1s_index_distal_link"/>
   </group>
   <group name="middle_left">
-    <chain base_link="left_hand_v1s_palm_base" tip_link="left_hand_v1s_middle_distal_link"/>
+    <chain base_link="arm_2_link_7" tip_link="left_hand_v1s_middle_distal_link"/>
   </group>
   <group name="ring_left">
-    <chain base_link="left_hand_v1s_palm_base" tip_link="left_hand_v1s_ring_distal_link"/>
+    <chain base_link="arm_2_link_7" tip_link="left_hand_v1s_ring_distal_link"/>
   </group>
   <group name="little_left">
-    <chain base_link="left_hand_v1s_palm_base" tip_link="left_hand_v1s_little_distal_link"/>
-  </group>
-  <group name="palm_left">
-    <chain base_link="arm_2_link_7" tip_link="left_hand_v1s_palm_base"/>
+    <chain base_link="arm_2_link_7" tip_link="left_hand_v1s_little_distal_link"/>
   </group>
   <group name="chains">
     <group name="sliding_guide"/>
     <group name="arm1"/>
     <group name="arm2"/>
+    <!-- <group name="palm_right"/> -->
     <group name="thumb_right"/>
     <group name="index_right"/>
     <group name="middle_right"/>
     <group name="ring_right"/>
     <group name="little_right"/>
+    <!-- <group name="palm_left"/> -->
     <group name="thumb_left"/>
     <group name="index_left"/>
     <group name="middle_left"/>
     <group name="ring_left"/>
     <group name="little_left"/>
-    <group name="palm_left"/>
-    <group name="palm_right"/>
   </group>
   <group_state group="chains" name="home">
     <joint name="arm_1_joint_1" value="1.5"/>
