@@ -33,10 +33,10 @@
         <!-- <group name="little_right"/> -->
         <!-- <group name="palm_left"/> -->
         <!-- <group name="thumb_left"/> -->
-        <group name="index_left"/>
+        <!-- <group name="index_left"/>
         <group name="middle_left"/>
         <group name="ring_left"/>
-        <group name="little_left"/>
+        <group name="little_left"/> -->
     </group>
     
     <group_state name="home" group="chains">

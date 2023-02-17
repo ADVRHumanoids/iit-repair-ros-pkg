@@ -21,7 +21,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
 
 <xacro:include filename="$(find repair_urdf)/urdf/repair_arm_coll_params.urdf.xacro"/>
 
-<xacro:macro name="repair_arm" params="id base_link is_sliding_wrist gen_coll load_sol use_updated_wrist gz_self_collide" >
+<xacro:macro name="repair_arm" params="id base_link is_sliding_wrist gen_coll load_sol use_updated_wrist gz_self_collide fixed_hands" >
 
 <xacro:if value="${gen_coll == True}">
 
@@ -30,6 +30,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
     <xacro:repair_arm_coll load_sol="${load_sol}"/> 
 
 </xacro:if>
+
 
 <!-- id: 1 for right arm, everything else is considered left arm -->
 <!-- base_link: name of base link a the single arm -->
@@ -459,7 +460,8 @@ results of the optimization), otherwise we go with the old ones (generated for a
         position="0 -0.015 0" 
         orientation="0 0 0" 
         operation_mode="0" 
-        translation="0">
+        translation="0"
+        fixed_hands="${fixed_hands}">
     </xacro:softhands>
 
 </xacro:if>
@@ -471,7 +473,8 @@ results of the optimization), otherwise we go with the old ones (generated for a
         position="0 -0.015 0" 
         orientation="0 0 0" 
         operation_mode="0" 
-        translation="0">
+        translation="0"
+        fixed_hands="${fixed_hands}">
     </xacro:softhands>
 
 </xacro:unless>

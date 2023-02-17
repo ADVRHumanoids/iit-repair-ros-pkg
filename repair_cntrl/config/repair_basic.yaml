@@ -1,5 +1,5 @@
 XBotInterface:
-  urdf_path: $(rospack find repair_urdf)/urdf/repair_full.urdf
+  urdf_path: $(rospack find repair_urdf)/urdf/repair_full_xbot.urdf
   srdf_path: $(rospack find repair_srdf)/srdf/repair_full.srdf
 
 ModelInterface:

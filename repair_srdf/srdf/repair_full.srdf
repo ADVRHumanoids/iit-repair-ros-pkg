@@ -71,10 +71,10 @@
     <!-- <group name="little_right"/> -->
     <!-- <group name="palm_left"/> -->
     <!-- <group name="thumb_left"/> -->
-    <group name="index_left"/>
-    <group name="middle_left"/>
-    <group name="ring_left"/>
-    <group name="little_left"/>
+    <!-- <group name="index_left"/>
+        <group name="middle_left"/>
+        <group name="ring_left"/>
+        <group name="little_left"/> -->
   </group>
   <group_state group="chains" name="home">
     <joint name="arm_1_joint_1" value="1.5"/>
