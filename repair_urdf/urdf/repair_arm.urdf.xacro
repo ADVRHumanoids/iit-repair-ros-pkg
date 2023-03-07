@@ -457,10 +457,10 @@ results of the optimization), otherwise we go with the old ones (generated for a
     <xacro:softhands type="right" 
         version="v1.0_simple" 
         parent="arm_${id}_link_7" 
-        position="0 -0.015 0" 
+        position="0 0 -0.015" 
         orientation="0 0 0" 
-        operation_mode="0" 
         translation="0"
+        operation_mode="0" 
         fixed_hands="${fixed_hands}">
     </xacro:softhands>
 
@@ -470,10 +470,10 @@ results of the optimization), otherwise we go with the old ones (generated for a
     <xacro:softhands type="left" 
         version="v1.0_simple" 
         parent="arm_${id}_link_7" 
-        position="0 -0.015 0" 
-        orientation="0 0 0" 
-        operation_mode="0" 
+        position="0 0.013900 -0.015" 
+        orientation="0 0.0 ${PI}" 
         translation="0"
+        operation_mode="0" 
         fixed_hands="${fixed_hands}">
     </xacro:softhands>
 
