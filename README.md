@@ -4,6 +4,8 @@
 
 
 ### Depends on:
+- catkin
+- xacro
 - [Xbot2](https://advrhumanoids.github.io/xbot2/quickstart.html)
 - [Softhand-plugin](https://github.com/ADVRHumanoids/SoftHand-Plugin/tree/repair)
 
