@@ -704,7 +704,7 @@ Links are approximated as spheres with hand-tuned radii and positions -->
 		# Softhand Base
 		
   <joint name="right_hand_base_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 -0.015"/>
+    <origin rpy="0 0.0 3.14159265359" xyz="0 0 -0.015"/>
     <parent link="arm_1_link_7"/>
     <child link="right_hand_v1s_palm_base"/>
   </joint>
@@ -1496,7 +1496,7 @@ Links are approximated as spheres with hand-tuned radii and positions -->
 		# Softhand Base
 		
   <joint name="left_hand_base_joint" type="fixed">
-    <origin rpy="0 0.0 3.14159265359" xyz="0 0.013900 -0.015"/>
+    <origin rpy="0 0 0" xyz="0 -0.013900 -0.015"/>
     <parent link="arm_2_link_7"/>
     <child link="left_hand_v1s_palm_base"/>
   </joint>

@@ -41,20 +41,20 @@
     
     <group_state name="home" group="chains">
 
-        <joint name="arm_1_joint_1" value="1.5"/>
-        <joint name="arm_1_joint_2" value="1.1"/>
+        <joint name="arm_1_joint_1" value="0.85"/>
+        <joint name="arm_1_joint_2" value="0.72"/>
         <joint name="arm_1_joint_3" value="0.6"/>
         <joint name="arm_1_joint_4" value="-0.9"/>
         <joint name="arm_1_joint_5" value="-0.5"/>
         <joint name="arm_1_joint_6" value="0"/>
-        <joint name="arm_1_joint_7" value="0"/>
-        <joint name="arm_2_joint_1" value="-1.5"/>
-        <joint name="arm_2_joint_2" value="-1.1"/>
+        <joint name="arm_1_joint_7" value="1.0"/>
+        <joint name="arm_2_joint_1" value="-0.85"/>
+        <joint name="arm_2_joint_2" value="-0.72"/>
         <joint name="arm_2_joint_3" value="-0.6"/>
         <joint name="arm_2_joint_4" value="-0.9"/>
         <joint name="arm_2_joint_5" value="0.5"/>
         <joint name="arm_2_joint_6" value="0"/>
-        <joint name="arm_2_joint_7" value="0"/>
+        <joint name="arm_2_joint_7" value="-1.0"/>
         <joint name="x_joint" value="-0.05"/>
 
         <xacro:softhand_homing side="right" type="v1s"/>
