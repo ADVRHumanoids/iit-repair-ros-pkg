@@ -4,10 +4,8 @@
 
 
 ### Depends on:
-- [Xbot2]()
+- [Xbot2](https://advrhumanoids.github.io/xbot2/quickstart.html)
 - [Softhand-plugin](https://github.com/ADVRHumanoids/SoftHand-Plugin/tree/repair)
-
-
 
 ### To visualize RePair on RViz and play with its joints:
 
