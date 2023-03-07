@@ -9,5 +9,6 @@ install(DIRECTORY
   config
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
+install(FILES bin/libxbot_rob_mon_plugin_softhand.so DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
 
 
