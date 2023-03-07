@@ -19,7 +19,7 @@
 
 - open a terminal, launch Gazebo simulation with ``` roslaunch repair_gazebo repair_gazebo.launch ```
 
-- open a terminal and set the xbot2 config file with ``` set_xbot2_config path2iit-repair-ros-pkg/repair_cntrl/config/repair_basic.yaml```
+- open a terminal and set the xbot2 config file with ``` set_xbot2_config {path2iit-repair-ros-pkg}/repair_cntrl/config/repair_basic.yaml```
 
 - in the same terminal run ``` xbot2-core -S ```
 
