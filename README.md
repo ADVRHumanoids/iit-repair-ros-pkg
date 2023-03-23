@@ -33,3 +33,4 @@
 	- read joint states (SoftHand excluded) using ```/xbotcore/joint_states``` topic
 	- send commands to the SoftHans using ```/{left/right}_hand_v1s/synergy_command``` topic, or inspect the state of each finger looking at ```/{left/right}_hand_v1s/{fingername}_state``` topic
 
+An explanatory video on how to use the simulator can be found ![here](https://istitutoitalianotecnologia-my.sharepoint.com/:v:/g/personal/andrea_patrizi_iit_it/EdY22-jClIZHjypPCAgZ-8QBuYrdovu1CyNowEOgkSumTw?e=6wp8xG)
