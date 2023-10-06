@@ -1,0 +1,16 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/francesco/forest_ws/install/lib/python3/dist-packages",
+        "/home/francesco/catkin_ws/devel/lib/python3/dist-packages",
+        "/opt/ros/noetic/lib/python3/dist-packages",
+        "/home/francesco/catkin_ws/devel",
+        "/home/francesco/forest_ws/install/lib/python2.7/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/francesco/forest_ws/install/lib/python3/dist-packages",
+        "/home/francesco/catkin_ws/devel/lib/python3/dist-packages",
+        "/opt/ros/noetic/lib/python3/dist-packages",
+        "/home/francesco/catkin_ws/devel",
+        "/home/francesco/forest_ws/install/lib/python2.7/dist-packages"
+    ]
+}
