@@ -29,7 +29,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
 
             <collision>
                 <geometry>
-                    <mesh filename="package://repair_urdf/meshes/mesh_sh-pitch.stl" scale="0.001 ${rot*0.001} 0.001"/>
+                    <mesh filename="package://repair_urdf/meshes/simplified/mesh_sh-pitch.stl" scale="0.001 ${rot*0.001} 0.001"/>
                 </geometry>
             </collision>
         </link>
@@ -51,7 +51,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
 
             <collision>
                 <geometry>
-                    <mesh filename="package://repair_urdf/meshes/mesh_sh-roll.stl" scale="0.001 ${rot*0.001} 0.001"/>
+                    <mesh filename="package://repair_urdf/meshes/simplified/mesh_sh-roll.stl" scale="0.001 ${rot*0.001} 0.001"/>
                 </geometry>
             </collision>
         </link>
@@ -73,7 +73,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
 
             <collision>
                 <geometry>
-                    <mesh filename="package://repair_urdf/meshes/mesh_sh-yaw.stl" scale="0.001 ${rot*0.001} 0.001"/>
+                    <mesh filename="package://repair_urdf/meshes/simplified/mesh_sh-yaw.stl" scale="0.001 ${rot*0.001} 0.001"/>
                 </geometry>
             </collision>
         </link>
@@ -95,7 +95,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
 
             <collision>
                 <geometry>
-                    <mesh filename="package://repair_urdf/meshes/mesh_elbow.stl" scale="0.001 ${rot*0.001} 0.001"/>
+                    <mesh filename="package://repair_urdf/meshes/simplified/mesh_elbow.stl" scale="0.001 ${rot*0.001} 0.001"/>
                 </geometry>
             </collision>
         </link>
@@ -117,7 +117,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
 
             <collision>
                 <geometry>
-                    <mesh filename="package://repair_urdf/meshes/mesh_forearm-yaw.stl" scale="0.001 ${rot*0.001} 0.001"/>
+                    <mesh filename="package://repair_urdf/meshes/simplified/mesh_forearm-yaw.stl" scale="0.001 ${rot*0.001} 0.001"/>
                 </geometry>
             </collision>
         </link>
@@ -139,7 +139,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
 
             <collision>
                 <geometry>
-                    <mesh filename="package://repair_urdf/meshes/mesh_wrist-pitch.stl" scale="0.001 ${rot*0.001} 0.001"/>
+                    <mesh filename="package://repair_urdf/meshes/simplified/mesh_wrist-pitch.stl" scale="0.001 ${rot*0.001} 0.001"/>
                 </geometry>
             </collision>
         </link>
@@ -161,7 +161,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
 
             <collision>
                 <geometry>
-                    <mesh filename="package://repair_urdf/meshes/mesh_wrist-roll.stl" scale="0.001 ${rot*0.001} 0.001"/>
+                    <mesh filename="package://repair_urdf/meshes/simplified/mesh_wrist-roll.stl" scale="0.001 ${rot*0.001} 0.001"/>
                 </geometry>
             </collision>
         </link>
