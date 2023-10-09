@@ -3,21 +3,21 @@
 
     <!-- Origin -->
     
-    <xacro:property name="j_arm_1_lower" value="${[-2.85]}"/>
-    <xacro:property name="j_arm_2_lower" value="${[-2.0]}"/>
-    <xacro:property name="j_arm_3_lower" value="${[-2.2]}"/>
-    <xacro:property name="j_arm_4_lower" value="${[-2.7]}"/>
-    <xacro:property name="j_arm_5_lower" value="${[-2.2]}"/>
-    <xacro:property name="j_arm_6_lower" value="${[-2.85]}"/>
-    <xacro:property name="j_arm_7_lower" value="${[-2.85]}"/>
+    <xacro:property name="j_arm_1_lower" value="${[-2.6]}"/>
+    <xacro:property name="j_arm_2_lower" value="${[-2.5]}"/>
+    <xacro:property name="j_arm_3_lower" value="${[-2.6]}"/>
+    <xacro:property name="j_arm_4_lower" value="${[-2.4]}"/>
+    <xacro:property name="j_arm_5_lower" value="${[-2.8]}"/>
+    <xacro:property name="j_arm_6_lower" value="${[-2.8]}"/>
+    <xacro:property name="j_arm_7_lower" value="${[-2.8]}"/>
     
-    <xacro:property name="j_arm_1_upper" value="${[2.85]}"/>
-    <xacro:property name="j_arm_2_upper" value="${[2.0]}"/>
-    <xacro:property name="j_arm_3_upper" value="${[2.2]}"/>
-    <xacro:property name="j_arm_4_upper" value="${[2.7]}"/>
-    <xacro:property name="j_arm_5_upper" value="${[2.2]}"/>
-    <xacro:property name="j_arm_6_upper" value="${[2.85]}"/>
-    <xacro:property name="j_arm_7_upper" value="${[2.85]}"/>
+    <xacro:property name="j_arm_1_upper" value="${[2.6]}"/>
+    <xacro:property name="j_arm_2_upper" value="${[0.1]}"/>
+    <xacro:property name="j_arm_3_upper" value="${[2.6]}"/>
+    <xacro:property name="j_arm_4_upper" value="${[0.8]}"/>
+    <xacro:property name="j_arm_5_upper" value="${[2.8]}"/>
+    <xacro:property name="j_arm_6_upper" value="${[2.1]}"/>
+    <xacro:property name="j_arm_7_upper" value="${[2.8]}"/>
     
     
     <xacro:property name="j_arm_1_velocity" value="${[3.86]}"/>
