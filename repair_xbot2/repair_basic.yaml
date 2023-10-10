@@ -6,9 +6,10 @@ ModelInterface:
   model_type: RBDL
 
 xbotcore_device_configs:
-   ec_idle: $PWD/hal/ec_all.yaml
-   ec_imp: $PWD/hal/ec_all.yaml
-   ec_pos: $PWD/hal/ec_all.yaml
+  dummy: $PWD/hal/repair_dummy.yaml
+  ec_idle: $PWD/hal/ec_all.yaml
+  ec_imp: $PWD/hal/ec_all.yaml
+  ec_pos: $PWD/hal/ec_all.yaml
 
 xbotcore_threads:
     rt_main:  {sched: fifo , prio: 60, period: 0.001}
