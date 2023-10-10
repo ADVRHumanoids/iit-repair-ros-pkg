@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<robot xmlns:xacro="http://ros.org/wiki/xacro" name="inail2arm">
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="repair_arm">
 
 
     <xacro:include filename="$(find repair_urdf)/urdf/conversions.urdf.xacro" />

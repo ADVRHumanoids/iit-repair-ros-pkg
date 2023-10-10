@@ -18,7 +18,7 @@ def get_robot():
     cfg.generate_jidmap()
     cfg.set_string_parameter('framework', 'ROS')
     cfg.set_string_parameter('model_type', 'RBDL')
-    cfg.set_bool_parameter('is_model_floating_base', True)
+    cfg.set_bool_parameter('is_model_floating_base', False)
     robot = xb.RobotInterface(cfg)
     robot.sense()
     robot.setControlMode(xb.ControlMode.Position())
@@ -42,12 +42,12 @@ def move_to_q(robot, q0, q1, time):
 def main():
     rospy.init_node('repair_stress_test')
 
-    time = 3.0
+    time = 4.0
 
     robot = get_robot()
 
     # Rise arms and send them to the back
-    q1 = robot.getMotorPosition()
+    q0 = robot.getMotorPosition()
 
     niter = 1
     t0 = rospy.Time.now()
@@ -55,21 +55,18 @@ def main():
     while not rospy.is_shutdown():
         print('Started loop ', niter, ', elapsed time ', (rospy.Time.now() - t0).to_sec())
         niter += 1
-    #
-        q0 = np.array(q1)
-        q1 = np.array([0.6, 2.3, 0.0, 0.0, -2.4, -1.4, -2.0])
+    
+        q1 = np.array([-2.5, -2.5, -2.5, 0.7, -2.7, -2.7, -2.7])
         move_to_q(robot, q0, q1, time)
-    #
-    #     q0 = np.array(q1)
-    #     la_q = np.array([1.4, 0.1, 2.3, -2.3, -2.4, -1.4, -2.0])
-    #     q1 = la_to_robot(robot, q0, la_q, s)
-    #     move_to_q(robot, q0, q1, time)
-    #
-    #     q0 = np.array(q1)
-    #     la_q = np.array([0.6, 0.3, 0.0, -1.9, 0.0, -0.5, -2.0])
-    #     q1 = la_to_robot(robot, q0, la_q, s)
-    #     move_to_q(robot, q0, q1, time)
-    #
+
+        q2 = np.array([0.0, -1.5, 0.0, -1.0, 0.0, -1.4, 0.0])
+        move_to_q(robot, q1, q2, time)
+        
+        q3 = np.array([2.5, -0.5, 2.5, -2.3, 2.7, 2.0, 2.7])
+        move_to_q(robot, q2, q3, time)
+    
+        move_to_q(robot, q3, q0, time)
+    
 
 
     print('Exiting..')
