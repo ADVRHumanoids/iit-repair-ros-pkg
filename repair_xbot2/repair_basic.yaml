@@ -7,6 +7,7 @@ ModelInterface:
 
 xbotcore_device_configs:
   dummy: $PWD/hal/repair_dummy.yaml
+  sim: $PWD/hal/repair_gz.yaml
   ec_idle: $PWD/hal/ec_all.yaml
   ec_imp: $PWD/hal/ec_all.yaml
   ec_pos: $PWD/hal/ec_all.yaml
