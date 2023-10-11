@@ -32,7 +32,7 @@ def main():
     add_wp(Affine3(pos=[-0.5082, -0.3903, 0.06521], rot=[ 0.5301,  0.3273, -0.2502,  0.7412]), 1*time, waypoints)
     add_wp(Affine3(pos=[-0.2159, -0.3903, 0.7449], rot=[ 0.5301,  0.3273, -0.2502,  0.7412]), 2*time, waypoints)
     add_wp(Affine3(pos=[0.4454, -0.3903, 0.1508], rot=[ 0.5301,  0.3273, -0.2502,  0.7412]), 3*time, waypoints)
-    add_wp(Affine3(pos=[-0.08358, -0.648, 0.01989], rot=[  0.588,  0.3463, -0.2231,  0.6961]), 4*time, waypoints)
+    add_wp(Affine3(pos=[-0.08358, -0.648, 0.01989], rot=[ 0.588,  0.3463, -0.2231,  0.6961]), 4*time, waypoints)
     add_wp(arm_start, 5*time, waypoints)
 
     ci.setWaypoints('arm_1_tcp', waypoints)
