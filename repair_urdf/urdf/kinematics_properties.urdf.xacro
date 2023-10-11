@@ -1,11 +1,52 @@
 <!--<?xml version="1.0"?>-->
 <robot  xmlns:xacro="http://ros.org/wiki/xacro">
 
+    <xacro:property name="Cage_Ox" value=" 0.0 "/>  <!-- 0.0  --> 
+    <xacro:property name="Cage_Oy" value=" 0.0 "/>  <!-- 0.0  --> 
+    <xacro:property name="Cage_Oz" value=" 0.5 "/>  <!-- 0.0  --> 
+
+    <!-- <xacro:property name="table_height" value="0.5" />
+    <xacro:property name="cage_width" value="1.5" />
+    <xacro:property name="cage_height" value="1.0"/>
+  
+    <xacro:property name="cage_depth" value="2.5" />
+    <xacro:property name="leg_radius" value="0.02" />
+    <xacro:property name="cage_depth" value="2.5" />
+    <xacro:property name="sliding_guide_width" value="0.2" />
+  
+    <xacro:property name="table_x" value="0.98" />
+    <xacro:property name="table_y" value="0.0" />
+    <xacro:property name="table_z" value="0.0" />
+    <xacro:property name="table_top_thickness" value="0.05"/>
+  
+    <xacro:property name="PI" value="3.14159265359" />
+    <xacro:property name="PI_2" value="1.57079632679" />
+     -->
+    <xacro:property name="Cage_x" value="1.5" />
+    <xacro:property name="Cage_y" value="2.5" />
+    <xacro:property name="Cage_z" value="1.0"/>
+    <xacro:property name="Cage_leg_radius" value="0.02" />
+    <xacro:property name="Cage_sliding_guide_width" value="0.2" />
+  
+    <xacro:property name="Table_x" value="0.98" />
+    <xacro:property name="Table_y" value="0.0" />
+    <xacro:property name="Table_z" value="0.0" />
+    <xacro:property name="table_top_thickness" value="0.05"/>
+    <xacro:property name="table_height" value="0.5"/>
+    <xacro:property name="sliding_guide_width" value="0.2"/>
+
+    <xacro:property name="Torso_Ox" value=" 0.0 "/> 
+    <xacro:property name="Torso_Oy" value=" 0.0 "/>
+    <xacro:property name="Torso_Oz" value=" 0.0 "/>
+    <xacro:property name="Torso_roll" value=" 0.0 "/>
+    <xacro:property name="Torso_pitch" value=" ${PI/2} "/> 
+    <xacro:property name="Torso_yaw" value=" 0.0 "/>
+
     <!-- Origin -->
     <xacro:property name="Shoulder_1_Ox" value=" 0.0 "/>  <!-- 0.0  --> 
-    <xacro:property name="Shoulder_1_Oy" value=" 0.0"/> <!-- 0.13515  -->
-    <xacro:property name="Shoulder_1_Oz" value=" 0.14 "/> <!-- -0.24215  -->
-    <xacro:property name="Shoulder_1_roll" value=" 0.0 "/> <!-- ${PI/2}  -->
+    <xacro:property name="Shoulder_1_Oy" value="  -0.135150"/> <!-- 0.13515  -->
+    <xacro:property name="Shoulder_1_Oz" value=" -0.242150 "/> <!-- -0.24215  -->
+    <xacro:property name="Shoulder_1_roll" value=" ${PI/2} "/> <!-- ${PI/2}  -->
     <xacro:property name="Shoulder_1_pitch" value=" 0.0 "/> <!-- 0.0  -->
     <xacro:property name="Shoulder_1_yaw" value=" 0.0 "/> <!-- 0.0  -->
     
@@ -22,7 +63,7 @@
     <xacro:property name="Shoulder_3_Oy" value=" -0.073 "/> <!-- -0.073  -->
     <xacro:property name="Shoulder_3_Oz" value=" -0.06015 "/> <!-- -0.06015  -->
     <xacro:property name="Shoulder_3_roll" value=" ${-PI/2}"/>
-    <xacro:property name="Shoulder_3_pitch" value=" ${-PI/2} "/> 
+    <xacro:property name="Shoulder_3_pitch" value=" ${PI/2} "/> 
     <xacro:property name="Shoulder_3_yaw" value=" 0.0 "/>
 
     <!-- Origin -->

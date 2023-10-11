@@ -9,6 +9,20 @@
     <xacro:property name="motors_weight" value=" 1.500000 "/>
     
     <!-- Center of Mass -->
+    <xacro:property name="Torso_x" value=" ${4.9776510e-01 *mmTom} "/>
+    <xacro:property name="Torso_y" value=" ${-4.2604032e-01*mmTom} "/>
+    <xacro:property name="Torso_z" value=" ${-1.6838189e+02 *mmTom} "/>
+    <!-- Inertia -->
+    <xacro:property name="Torso_xx" value=" ${1.1857829e+05 *mm2Tom2} "/>
+    <xacro:property name="Torso_yy" value=" ${8.0733992e+04 *mm2Tom2} "/>
+    <xacro:property name="Torso_zz" value=" ${5.4100212e+04 *mm2Tom2} "/>
+    <xacro:property name="Torso_xy" value=" ${2.0401988e+01 *mm2Tom2} "/> 
+    <xacro:property name="Torso_xz" value=" ${1.2279511e+01 *mm2Tom2} "/>
+    <xacro:property name="Torso_yz" value=" ${7.0011268e+00 *mm2Tom2}"/> 
+    <!-- Mass -->
+    <xacro:property name="Torso_mass" value=" 8.7077745e+00 "/>
+    
+    <!-- Center of Mass -->
     <xacro:property name="Base_x" value=" ${2.0548930e-01 *mmTom} "/>
     <xacro:property name="Base_y" value=" ${-6.2095789e-01*mmTom} "/>
     <xacro:property name="Base_z" value=" ${7.7352002e+01 *mmTom} "/>
@@ -35,7 +49,7 @@
     <xacro:property name="Shoulder_1_xz" value=" ${-3.9791236e+02 *mm2Tom2}"/>
     <xacro:property name="Shoulder_1_yz" value=" ${1.2857051e+03 *mm2Tom2}"/> 
     <!-- Mass -->
-    <xacro:property name="Shoulder_1_mass" value="2.4405495"/>
+    <xacro:property name="Shoulder_1_mass" value="2.347"/> <!-- 2.4405495 -->
     
     <!-- SHOULDER ROLL -->
     <!-- Center of Mass -->
@@ -50,7 +64,7 @@
     <xacro:property name="Shoulder_2_xz" value=" ${-1.3644218e+00 *mm2Tom2}"/>
     <xacro:property name="Shoulder_2_yz" value=" ${-6.6693438e+02 *mm2Tom2}"/> 
     <!-- Mass -->
-    <xacro:property name="Shoulder_2_mass" value="7.8724534e-01"/>
+    <xacro:property name="Shoulder_2_mass" value="0.76"/> <!-- 7.8724534e-01 -->
     
     <!-- SHOULDER YAW -->
     <!-- Center of Mass -->
@@ -65,7 +79,7 @@
     <xacro:property name="Shoulder_3_xz" value=" ${2.3711270e+03 *mm2Tom2}"/>
     <xacro:property name="Shoulder_3_yz" value=" ${1.8728041e+03 *mm2Tom2}"/> 
     <!-- Mass -->
-    <xacro:property name="Shoulder_3_mass" value="2.8848438e+00"/>
+    <xacro:property name="Shoulder_3_mass" value="3.34"/> <!-- 2.8848438e+00-->
 
     <!-- ELBOW -->
     <!-- Center of Mass -->
@@ -80,37 +94,37 @@
     <xacro:property name="Elbow_xz" value=" ${-1.1734799e+00 *mm2Tom2} "/>
     <xacro:property name="Elbow_yz" value=" ${-3.9531701e+02 *mm2Tom2} "/> 
     <!-- Mass -->
-    <xacro:property name="Elbow_mass" value="6.0145584e-01"/>
+    <xacro:property name="Elbow_mass" value="0.55"/> <!-- 6.0145584e-01 -->
     
     <!-- FOREARM -->
     <!-- Center of Mass -->
-    <xacro:property name="Forearm_x" value=" ${2.0004978e+00 *mmTom} "/>
-    <xacro:property name="Forearm_y" value=" ${-5.9178127e+01 *mmTom} "/> 
-    <xacro:property name="Forearm_z" value=" ${-1.5065406e+02 *mmTom} "/>
+    <xacro:property name="Forearm_x" value=" ${9.4711044e-01 *mmTom} "/>
+    <xacro:property name="Forearm_y" value=" ${-4.8009667e+01 *mmTom} "/> 
+    <xacro:property name="Forearm_z" value=" ${-1.4331833e+02 *mmTom} "/>
     <!-- Inertia -->
-    <xacro:property name="Forearm_xx" value=" ${9.9022766e+03 *mm2Tom2}"/>
-    <xacro:property name="Forearm_yy" value=" ${7.1759859e+03 *mm2Tom2}"/>
-    <xacro:property name="Forearm_zz" value=" ${4.5802104e+03 *mm2Tom2}"/>
-    <xacro:property name="Forearm_xy" value=" ${4.4500899e+01 *mm2Tom2} "/> 
-    <xacro:property name="Forearm_xz" value=" ${1.3354192e+01 *mm2Tom2} "/>
-    <xacro:property name="Forearm_yz" value=" ${-3.1875374e+03 *mm2Tom2}"/> 
+    <xacro:property name="Forearm_xx" value=" ${3.0333275e+04 *mm2Tom2}"/>
+    <xacro:property name="Forearm_yy" value=" ${2.5195445e+04 *mm2Tom2}"/>
+    <xacro:property name="Forearm_zz" value=" ${6.9975104e+03 *mm2Tom2}"/>
+    <xacro:property name="Forearm_xy" value=" ${7.3729709e+01 *mm2Tom2} "/> 
+    <xacro:property name="Forearm_xz" value=" ${3.2427371e+01 *mm2Tom2} "/>
+    <xacro:property name="Forearm_yz" value=" ${-9.5263763e+03 *mm2Tom2}"/> 
     <!-- Mass -->
-    <xacro:property name="Forearm_mass" value="1.3065556e+00"/>
+    <xacro:property name="Forearm_mass" value="2.825"/> <!-- 2.7650803e+00 -->
 
     <!-- WRITST PITCH -->    
     <!-- Center of Mass -->
-    <xacro:property name="Wrist_1_x" value=" ${-5.8850122e+00 *mmTom} "/>
-    <xacro:property name="Wrist_1_y" value=" ${-2.0700011e+01 *mmTom} "/> 
-    <xacro:property name="Wrist_1_z" value=" ${4.4606499e+01 *mmTom} "/>
+    <xacro:property name="Wrist_1_x" value=" ${6.8559302e-01 *mmTom} "/>
+    <xacro:property name="Wrist_1_y" value=" ${-5.0299682e+00 *mmTom} "/> 
+    <xacro:property name="Wrist_1_z" value=" ${4.6682846e+01 *mmTom} "/>
     <!-- Inertia -->
-    <xacro:property name="Wrist_1_xx" value=" ${3.3129474e+03 *mm2Tom2} "/>
-    <xacro:property name="Wrist_1_yy" value=" ${2.9894708e+03 *mm2Tom2} "/>
-    <xacro:property name="Wrist_1_zz" value=" ${3.6865610e+03 *mm2Tom2} "/>
-    <xacro:property name="Wrist_1_xy" value=" ${-2.2801449e+02 *mm2Tom2} "/> 
-    <xacro:property name="Wrist_1_xz" value=" ${-1.1490187e+02 *mm2Tom2} "/>
-    <xacro:property name="Wrist_1_yz" value=" ${-4.9067763e+01 *mm2Tom2} "/> 
+    <xacro:property name="Wrist_1_xx" value=" ${4.2406037e+03 *mm2Tom2} "/>
+    <xacro:property name="Wrist_1_yy" value=" ${2.9010806e+03 *mm2Tom2} "/>
+    <xacro:property name="Wrist_1_zz" value=" ${4.4989008e+03 *mm2Tom2} "/>
+    <xacro:property name="Wrist_1_xy" value=" ${-5.5692732e+01 *mm2Tom2} "/> 
+    <xacro:property name="Wrist_1_xz" value=" ${-9.0851982e+01 *mm2Tom2} "/>
+    <xacro:property name="Wrist_1_yz" value=" ${-1.8560541e+02 *mm2Tom2} "/> 
     <!-- Mass -->
-    <xacro:property name="Wrist_1_mass" value="1.1552856e+00"/>
+    <xacro:property name="Wrist_1_mass" value="1.861"/> <!-- 1.8854765e+00 -->
 
     <!-- WRITST ROLL -->    
     <!-- Center of Mass -->
@@ -125,7 +139,7 @@
     <xacro:property name="Wrist_2_xz" value=" ${0.0000000e+00 *mm2Tom2} "/>
     <xacro:property name="Wrist_2_yz" value=" ${4.7786448e-01 *mm2Tom2} "/>
     <!-- Mass -->
-    <xacro:property name="Wrist_2_mass" value="1.4163970e-01"/>
+    <xacro:property name="Wrist_2_mass" value="1.4163970e-01"/> <!-- 2.4405495 -->
     
     
     </robot>

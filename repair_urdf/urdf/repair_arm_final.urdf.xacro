@@ -4,8 +4,10 @@
 
     <xacro:include filename="$(find repair_urdf)/urdf/conversions.urdf.xacro" />
     <xacro:include filename="$(find repair_urdf)/urdf/materials.urdf.xacro" />
+
     <xacro:include filename="$(find repair_urdf)/urdf/repair_base.urdf.xacro" />
     <xacro:include filename="$(find repair_urdf)/urdf/repair_arm_macro.urdf.xacro" />
+    
     <xacro:include filename="$(find repair_urdf)/urdf/kinematics_properties.urdf.xacro" />
     <xacro:include filename="$(find repair_urdf)/urdf/inertial_properties.urdf.xacro" />
     <xacro:include filename="$(find repair_urdf)/urdf/limits.urdf.xacro" />
@@ -19,9 +21,8 @@
 
 
     <xacro:repair_arm id="1"  rot="1"  parent="base_link">
-      <origin xyz="${Shoulder_1_Ox} ${Shoulder_1_Oy} ${Shoulder_1_Oz}"
-              rpy="${Shoulder_1_roll} ${Shoulder_1_pitch} ${Shoulder_1_yaw}" />
+      <origin xyz="0.0 0.0 0.14"
+              rpy="0.0 0.0 0.0" />
     </xacro:repair_arm>
-   
-  
+
 </robot>

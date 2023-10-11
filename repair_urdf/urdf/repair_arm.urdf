@@ -37,6 +37,13 @@
   <!-- use_updated_wrist: visual parameter. if true, we load the latest meshes (which are adapted to the
 results of the optimization), otherwise we go with the old ones (generated for a spherical wrist) -->
   <!-- 0.0  -->
+  <!-- 2.4405495 -->
+  <!-- 7.8724534e-01 -->
+  <!-- 2.8848438e+00-->
+  <!-- 6.0145584e-01 -->
+  <!-- 2.7650803e+00 -->
+  <!-- 1.8854765e+00 -->
+  <!-- 2.4405495 -->
   <!-- Origin -->
   <!-- <xacro:property name="motor_A_velocity" value="8.8"/>
     <xacro:property name="motor_B_velocity" value="8.1"/>
@@ -92,7 +99,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
   <link name="arm_1_1">
     <inertial>
       <origin xyz="0.010200651000000002 -0.021560998 0.09876702500000001"/>
-      <mass value="2.4405495"/>
+      <mass value="2.347"/>
       <inertia ixx="0.007192915699999999" ixy="7.854318399999999e-05" ixz="-0.00039791235999999997" iyy="0.009471160999999999" iyz="0.0012857050999999999" izz="0.0058530904"/>
     </inertial>
     <visual>
@@ -110,7 +117,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
   <link name="arm_1_2">
     <inertial>
       <origin xyz="4.5955243e-05 -0.044957128 -0.030791013"/>
-      <mass value="0.78724534"/>
+      <mass value="0.76"/>
       <inertia ixx="0.0027927572" ixy="-2.0135067e-06" ixz="-1.3644218e-06" iyy="0.0019288488" iyz="-0.00066693438" izz="0.0026633366"/>
     </inertial>
     <visual>
@@ -128,7 +135,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
   <link name="arm_1_3">
     <inertial>
       <origin xyz="0.005099315 0.0059986523 -0.18011742"/>
-      <mass value="2.8848438"/>
+      <mass value="3.34"/>
       <inertia ixx="0.031298784999999996" ixy="-0.00025158367" ixz="0.002371127" iyy="0.031963501" iyz="0.0018728041" izz="0.0026332359"/>
     </inertial>
     <visual>
@@ -146,7 +153,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
   <link name="arm_1_4">
     <inertial>
       <origin xyz="3.332275e-06 -0.033289421 -0.023682302"/>
-      <mass value="0.60145584"/>
+      <mass value="0.55"/>
       <inertia ixx="0.0016198328" ixy="-1.2642724e-06" ixz="-1.1734799e-06" iyy="0.0012266731" iyz="-0.00039531700999999997" izz="0.0016081346"/>
     </inertial>
     <visual>
@@ -163,9 +170,9 @@ results of the optimization), otherwise we go with the old ones (generated for a
   </link>
   <link name="arm_1_5">
     <inertial>
-      <origin xyz="0.0020004978000000002 -0.059178127000000004 -0.15065405999999998"/>
-      <mass value="1.3065556"/>
-      <inertia ixx="0.009902276599999999" ixy="4.4500899e-05" ixz="1.3354191999999998e-05" iyy="0.007175985899999999" iyz="-0.0031875374" izz="0.0045802104"/>
+      <origin xyz="0.00094711044 -0.048009667 -0.14331833"/>
+      <mass value="2.825"/>
+      <inertia ixx="0.030333275" ixy="7.3729709e-05" ixz="3.2427371e-05" iyy="0.025195444999999997" iyz="-0.0095263763" izz="0.0069975103999999995"/>
     </inertial>
     <visual>
       <geometry>
@@ -181,9 +188,9 @@ results of the optimization), otherwise we go with the old ones (generated for a
   </link>
   <link name="arm_1_6">
     <inertial>
-      <origin xyz="-0.0058850122 -0.020700011 0.044606499"/>
-      <mass value="1.1552856"/>
-      <inertia ixx="0.0033129474" ixy="-0.00022801448999999998" ixz="-0.00011490187" iyy="0.0029894708" iyz="-4.9067763e-05" izz="0.003686561"/>
+      <origin xyz="0.00068559302 -0.0050299682 0.046682846"/>
+      <mass value="1.861"/>
+      <inertia ixx="0.0042406037" ixy="-5.5692732e-05" ixz="-9.085198200000001e-05" iyy="0.0029010805999999997" iyz="-0.00018560541" izz="0.0044989008"/>
     </inertial>
     <visual>
       <geometry>

@@ -2,7 +2,10 @@
 <robot  xmlns:xacro="http://ros.org/wiki/xacro">
 
     <!-- Origin -->
-    
+
+    <xacro:property name="j_prismatic_lower" value="${[2]}"/>
+    <xacro:property name="j_torso_lower" value="${[-2.6]}"/>
+
     <xacro:property name="j_arm_1_lower" value="${[-2.6]}"/>
     <xacro:property name="j_arm_2_lower" value="${[-2.5]}"/>
     <xacro:property name="j_arm_3_lower" value="${[-2.6]}"/>
@@ -10,7 +13,10 @@
     <xacro:property name="j_arm_5_lower" value="${[-2.8]}"/>
     <xacro:property name="j_arm_6_lower" value="${[-2.8]}"/>
     <xacro:property name="j_arm_7_lower" value="${[-2.8]}"/>
-    
+
+    <xacro:property name="j_prismatic_upper" value="${[-2]}"/>
+    <xacro:property name="j_torso_upper" value="${[2.6]}"/>
+
     <xacro:property name="j_arm_1_upper" value="${[2.6]}"/>
     <xacro:property name="j_arm_2_upper" value="${[0.1]}"/>
     <xacro:property name="j_arm_3_upper" value="${[2.6]}"/>
@@ -19,7 +25,9 @@
     <xacro:property name="j_arm_6_upper" value="${[2.1]}"/>
     <xacro:property name="j_arm_7_upper" value="${[2.8]}"/>
     
-    
+    <xacro:property name="j_prismatic_velocity" value="${[-5]}"/>
+    <xacro:property name="j_torso_velocity" value="${[3.86]}"/>
+
     <xacro:property name="j_arm_1_velocity" value="${[3.86]}"/>
     <xacro:property name="j_arm_2_velocity" value="${[3.86]}"/>
     <xacro:property name="j_arm_3_velocity" value="${[6.06]}"/>
@@ -28,6 +36,9 @@
     <xacro:property name="j_arm_6_velocity" value="${[11.72]}"/>
     <xacro:property name="j_arm_7_velocity" value="${[11.72]}"/>
     
+    <xacro:property name="j_prismatic_torque" value="${[147]}"/>
+    <xacro:property name="j_torso_torque" value="${[147.00]}"/>
+
     <xacro:property name="j_arm_1_torque" value="${[147.00]}"/>
     <xacro:property name="j_arm_2_torque" value="${[147.00]}"/>
     <xacro:property name="j_arm_3_torque" value="${[147.00]}"/>
