@@ -45,6 +45,22 @@ results of the optimization), otherwise we go with the old ones (generated for a
     <xacro:property name="motor_A_effort" value="304"/>
     <xacro:property name="motor_B_effort" value="147"/>
     <xacro:property name="motor_C_effort" value="35"/> -->
+  <gazebo>
+    <plugin filename="libxbot2_gz_joint_server.so" name="xbot2_joint_driver">
+      <pid>
+        <gain d="1" name="fake_mot" p="10"/>
+        <gain d="10" name="small_mot" p="1000"/>
+        <gain d="20" name="medium_mot" p="2000"/>
+        <pid name="j_arm_1_1" profile="medium_mot"/>
+        <pid name="j_arm_1_2" profile="medium_mot"/>
+        <pid name="j_arm_1_3" profile="medium_mot"/>
+        <pid name="j_arm_1_4" profile="medium_mot"/>
+        <pid name="j_arm_1_5" profile="small_mot"/>
+        <pid name="j_arm_1_6" profile="small_mot"/>
+        <pid name="j_arm_1_7" profile="small_mot"/>
+      </pid>
+    </plugin>
+  </gazebo>
   <link name="world"/>
   <!-- base -->
   <link name="base_link">
@@ -183,9 +199,9 @@ results of the optimization), otherwise we go with the old ones (generated for a
   </link>
   <link name="arm_1_7">
     <inertial>
-      <origin xyz="0.0 -1.0491951 -10.307299"/>
+      <origin xyz="0.0 -0.0010491951 -0.010307299"/>
       <mass value="0.1416397"/>
-      <inertia ixx="61.479333" ixy="-7.4023399e-05" ixz="0.0" iyy="64.247521" iyz="0.47786448" izz="118.79744"/>
+      <inertia ixx="6.1479333e-05" ixy="-7.4023399e-11" ixz="0.0" iyy="6.4247521e-05" iyz="4.778644799999999e-07" izz="0.00011879743999999998"/>
     </inertial>
     <visual>
       <geometry>
@@ -199,7 +215,13 @@ results of the optimization), otherwise we go with the old ones (generated for a
       </geometry>
     </collision>
   </link>
-  <link name="arm_1_tcp"/>
+  <link name="arm_1_tcp">
+    <inertial>
+      <origin xyz="0.0 0.05 0.1"/>
+      <mass value="0.5"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+  </link>
   <!-- JOINTS -->
   <!-- shoulder pitch -->
   <joint name="j_arm_1_1" type="revolute">
@@ -259,7 +281,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
   <joint name="j_arm_1_7" type="revolute">
     <parent link="arm_1_6"/>
     <child link="arm_1_7"/>
-    <origin rpy="-1.570796326795 0.3316123 0.0" xyz="0.0216503 0.062877 0.05"/>
+    <origin rpy="-1.570796326795 0.3316123 0.0" xyz="0.0 0.062877 0.05"/>
     <axis xyz="0 0 1"/>
     <limit effort="55.0" lower="-2.8" upper="2.8" velocity="11.72"/>
   </joint>
