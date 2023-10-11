@@ -50,7 +50,7 @@
     <xacro:property name="Wrist_1_yaw" value=" 0.0 "/>
     
     <!-- Origin -->
-    <xacro:property name="Wrist_2_Ox" value=" 0.0216503 "/>
+    <xacro:property name="Wrist_2_Ox" value=" 0.00 "/>
     <xacro:property name="Wrist_2_Oy" value=" 0.062877 "/>
     <xacro:property name="Wrist_2_Oz" value=" 0.050 "/>
     <xacro:property name="Wrist_2_roll" value=" ${-PI/2} "/>

@@ -114,16 +114,16 @@
 
     <!-- WRITST ROLL -->    
     <!-- Center of Mass -->
-    <xacro:property name="Wrist_2_x" value="0.0000000e+00"/>
-    <xacro:property name="Wrist_2_y" value="-1.0491951e+00"/> 
-    <xacro:property name="Wrist_2_z" value="-1.0307299e+01"/>
+    <xacro:property name="Wrist_2_x" value=" ${0.0000000e+00 *mmTom} "/>
+    <xacro:property name="Wrist_2_y" value=" ${-1.0491951e+00 *mmTom} "/> 
+    <xacro:property name="Wrist_2_z" value=" ${-1.0307299e+01 *mmTom} "/>
     <!-- Inertia -->
-    <xacro:property name="Wrist_2_xx" value="6.1479333e+01"/>
-    <xacro:property name="Wrist_2_yy" value="6.4247521e+01"/>
-    <xacro:property name="Wrist_2_zz" value="1.1879744e+02"/>
-    <xacro:property name="Wrist_2_xy" value="-7.4023399e-05"/> 
-    <xacro:property name="Wrist_2_xz" value="0.0000000e+00"/>
-    <xacro:property name="Wrist_2_yz" value="4.7786448e-01"/> 
+    <xacro:property name="Wrist_2_xx" value=" ${6.1479333e+01 *mm2Tom2} "/>
+    <xacro:property name="Wrist_2_yy" value=" ${6.4247521e+01 *mm2Tom2} "/>
+    <xacro:property name="Wrist_2_zz" value=" ${1.1879744e+02 *mm2Tom2} "/>
+    <xacro:property name="Wrist_2_xy" value=" ${-7.4023399e-05 *mm2Tom2} "/> 
+    <xacro:property name="Wrist_2_xz" value=" ${0.0000000e+00 *mm2Tom2} "/>
+    <xacro:property name="Wrist_2_yz" value=" ${4.7786448e-01 *mm2Tom2} "/>
     <!-- Mass -->
     <xacro:property name="Wrist_2_mass" value="1.4163970e-01"/>
     

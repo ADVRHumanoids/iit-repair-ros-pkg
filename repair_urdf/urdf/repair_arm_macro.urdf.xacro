@@ -150,7 +150,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
                 <mass value="${Wrist_2_mass}" />
                 <inertia ixx="${Wrist_2_xx}" ixy="${rot*Wrist_2_xy}" ixz="${Wrist_2_xz}"
                     iyy="${Wrist_2_yy}" iyz="${rot*Wrist_2_yz}" izz="${Wrist_2_zz}" />
-                </inertial>
+            </inertial>
 
             <visual>
                 <geometry>
@@ -166,8 +166,13 @@ results of the optimization), otherwise we go with the old ones (generated for a
             </collision>
         </link>
 
-        <link name="arm_${id}_tcp" />
-        
+        <link name="arm_${id}_tcp">
+            <inertial>
+                <origin xyz="0.0 0.05 0.1" />
+                <mass value="0.5" />
+                <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+            </inertial>
+        </link>
         <!-- JOINTS -->
 
         <!-- shoulder pitch -->
