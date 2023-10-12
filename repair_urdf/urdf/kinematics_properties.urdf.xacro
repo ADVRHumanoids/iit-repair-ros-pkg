@@ -7,7 +7,7 @@
     <xacro:property name="Cage_leg_radius" value="0.02" />
     <xacro:property name="Cage_sliding_guide_width" value="0.2" />
   
-    <xacro:property name="Table_x" value="0.98" />
+    <xacro:property name="Table_x" value="0.0" />
     <xacro:property name="Table_y" value="0.0" />
     <xacro:property name="Table_z" value="0.0" />
     <xacro:property name="table_top_thickness" value="0.05"/>
