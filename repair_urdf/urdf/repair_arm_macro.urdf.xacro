@@ -12,6 +12,12 @@ results of the optimization), otherwise we go with the old ones (generated for a
 
     <xacro:macro name="repair_arm" params="id rot parent *origin">
 
+        <xacro:property name="limit_index" value="0" />
+        
+        <xacro:if value="${rot == -1}">
+            <xacro:property name="limit_index" value="1" />
+        </xacro:if>
+
         <link name="arm_${id}_1"> 
             <inertial>
                 <origin xyz="${Shoulder_1_x} ${rot*Shoulder_1_y} ${Shoulder_1_z}" />
@@ -181,8 +187,8 @@ results of the optimization), otherwise we go with the old ones (generated for a
             <child link="arm_${id}_1" />
             <axis xyz="0 0 1" />
             <xacro:insert_block name="origin" />
-            <limit lower="${j_arm_1_lower[0]}" upper="${j_arm_1_upper[0]}"
-            effort="${j_arm_1_torque[0]}" velocity="${j_arm_1_velocity[0]}" />
+            <limit lower="${j_arm_1_lower[limit_index]}" upper="${j_arm_1_upper[limit_index]}"
+            effort="${j_arm_1_torque[limit_index]}" velocity="${j_arm_1_velocity[limit_index]}" />
         </joint>
         <!-- shoulder pitch -->
 
@@ -192,8 +198,8 @@ results of the optimization), otherwise we go with the old ones (generated for a
             <child link="arm_${id}_2" />
             <origin xyz="${Shoulder_2_Ox} ${rot*Shoulder_2_Oy} ${Shoulder_2_Oz}"
             rpy="${rot*Shoulder_2_roll} ${Shoulder_2_pitch} ${Shoulder_2_yaw}" />
-            <axis xyz="0 0 -1" />
-            <limit lower="${j_arm_2_lower[0]}" upper="${j_arm_2_upper[0]}"
+            <axis xyz="0 0 1" /> <!-- -1 -->
+            <limit lower="${j_arm_2_lower[limit_index]}" upper="${rot*j_arm_2_upper[limit_index]}"
             effort="${j_arm_2_torque[0]}" velocity="${j_arm_2_velocity[0]}" />
         </joint>
         <!-- shoulder yaw -->
@@ -204,8 +210,8 @@ results of the optimization), otherwise we go with the old ones (generated for a
             <child link="arm_${id}_3" />
             <origin xyz="${Shoulder_3_Ox} ${rot*Shoulder_3_Oy} ${Shoulder_3_Oz}"
             rpy="${rot*Shoulder_3_roll} ${Shoulder_3_pitch} ${Shoulder_3_yaw}" />
-            <axis xyz="0 0 -1" />
-            <limit lower="${j_arm_3_lower[0]}" upper="${j_arm_3_upper[0]}"
+            <axis xyz="0 0 -1" /> <!-- -1 -->
+            <limit lower="${j_arm_3_lower[limit_index]}" upper="${j_arm_3_upper[limit_index]}"
             effort="${j_arm_3_torque[0]}" velocity="${j_arm_3_velocity[0]}" />
         </joint>
         <!-- shoulder yaw -->
@@ -216,8 +222,8 @@ results of the optimization), otherwise we go with the old ones (generated for a
             <child link="arm_${id}_4" />
             <origin xyz="${Elbow_1_Ox} ${rot*Elbow_1_Oy} ${Elbow_1_Oz}"
             rpy="${rot*Elbow_1_roll} ${Elbow_1_pitch} ${Elbow_1_yaw}" />
-            <axis xyz="0 0 -1" />
-            <limit lower="${j_arm_4_lower[0]}" upper="${j_arm_4_upper[0]}"
+            <axis xyz="0 0 1" /> <!-- -1 -->
+            <limit lower="${j_arm_4_lower[limit_index]}" upper="${j_arm_4_upper[limit_index]}"
             effort="${j_arm_4_torque[0]}" velocity="${j_arm_4_velocity[0]}" />
         </joint>
         <!-- elbow -->
@@ -228,8 +234,8 @@ results of the optimization), otherwise we go with the old ones (generated for a
             <child link="arm_${id}_5" />
             <origin xyz="${Forearm_1_Ox} ${rot*Forearm_1_Oy} ${Forearm_1_Oz}"
             rpy="${rot*Forearm_1_roll} ${Forearm_1_pitch} ${Forearm_1_yaw}" />
-            <axis xyz="0 0 -1" />
-            <limit lower="${j_arm_5_lower[0]}" upper="${j_arm_5_upper[0]}"
+            <axis xyz="0 0 -1" /> <!-- -1 -->
+            <limit lower="${j_arm_5_lower[limit_index]}" upper="${j_arm_5_upper[limit_index]}"
             effort="${j_arm_5_torque[0]}" velocity="${j_arm_5_velocity[0]}" />
         </joint>
         <!-- forearm yaw -->
@@ -241,7 +247,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
             <origin xyz="${Wrist_1_Ox} ${rot*Wrist_1_Oy} ${Wrist_1_Oz}"
             rpy="${rot*Wrist_1_roll} ${Wrist_1_pitch} ${Wrist_1_yaw}" />
             <axis xyz="0 0 1" />
-            <limit lower="${j_arm_6_lower[0]}" upper="${j_arm_6_upper[0]}"
+            <limit lower="${j_arm_6_lower[limit_index]}" upper="${j_arm_6_upper[limit_index]}"
             effort="${j_arm_6_torque[0]}" velocity="${j_arm_6_velocity[0]}" />
         </joint>
         <!-- wrist pitch-->
@@ -253,7 +259,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
             <origin xyz="${Wrist_2_Ox} ${rot*Wrist_2_Oy} ${Wrist_2_Oz}"
             rpy="${rot*Wrist_2_roll} ${Wrist_2_pitch} ${Wrist_2_yaw}" />
             <axis xyz="0 0 1" />
-            <limit lower="${j_arm_7_lower[0]}" upper="${j_arm_7_upper[0]}"
+            <limit lower="${j_arm_7_lower[limit_index]}" upper="${j_arm_7_upper[limit_index]}"
             effort="${j_arm_7_torque[0]}" velocity="${j_arm_7_velocity[0]}" />
         </joint>
         <!-- /wrist roll-->

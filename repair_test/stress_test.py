@@ -56,13 +56,16 @@ def main():
         print('Started loop ', niter, ', elapsed time ', (rospy.Time.now() - t0).to_sec())
         niter += 1
     
-        q1 = np.array([-2.5, -2.5, -2.5, 0.7, -2.7, -2.7, -2.7])
+        q1 = np.array([-2.5, 0.5, -2.5, -0.7, -2.7, -2.7, -2.7])
+        # q1 = np.array([-2.5, -2.5, -2.5, 0.7, -2.7, -2.7, -2.7])
         move_to_q(robot, q0, q1, time)
 
-        q2 = np.array([0.0, -1.5, 0.0, -1.0, 0.0, -1.4, 0.0])
+        q2 = np.array([0.0, 1.5, 0.0, 1.0, 0.0, 0.0, 0.0])
+        # q2 = np.array([0.0, -1.5, 0.0, -1.0, 0.0, -1.4, 0.0])
         move_to_q(robot, q1, q2, time)
         
-        q3 = np.array([2.5, -0.5, 2.5, -2.3, 2.7, 2.0, 2.7])
+        q3 = np.array([2.5, 2.5, 2.5, 2.3, 2.7, 2.0, 2.7])
+        # q3 = np.array([2.5, -0.5, 2.5, -2.3, 2.7, 2.0, 2.7])
         move_to_q(robot, q2, q3, time)
     
         move_to_q(robot, q3, q0, time)

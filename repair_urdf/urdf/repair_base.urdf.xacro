@@ -1,21 +1,21 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
-    <xacro:macro name="repair_base" params="rot parent *origin">
+    <xacro:macro name="repair_base" params="parent *origin">
         <!-- base -->
         <link name="base_link">
             <inertial>
-                <origin xyz="${Base_x} ${rot*Base_y} ${Base_z}" />
+                <origin xyz="${Base_x} ${Base_y} ${Base_z}" />
                 <mass value="${Base_mass}" />
-                <inertia ixx="${Base_xx}" ixy="${rot*Base_xy}" ixz="${Base_xz}" iyy="${Base_yy}"
-                    iyz="${rot*Base_yz}" izz="${Base_zz}" />
+                <inertia ixx="${Base_xx}" ixy="${Base_xy}" ixz="${Base_xz}" iyy="${Base_yy}"
+                    iyz="${Base_yz}" izz="${Base_zz}" />
             </inertial>
 
             <visual>
                 <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
                 <geometry>
                     <mesh filename="package://repair_urdf/meshes/mesh_base.stl"
-                        scale="0.001 ${rot*0.001} 0.001" />
+                        scale="0.001 0.001 0.001" />
                 </geometry>
                 <material name="dark_grey" />
             </visual>
@@ -24,7 +24,7 @@
                 <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
                 <geometry>
                     <mesh filename="package://repair_urdf/meshes/simplified/mesh_base.stl"
-                        scale="0.001 ${rot*0.001} 0.001" />
+                        scale="0.001 0.001 0.001" />
                 </geometry>
             </collision>
         </link>
