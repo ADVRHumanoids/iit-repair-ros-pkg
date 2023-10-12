@@ -188,7 +188,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
             <axis xyz="0 0 1" />
             <xacro:insert_block name="origin" />
             <limit lower="${j_arm_1_lower[limit_index]}" upper="${j_arm_1_upper[limit_index]}"
-            effort="${j_arm_1_torque[limit_index]}" velocity="${j_arm_1_velocity[limit_index]}" />
+            effort="${j_arm_1_torque[0]}" velocity="${j_arm_1_velocity[0]}" />
         </joint>
         <!-- shoulder pitch -->
 
@@ -199,7 +199,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
             <origin xyz="${Shoulder_2_Ox} ${rot*Shoulder_2_Oy} ${Shoulder_2_Oz}"
             rpy="${rot*Shoulder_2_roll} ${Shoulder_2_pitch} ${Shoulder_2_yaw}" />
             <axis xyz="0 0 1" /> <!-- -1 -->
-            <limit lower="${j_arm_2_lower[limit_index]}" upper="${rot*j_arm_2_upper[limit_index]}"
+            <limit lower="${j_arm_2_lower[limit_index]}" upper="${j_arm_2_upper[limit_index]}"
             effort="${j_arm_2_torque[0]}" velocity="${j_arm_2_velocity[0]}" />
         </joint>
         <!-- shoulder yaw -->
