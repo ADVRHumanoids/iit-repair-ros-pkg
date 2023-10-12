@@ -3,20 +3,6 @@
   
   <xacro:macro name="repair_cage" params="parent">
 
-
-  <!-- only something to avoid collisions between leg and ground plane when using Gaz. -->
-  <!-- <xacro:if value="$(arg shorten_table_legs_coll)">
-
-    <xacro:property name="leg_z_offset_gz" value="0.05" /> 
-
-  </xacro:if>
-
-    <xacro:property name="leg_z_offset_gz" value="0.0" /> 
-
-  </xacro:unless> -->
-
-  <xacro:property name="leg_z_offset_gz" value="0.0" /> 
-
   <link name="table_top_link"> 
     <visual>
       <origin xyz="${Table_x} ${Table_y} ${Table_z+table_height-table_top_thickness/2}" />
@@ -52,7 +38,7 @@
     <material name="silver_gray" />
     </visual> 
     <collision>
-      <origin xyz="0.0 0.0 ${-table_height/2 + leg_z_offset_gz}" rpy="0.0 0.0 0.0" />
+      <origin xyz="0.0 0.0 ${-table_height/2}" rpy="0.0 0.0 0.0" />
       <geometry>
         <cylinder radius="${Cage_leg_radius}" length="${table_height}" />
       </geometry>
@@ -94,7 +80,7 @@
 
     </visual> 
     <collision>
-      <origin xyz="0.0 0.0 ${-table_height/2 + leg_z_offset_gz}" rpy="0.0 0.0 0.0" />
+      <origin xyz="0.0 0.0 ${-table_height/2}" rpy="0.0 0.0 0.0" />
       <geometry>
         <cylinder radius="${Cage_leg_radius}" length="${table_height}" />
       </geometry>
@@ -136,7 +122,7 @@
 
     </visual> 
     <collision>
-      <origin xyz="0.0 0.0 ${-table_height/2 + leg_z_offset_gz}" rpy="0.0 0.0 0.0" />
+      <origin xyz="0.0 0.0 ${-table_height/2}" rpy="0.0 0.0 0.0" />
       <geometry>
         <cylinder radius="${Cage_leg_radius}" length="${table_height}" />
       </geometry>
@@ -178,7 +164,7 @@
 
     </visual> 
     <collision>
-      <origin xyz="0.0 0.0 ${-table_height/2 + leg_z_offset_gz}" rpy="0.0 0.0 0.0" />
+      <origin xyz="0.0 0.0 ${-table_height/2}" rpy="0.0 0.0 0.0" />
       <geometry>
         <cylinder radius="${Cage_leg_radius}" length="${table_height}" />
       </geometry>

@@ -24,7 +24,6 @@ def get_robot():
     robot.setControlMode(xb.ControlMode.Position())
 
     return robot
-
 def move_to_q(robot, q0, q1, time):
 
     current_time = 0.0
@@ -39,32 +38,11 @@ def move_to_q(robot, q0, q1, time):
         rospy.sleep(rospy.Duration(dt))
         current_time += dt
 
-def la_to_q(robot, q, la_q, signs):
-
-    la_idx = robot.getDofIndex('j_arm_1_1')
-    ra_idx = robot.getDofIndex('j_arm_2_1')
-
-    ra_q = la_q * signs
-
-    q1 = np.array(q)
-
-    q1[la_idx:(la_idx + 6)] = la_q[:6]
-    q1[ra_idx:(ra_idx + 6)] = ra_q[:6]
-
-    return q1
-
-    
 
 def main():
-
     rospy.init_node('repair_stress_test')
 
-    time = 2.0
-
-    # homing_arm_r = [0.5, 0.5, -0.5, 1.0, 0.5, 0.5, 1.0] # arm_1 
-    # homing_arm_l = [-0.5, -0.5, 0.5, -1.0, -0.5, -0.5, -1.0] # arm_2
-
-    s = np.array([-1, -1, -1, -1, -1, -1, -1])
+    time = 4.0
 
     robot = get_robot()
 
@@ -77,23 +55,22 @@ def main():
     while not rospy.is_shutdown():
         print('Started loop ', niter, ', elapsed time ', (rospy.Time.now() - t0).to_sec())
         niter += 1
-
-        la_q_1 = -np.array([1.25, 0.0, -0.5, 1.0, 2.0, 1.9, 0.0])
-        la_q_2 = -np.array([1.0, 1.0, -2.1, 0.5, -0.5, -1.5, -2.7])
-        la_q_3 = -np.array([-1.5, 0.2, -0.7, 2.0, 0.5, 1.5, 1])
-        la_q_4 = -np.array([-2.5, 2.4, 2.5, 0.7, 1.8, -1.0, -2.5])
-
-        q1 =la_to_q(robot, q0, la_q_1, s)
-        q2 =la_to_q(robot, q0, la_q_2, s)
-        q3 =la_to_q(robot, q0, la_q_3, s)
-        q4 =la_to_q(robot, q0, la_q_4, s)
-
-        move_to_q(robot, q0, q1, time)
-        move_to_q(robot, q1, q2, 2*time)
-        move_to_q(robot, q2, q3, 3*time)
-        move_to_q(robot, q3, q4, 4*time)
-        move_to_q(robot, q4, q0, 4*time)
     
+        q1 = np.array([-2.5, 0.5, -2.5, -0.7, -2.7, -2.7, -2.7])
+        # q1 = np.array([-2.5, -2.5, -2.5, 0.7, -2.7, -2.7, -2.7])
+        move_to_q(robot, q0, q1, time)
+
+        q2 = np.array([0.0, 1.5, 0.0, 1.0, 0.0, 0.0, 0.0])
+        # q2 = np.array([0.0, -1.5, 0.0, -1.0, 0.0, -1.4, 0.0])
+        move_to_q(robot, q1, q2, time)
+        
+        q3 = np.array([2.5, 2.5, 2.5, 2.3, 2.7, 2.0, 2.7])
+        # q3 = np.array([2.5, -0.5, 2.5, -2.3, 2.7, 2.0, 2.7])
+        move_to_q(robot, q2, q3, time)
+    
+        move_to_q(robot, q3, q0, time)
+    
+
 
     print('Exiting..')
 
