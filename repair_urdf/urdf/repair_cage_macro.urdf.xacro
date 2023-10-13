@@ -278,14 +278,14 @@
 
   <joint name="sliding_guide_joint" type="fixed" >
     <parent link="obar2_link" />
-    <origin xyz="0 ${Cage_y/2} 0" rpy="-${PI_2} 0 0" />
+    <origin xyz="${Cage_sliding_guide_z} ${Cage_y/2 + Cage_sliding_guide_y} ${Cage_x/2 - Cage_sliding_guide_width/2 + Cage_sliding_guide_x}" rpy="-${PI_2} 0 0" />
     <child link="sliding_guide_link" />
   </joint> 
   <link name="sliding_guide_link">
     <visual>
       <origin xyz="0.0 0.0 0" rpy="0 0 0" />
       <geometry>
-        <box size="0.001 ${sliding_guide_width} ${Cage_y}" />
+        <box size="0.001 ${Cage_sliding_guide_width} ${Cage_y}" />
       </geometry>
     <material name="silver_gray" />
     </visual> 
