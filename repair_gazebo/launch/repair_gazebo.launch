@@ -10,7 +10,7 @@
   <arg name="headless" default="false"/>
   <arg name="debug" default="false"/>
   <arg name="physics" default="ode"/>
-  <arg name="verbose" default="false"/>
+  <arg name="verbose" default="true"/>
   <arg name="extra_gazebo_args" default=""/>
 
   <arg unless="$(arg paused)" name="command_arg1" value=""/>
@@ -26,7 +26,7 @@
 
   <!-- Load the right URDF into the ROS Parameter Server, depending on the chosen model type -->
   <param name="robot_description_gz"
-         command="$(find xacro)/xacro $(find repair_urdf)/urdf/repair_arm_final.urdf.xacro"/>
+         command="$(find xacro)/xacro $(find repair_urdf)/urdf/repair_full.urdf.xacro"/>
   
   <group if="$(arg gazebo)">
   <!-- start gazebo server-->
