@@ -11,12 +11,12 @@
       </geometry>
       <material name="wood" />
     </visual> 
-    <collision>
+    <!-- <collision>
       <origin xyz="${Table_x} ${Table_y} ${Table_z+table_height-table_top_thickness/2}" />
       <geometry>
         <box size="${Cage_x} ${Cage_y} ${table_top_thickness}" />
       </geometry>
-    </collision>
+    </collision> -->
   </link>
 
   <joint name="table_top_link_joint" type="fixed" >
