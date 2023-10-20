@@ -3,7 +3,7 @@ solver_options:
     back_end: qpoases
 
 stack:
-  - [tcp]
+  - [tcp1, tcp2]
   - [postural]
 
 constraints:
@@ -19,10 +19,16 @@ vlim:
   type: VelocityLimits
   limits: 3.0
 
-tcp:
+tcp1:
   type: Cartesian
   lambda: 0.1
   distal_link: arm_1_tcp
+  use_local_subtasks: true
+
+tcp2:
+  type: Cartesian
+  lambda: 0.1
+  distal_link: arm_2_tcp
   use_local_subtasks: true
 
 tcp_pos:

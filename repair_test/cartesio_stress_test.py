@@ -25,14 +25,20 @@ def main():
 
     waypoints = []
 
+    # translation: [0.2448, 0.3962, 1.125]
+    # rotation: [0.7011, 0.4426, 0.4744, 0.2959]
 
-    # translation: [-0.05334,  -0.6825,   0.1167]
-    # rotation   : [  0.5859,   0.5951, -0.01868,   0.5497]
+    # translation: [0.2448, 0.2002, 1.552]
+    # rotation: [0.7231, 0.1131, 0.6803, 0.03735]
+
+    # translation: [0.2448, -0.09736, 1.123]
+    # rotation: [0.7634, 0.1623, 0.5486, 0.2997]
+    ci.getTask('arm_2_tcp').disable()
     arm_start, _, _ = ci.getPoseReference('arm_1_tcp')
-    add_wp(Affine3(pos=[-0.5082, -0.3903, 0.06521], rot=[ 0.5301,  0.3273, -0.2502,  0.7412]), 1*time, waypoints)
-    add_wp(Affine3(pos=[-0.2159, -0.3903, 0.7449], rot=[ 0.5301,  0.3273, -0.2502,  0.7412]), 2*time, waypoints)
-    add_wp(Affine3(pos=[0.4454, -0.3903, 0.1508], rot=[ 0.5301,  0.3273, -0.2502,  0.7412]), 3*time, waypoints)
-    add_wp(Affine3(pos=[-0.08358, -0.648, 0.01989], rot=[ 0.588,  0.3463, -0.2231,  0.6961]), 4*time, waypoints)
+
+    add_wp(Affine3(pos=[0.2448, 0.3962, 1.125], rot=[0.7011, 0.4426, 0.4744, 0.2959]), 1*time, waypoints)
+    add_wp(Affine3(pos=[0.2448, 0.2002, 1.552], rot=[0.7231, 0.1131, 0.6803, 0.03735]), 2*time, waypoints)
+    add_wp(Affine3(pos=[0.2448, -0.09736, 1.123], rot=[0.7634, 0.1623, 0.5486, 0.2997]), 3*time, waypoints)
     add_wp(arm_start, 5*time, waypoints)
 
     ci.setWaypoints('arm_1_tcp', waypoints)
