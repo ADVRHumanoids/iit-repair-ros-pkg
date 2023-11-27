@@ -1,8 +1,6 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro" name="repair_full">
     
-    <xacro:include filename="$(find softhands_description)/urdf/softhands.xacro" />
-
     <xacro:include filename="$(find repair_urdf)/urdf/conversions.urdf.xacro" />
     <xacro:include filename="$(find repair_urdf)/urdf/materials.urdf.xacro" />
 
