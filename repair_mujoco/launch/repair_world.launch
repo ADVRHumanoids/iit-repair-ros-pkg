@@ -1,0 +1,13 @@
+<launch>
+
+  
+  <arg name="world" default="$(find repair_mujoco)/config/world.xml"/>
+  <arg name="simopt" default="$(find repair_mujoco)/config/options.xml"/>
+  <arg name="sites" default="$(find repair_mujoco)/config/sites.xml"/>
+  <arg name="ctrlcfg" default="$(find repair_mujoco)/config/repair.yaml"/>
+  <arg name="urdf" default="$(find repair_urdf)/urdf/repair_full.urdf.xacro"/>
+
+  <node pkg="repair_mujoco" type="simulator_wrapper.bash" name="repair_mujoco"
+    args="--name repair --urdf-command 'xacro $(arg urdf)' --world $(arg world) --simopt $(arg simopt) --ctrlcfg $(arg ctrlcfg) --sites $(arg sites)"/>
+
+</launch>
