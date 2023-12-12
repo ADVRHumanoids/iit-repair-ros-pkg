@@ -16,3 +16,4 @@ joint_map:
   41: j_torso_1
   102: left_hand
   101: right_hand
+  110: neck
