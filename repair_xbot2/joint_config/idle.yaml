@@ -83,3 +83,7 @@ left_hand:
 right_hand:
     control_mode: idle
     pid: {}
+    
+neck:
+    control_mode: idle
+    pid: {}
