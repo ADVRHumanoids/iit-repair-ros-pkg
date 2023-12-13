@@ -165,6 +165,6 @@ neck:
     control_mode: 3B_motor_pos_ctrl
     pid:
         position:
-            - 50000
+            - 0.0
             - 0.0
             - 0.0
