@@ -22,13 +22,15 @@ vlim:
 tcp1:
   type: Cartesian
   lambda: 0.1
-  distal_link: arm_1_tcp
+  distal_link: arm_1_tcp_joi
+  base_link: torso_1
   use_local_subtasks: true
 
 tcp2:
   type: Cartesian
   lambda: 0.1
-  distal_link: arm_2_tcp
+  distal_link: arm_2_tcp_joi
+  base_link: torso_1
   use_local_subtasks: true
 
 tcp_pos:
