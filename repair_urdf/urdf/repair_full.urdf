@@ -42,7 +42,6 @@
   <!-- gen_coll: whether to add the approximate collision  model of the platform -->
   <!-- use_updated_wrist: visual parameter. if true, we load the latest meshes (which are adapted to the
 results of the optimization), otherwise we go with the old ones (generated for a spherical wrist) -->
-  <!-- w.r.t. working surface of the table  -->
   <!-- w.r.t world  -->
   <!-- 0.0  -->
   <!-- 2.4405495 -->
@@ -125,18 +124,18 @@ results of the optimization), otherwise we go with the old ones (generated for a
   <link name="world"/>
   <link name="table_top_link">
     <visual>
-      <origin xyz="0.0 0.0 0.968"/>
+      <origin xyz="0.0 0.0 0.975"/>
       <geometry>
-        <box size="1.0 2.5 0.03"/>
+        <box size="1.0 2.5 0.05"/>
       </geometry>
       <material name="wood"/>
     </visual>
-    <!-- <collision>
-      <origin xyz="${Table_x} ${Table_y} ${Table_z+table_height-table_top_thickness/2}" />
+    <collision>
+      <origin xyz="0.0 0.0 0.975"/>
       <geometry>
-        <box size="${Cage_x} ${Cage_y} ${table_top_thickness}" />
+        <box size="1.0 2.5 0.05"/>
       </geometry>
-    </collision> -->
+    </collision>
   </link>
   <joint name="table_top_link_joint" type="fixed">
     <parent link="world"/>
@@ -144,167 +143,167 @@ results of the optimization), otherwise we go with the old ones (generated for a
   </joint>
   <joint name="leg1_joint" type="fixed">
     <parent link="table_top_link"/>
-    <origin rpy="0 0 0" xyz="0.5 1.25 0.983"/>
+    <origin rpy="0 0 0" xyz="0.5 1.25 1.0"/>
     <child link="leg1_link"/>
   </joint>
   <link name="leg1_link">
     <visual>
-      <origin rpy="0 0 0" xyz="0.0 0.0 -0.4915"/>
+      <origin rpy="0 0 0" xyz="0.0 0.0 -0.5"/>
       <geometry>
-        <cylinder length="0.983" radius="0.02"/>
+        <cylinder length="1.0" radius="0.02"/>
       </geometry>
       <material name="silver_gray"/>
     </visual>
     <collision>
-      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.4915"/>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.5"/>
       <geometry>
-        <cylinder length="0.983" radius="0.02"/>
+        <cylinder length="1.0" radius="0.02"/>
       </geometry>
     </collision>
   </link>
   <joint name="vbar1_joint" type="fixed">
     <parent link="leg1_link"/>
-    <origin rpy="0 0 0" xyz="0 0 0.525"/>
+    <origin rpy="0 0 0" xyz="0 0 0.485"/>
     <child link="vbar1_link"/>
   </joint>
   <link name="vbar1_link">
     <visual>
       <origin rpy="0 0 0" xyz="0.0 0.0 0"/>
       <geometry>
-        <cylinder length="1.05" radius="0.02"/>
+        <cylinder length="0.97" radius="0.02"/>
       </geometry>
       <material name="silver_gray"/>
     </visual>
     <collision>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0"/>
       <geometry>
-        <cylinder length="1.05" radius="0.02"/>
+        <cylinder length="0.97" radius="0.02"/>
       </geometry>
     </collision>
   </link>
   <joint name="leg2_joint" type="fixed">
     <parent link="table_top_link"/>
-    <origin rpy="0 0 0" xyz="-0.5 1.25 0.983"/>
+    <origin rpy="0 0 0" xyz="-0.5 1.25 1.0"/>
     <child link="leg2_link"/>
   </joint>
   <link name="leg2_link">
     <visual>
-      <origin rpy="0 0 0" xyz="0.0 0.0 -0.4915"/>
+      <origin rpy="0 0 0" xyz="0.0 0.0 -0.5"/>
       <geometry>
-        <cylinder length="0.983" radius="0.02"/>
+        <cylinder length="1.0" radius="0.02"/>
       </geometry>
       <material name="silver_gray"/>
     </visual>
     <collision>
-      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.4915"/>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.5"/>
       <geometry>
-        <cylinder length="0.983" radius="0.02"/>
+        <cylinder length="1.0" radius="0.02"/>
       </geometry>
     </collision>
   </link>
   <joint name="vbar2_joint" type="fixed">
     <parent link="leg2_link"/>
-    <origin rpy="0 0 0" xyz="0 0 0.525"/>
+    <origin rpy="0 0 0" xyz="0 0 0.485"/>
     <child link="vbar2_link"/>
   </joint>
   <link name="vbar2_link">
     <visual>
       <origin rpy="0 0 0" xyz="0.0 0.0 0"/>
       <geometry>
-        <cylinder length="1.05" radius="0.02"/>
+        <cylinder length="0.97" radius="0.02"/>
       </geometry>
       <material name="silver_gray"/>
     </visual>
     <collision>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0"/>
       <geometry>
-        <cylinder length="1.05" radius="0.02"/>
+        <cylinder length="0.97" radius="0.02"/>
       </geometry>
     </collision>
   </link>
   <joint name="leg3_joint" type="fixed">
     <parent link="table_top_link"/>
-    <origin rpy="0 0 0" xyz="0.5 -1.25 0.983"/>
+    <origin rpy="0 0 0" xyz="0.5 -1.25 1.0"/>
     <child link="leg3_link"/>
   </joint>
   <link name="leg3_link">
     <visual>
-      <origin rpy="0 0 0" xyz="0.0 0.0 -0.4915"/>
+      <origin rpy="0 0 0" xyz="0.0 0.0 -0.5"/>
       <geometry>
-        <cylinder length="0.983" radius="0.02"/>
+        <cylinder length="1.0" radius="0.02"/>
       </geometry>
       <material name="silver_gray"/>
     </visual>
     <collision>
-      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.4915"/>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.5"/>
       <geometry>
-        <cylinder length="0.983" radius="0.02"/>
+        <cylinder length="1.0" radius="0.02"/>
       </geometry>
     </collision>
   </link>
   <joint name="vbar3_joint" type="fixed">
     <parent link="leg3_link"/>
-    <origin rpy="0 0 0" xyz="0 0 0.525"/>
+    <origin rpy="0 0 0" xyz="0 0 0.485"/>
     <child link="vbar3_link"/>
   </joint>
   <link name="vbar3_link">
     <visual>
       <origin rpy="0 0 0" xyz="0.0 0.0 0"/>
       <geometry>
-        <cylinder length="1.05" radius="0.02"/>
+        <cylinder length="0.97" radius="0.02"/>
       </geometry>
       <material name="silver_gray"/>
     </visual>
     <collision>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0"/>
       <geometry>
-        <cylinder length="1.05" radius="0.02"/>
+        <cylinder length="0.97" radius="0.02"/>
       </geometry>
     </collision>
   </link>
   <joint name="leg4_joint" type="fixed">
     <parent link="table_top_link"/>
-    <origin rpy="0 0 0" xyz="-0.5 -1.25 0.983"/>
+    <origin rpy="0 0 0" xyz="-0.5 -1.25 1.0"/>
     <child link="leg4_link"/>
   </joint>
   <link name="leg4_link">
     <visual>
-      <origin rpy="0 0 0" xyz="0.0 0.0 -0.4915"/>
+      <origin rpy="0 0 0" xyz="0.0 0.0 -0.5"/>
       <geometry>
-        <cylinder length="0.983" radius="0.02"/>
+        <cylinder length="1.0" radius="0.02"/>
       </geometry>
       <material name="silver_gray"/>
     </visual>
     <collision>
-      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.4915"/>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.5"/>
       <geometry>
-        <cylinder length="0.983" radius="0.02"/>
+        <cylinder length="1.0" radius="0.02"/>
       </geometry>
     </collision>
   </link>
   <joint name="vbar4_joint" type="fixed">
     <parent link="leg4_link"/>
-    <origin rpy="0 0 0" xyz="0 0 0.525"/>
+    <origin rpy="0 0 0" xyz="0 0 0.485"/>
     <child link="vbar4_link"/>
   </joint>
   <link name="vbar4_link">
     <visual>
       <origin rpy="0 0 0" xyz="0.0 0.0 0"/>
       <geometry>
-        <cylinder length="1.05" radius="0.02"/>
+        <cylinder length="0.97" radius="0.02"/>
       </geometry>
       <material name="silver_gray"/>
     </visual>
     <collision>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0"/>
       <geometry>
-        <cylinder length="1.05" radius="0.02"/>
+        <cylinder length="0.97" radius="0.02"/>
       </geometry>
     </collision>
   </link>
   <joint name="obar1_joint" type="fixed">
     <parent link="vbar1_link"/>
-    <origin rpy="0 -1.57079632679 0" xyz="-0.5 0 0.525"/>
+    <origin rpy="0 -1.57079632679 0" xyz="-0.5 0 0.485"/>
     <child link="obar1_link"/>
   </joint>
   <link name="obar1_link">
@@ -324,7 +323,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
   </link>
   <joint name="obar2_joint" type="fixed">
     <parent link="vbar3_link"/>
-    <origin rpy="0 -1.57079632679 0" xyz="-0.5 0 0.525"/>
+    <origin rpy="0 -1.57079632679 0" xyz="-0.5 0 0.485"/>
     <child link="obar2_link"/>
   </joint>
   <link name="obar2_link">
@@ -344,7 +343,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
   </link>
   <joint name="obar3_joint" type="fixed">
     <parent link="vbar3_link"/>
-    <origin rpy="-1.57079632679 0 0" xyz="0 1.25 0.525"/>
+    <origin rpy="-1.57079632679 0 0" xyz="0 1.25 0.485"/>
     <child link="obar3_link"/>
   </joint>
   <link name="obar3_link">
@@ -364,7 +363,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
   </link>
   <joint name="obar4_joint" type="fixed">
     <parent link="vbar4_link"/>
-    <origin rpy="-1.57079632679 0 0" xyz="0 1.25 0.525"/>
+    <origin rpy="-1.57079632679 0 0" xyz="0 1.25 0.485"/>
     <child link="obar4_link"/>
   </joint>
   <link name="obar4_link">
@@ -405,7 +404,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
   </link>
   <joint name="working_surface_joint" type="fixed">
     <parent link="sliding_guide_link"/>
-    <origin rpy="0.0 -1.57079632679 3.14159265359" xyz="-1.05 0 0"/>
+    <origin rpy="0.0 -1.57079632679 3.14159265359" xyz="-0.97 0 0"/>
     <child link="working_surface_link"/>
   </joint>
   <link name="working_surface_link">
@@ -449,7 +448,7 @@ results of the optimization), otherwise we go with the old ones (generated for a
     <parent link="dummy_prismatic_link"/>
     <child link="torso_1"/>
     <axis xyz="0 0 1"/>
-    <origin rpy="1.570796326795 0.0 1.570796326795" xyz="-0.13 0.0 0.0"/>
+    <origin rpy="1.570796326795 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
     <limit effort="147.0" lower="-2.6" upper="2.6" velocity="3.86"/>
   </joint>
   <!-- torso  -->
@@ -586,6 +585,13 @@ results of the optimization), otherwise we go with the old ones (generated for a
       <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
     </inertial>
   </link>
+  <link name="arm_2_tcp_joi">
+    <inertial>
+      <origin xyz="0.0 0.05 0.1"/>
+      <mass value="0.5"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+  </link>
   <!-- JOINTS -->
   <!-- shoulder pitch -->
   <joint name="j_arm_2_1" type="revolute">
@@ -659,6 +665,13 @@ results of the optimization), otherwise we go with the old ones (generated for a
     <parent link="arm_2_7"/>
     <child link="arm_2_tcp"/>
     <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+  </joint>
+  <!-- virtual tip-->
+  <!-- virtual tip-->
+  <joint name="j_tcp_2_joi" type="fixed">
+    <parent link="arm_2_tcp"/>
+    <child link="arm_2_tcp_joi"/>
+    <origin rpy="3.14 0 0" xyz="0.0 0.0 0.0"/>
   </joint>
   <!-- virtual tip-->
   <link name="arm_1_1">
@@ -794,6 +807,13 @@ results of the optimization), otherwise we go with the old ones (generated for a
       <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
     </inertial>
   </link>
+  <link name="arm_1_tcp_joi">
+    <inertial>
+      <origin xyz="0.0 0.05 0.1"/>
+      <mass value="0.5"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+  </link>
   <!-- JOINTS -->
   <!-- shoulder pitch -->
   <joint name="j_arm_1_1" type="revolute">
@@ -867,6 +887,13 @@ results of the optimization), otherwise we go with the old ones (generated for a
     <parent link="arm_1_7"/>
     <child link="arm_1_tcp"/>
     <origin rpy="-0.0 0.0 0.0" xyz="0.0 -0.0 0.0"/>
+  </joint>
+  <!-- virtual tip-->
+  <!-- virtual tip-->
+  <joint name="j_tcp_1_joi" type="fixed">
+    <parent link="arm_1_tcp"/>
+    <child link="arm_1_tcp_joi"/>
+    <origin rpy="3.14 0 0" xyz="0.0 -0.0 0.0"/>
   </joint>
   <!-- virtual tip-->
   
