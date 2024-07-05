@@ -179,6 +179,15 @@ results of the optimization), otherwise we go with the old ones (generated for a
                 <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
             </inertial>
         </link>
+
+        <link name="arm_${id}_tcp_joi">
+            <inertial>
+		<origin xyz="0.0 0.05 0.1" />
+                <mass value="0.5" />
+                <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+            </inertial>
+        </link>
+
         <!-- JOINTS -->
 
         <!-- shoulder pitch -->
@@ -270,6 +279,15 @@ results of the optimization), otherwise we go with the old ones (generated for a
             <child link="arm_${id}_tcp" />
             <origin xyz="${No_end_ft_Ox} ${rot*No_end_ft_Oy} ${No_end_ft_Oz}"
             rpy="${rot*No_end_ft_roll} ${No_end_ft_pitch} ${No_end_ft_yaw}" />
+        </joint>
+        <!-- virtual tip-->
+        
+	<!-- virtual tip-->
+        <joint name="j_tcp_${id}_joi" type="fixed">
+            <parent link="arm_${id}_tcp" />
+            <child link="arm_${id}_tcp_joi" />
+            <origin xyz="${No_end_ft_Ox} ${rot*No_end_ft_Oy} ${No_end_ft_Oz}"
+            rpy="3.14 0 0" />
         </joint>
         <!-- virtual tip-->
 
